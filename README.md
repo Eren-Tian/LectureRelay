@@ -1,16 +1,55 @@
 # LectureRelay
 
-LectureRelay **0.2.0** is a Windows classroom companion: course context and glossary, microphone or system recording, live English captions, optional translation, lecture replay, corrections, notes, evidence-based Q&A and exports.
+LectureRelay is a **Windows desktop app** for recording classes, reading English captions and reviewing what you learned. **Download the EXE, install it, and open the app. You do not need to build the project or install developer tools.**
 
-Built with Tauri 2, React, TypeScript, Rust, SQLite and a controlled native Nemotron speech worker. Recording and manual work are offline; local recognition needs a one-time model download. Cloud processing uses your own OpenAI/Groq key. Defaults are **None**, with no automatic cloud fallback.
+## Download and install
 
-The [October 2 preferences update](docs/releases/v0.2.0-preferences.md) adds persistent Light/Dark themes, a global Quiet Mode switch that updates running workers, five-second audio input checks, replay speed/skip controls and transcript search. Installed acceptance verified the same worker switching from four to 32 and back to four allowed logical CPUs during a recording.
+**[Download LectureRelay 0.2.0 for Windows x64 (.exe)](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.2.0/LectureRelay_0.2.0_x64-setup.exe)**
 
-The [October product iteration](docs/releases/v0.2.0-product-iteration.md) adds categorized Settings, clearer bilingual caption states, stable reading/scrolling and an original flying phoenix. Its short installed-app run checks the revised classroom at 1180×780 and 880×620. An earlier build passed a real 90-minute installed local recording/caption/replay/restart run; that run found continuing WebView2 memory growth, which this UI iteration does not claim to resolve. Authenticated cloud workflows and ordinary-laptop behavior remain unverified. This is an unsigned development preview. See the [earlier installed acceptance](docs/testing/installed-acceptance-v0.2.md), [v0.2 validation](docs/releases/v0.2.0.md) and [cleanup report](docs/releases/v0.2.0-repository-cleanup.md).
+[Release notes and all downloads](https://github.com/Ellen-Tian/LectureRelay/releases/tag/v0.2.0) · [SHA-256 checksum](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.2.0/LectureRelay_0.2.0_x64-setup.exe.sha256)
 
-## Develop
+1. Download **`LectureRelay_0.2.0_x64-setup.exe`** from the release's **Assets** section. The automatically generated **Source code** archives are for developers.
+2. Run the installer and follow the setup wizard. It installs for your Windows user and downloads Microsoft WebView2 if it is missing; that step needs an internet connection.
+3. Open **LectureRelay** from the Start menu or desktop shortcut. No LectureRelay account is required.
+4. For local English captions, open **Settings → Local AI**, download the speech model once (about 667 MiB), then select **Local English** in **AI Providers**.
+5. Create a course, add its background and terminology, select your microphone or system audio, and start a class.
 
-Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2 are required. End users need only the installer and WebView2.
+This package targets **64-bit Intel/AMD Windows PCs**. A GPU is not required. The speech model is downloaded separately. You do not need Node.js, pnpm, Rust or Python to use the installed app.
+
+This is an **unsigned development preview**; Windows may display an unknown-publisher warning. GitHub downloads currently require access to this private repository; that is separate from using the app, which has no mandatory login.
+
+## What you can do
+
+- Organize courses with background information and a terminology glossary.
+- Record a microphone or system audio, with local English speech recognition.
+- Read live captions, scroll back, jump to live, pause and resume.
+- Replay recordings, follow timestamps, search and correct transcripts.
+- Import supported media, attach PDF slides, and keep timestamped notes, bookmarks and chapters.
+- Review note versions and unfinished processing tasks, and export transcripts, subtitles and notes.
+- Choose Light or Dark appearance and a global Quiet Mode for local speech.
+- Restore courses from Trash and keep your library between app sessions.
+
+See the [getting-started guide](docs/user-guide/getting-started.md) and [local speech guide](docs/user-guide/local-speech.md).
+
+## Local and optional cloud AI
+
+**Local English transcription runs on your computer with no per-minute speech API charge.** After the model download, recording, local captions, playback and manual notes can work offline. Quiet Mode limits local speech's CPU budget; actual speed, power use and fan noise depend on your computer.
+
+**Translation, AI-generated notes and Q&A currently use an optional OpenAI/Groq provider configured with your own API key.** Provider charges or usage limits apply to your account. Cloud providers are disabled by default, and there is no automatic cloud fallback.
+
+Offline translation and local AI summaries are being evaluated; they are **not included in this release**. Read [provider setup](docs/providers/setup.md) before enabling cloud processing.
+
+## Preview status
+
+Version 0.2.0 includes the classroom, appearance and study-workspace changes. The GitHub installer is rebuilt from the published source; its release page records the packaging checks and checksum.
+
+Authenticated cloud workflows and ordinary-laptop power/noise behavior remain unverified. A previous 90-minute installed-app run found WebView2 memory growth; this release does not claim that issue is resolved. Earlier reports describe the specific builds and scenarios tested, rather than certifying every feature in the current installer: [installed acceptance](docs/testing/installed-acceptance-v0.2.md), [preferences](docs/releases/v0.2.0-preferences.md), [product iteration](docs/releases/v0.2.0-product-iteration.md).
+
+## For developers
+
+The instructions below are only for contributing or building from source. **They are not part of installing or using LectureRelay.**
+
+The app uses Tauri 2, React, TypeScript, Rust, SQLite and a native Nemotron speech worker. Development requires Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2.
 
 ```powershell
 pnpm run setup
@@ -30,7 +69,7 @@ The first build downloads a hash-pinned CPU SDK; model weights are downloaded se
 | `pnpm build:debug`                            | Native debug executable                            |
 | `pnpm release`                                | Release EXE + current-user English NSIS + checksum |
 
-Installer: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.2.0_x64-setup.exe`.
+Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.2.0_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
 
 ## Repository
 

@@ -1,0 +1,20 @@
+[workspace]
+members = ["apps/desktop/src-tauri", "crates/environment-check"]
+resolver = "3"
+
+[workspace.package]
+version = "0.2.0"
+edition = "2024"
+rust-version = "1.98"
+publish = false
+
+[workspace.dependencies]
+tauri = { version = "=2.12.0", features = [] }
+tauri-build = { version = "=2.7.0", features = [] }
+serde = { version = "1", features = ["derive"] }
+rusqlite = { version = "=0.40.2", features = ["bundled"] }
+
+[profile.release]
+codegen-units = 1
+lto = "thin"
+strip = true

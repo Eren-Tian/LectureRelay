@@ -1,0 +1,27 @@
+{
+  "name": "@lecturerelay/desktop",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node ../../scripts/build/prepare-branding.mjs && vite",
+    "typecheck": "tsc --noEmit",
+    "build": "node ../../scripts/build/prepare-branding.mjs && pnpm -w build:asr && tsc --noEmit && vite build",
+    "preview": "vite preview --host 127.0.0.1"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "2.12.0",
+    "pdfjs-dist": "5.4.624",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-markdown": "10.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "24.10.0",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.1"
+  }
+}

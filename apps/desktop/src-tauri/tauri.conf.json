@@ -1,0 +1,59 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "LectureRelay",
+  "version": "0.2.0",
+  "identifier": "com.lecturerelay.desktop",
+  "build": {
+    "beforeDevCommand": "pnpm -w build:asr && pnpm dev",
+    "devUrl": "http://127.0.0.1:5173",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "create": false,
+        "title": "LectureRelay",
+        "width": 1180,
+        "height": 780,
+        "minWidth": 880,
+        "minHeight": 620
+      }
+    ],
+    "security": {
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$DOCUMENT/LectureRelay/Courses/**/*.wav"]
+      },
+      "devCsp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' asset: http://asset.localhost; connect-src 'self' ipc: http://ipc.localhost ws://127.0.0.1:5173; worker-src 'self' blob:; font-src 'self' data: blob:",
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' asset: http://asset.localhost; connect-src ipc: http://ipc.localhost; worker-src 'self' blob:; font-src 'self' data: blob:"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["nsis"],
+    "shortDescription": "Every lecture, in your language.",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.ico"
+    ],
+    "windows": {
+      "webviewInstallMode": {
+        "type": "downloadBootstrapper"
+      },
+      "nsis": {
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico",
+        "uninstallerIcon": "icons/icon.ico",
+        "languages": ["English"],
+        "displayLanguageSelector": false
+      }
+    },
+    "resources": {
+      "resources/local-asr/": "local-asr/"
+    }
+  }
+}

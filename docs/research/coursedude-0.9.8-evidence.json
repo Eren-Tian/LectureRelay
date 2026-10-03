@@ -1,0 +1,202 @@
+{
+  "date": "2026-10-02",
+  "scope": "安装版客户端资源、前端控制流、原生命令边界、二进制内嵌结构、只读界面检查和本地翻译辅助进程。没有恢复服务端源码，也没有完成整个 Rust 二进制的函数级反编译。",
+  "referenceExecutable": {
+    "productVersion": "0.9.8",
+    "path": "target/reference-coursedude/app/Coursedude-Dev.exe",
+    "sha256": "77dcca988fe4348b86afd1e9bfacb7ad7c415b626f5d735d78f1cc973d86064b"
+  },
+  "mainClientAsset": {
+    "file": "index-DoeYQLF4.js",
+    "byteSize": 3488473,
+    "sha256": "71604aa73c38230c19ee6213c426f8c64f64836845896719b2faa5f9cf2d1b75"
+  },
+  "assetCount": 18,
+  "nativeCommandCount": 86,
+  "businessPathTemplateCount": 110,
+  "logicProbe": {
+    "scope": "Selected extracted pure client functions in an isolated harness; fake translation promises. This does not exercise native capture, model inference, GUI integration or the server.",
+    "results": [
+      {
+        "name": "replacement character rejected",
+        "result": {
+          "valid": false,
+          "reason": "replacement_character"
+        }
+      },
+      {
+        "name": "unchanged English rejected",
+        "result": {
+          "valid": false,
+          "reason": "source_copy"
+        }
+      },
+      {
+        "name": "repetitive output rejected",
+        "result": {
+          "valid": false,
+          "reason": "decoder_loop"
+        }
+      },
+      {
+        "name": "semantic terminology error passes structural guard",
+        "result": {
+          "valid": true
+        }
+      },
+      {
+        "name": "stale source revision result discarded",
+        "emittedRevisions": [2]
+      },
+      {
+        "name": "final queue capacity enforced",
+        "pendingFinals": 16,
+        "overloadEvents": 2,
+        "causes": ["capacity", "capacity"]
+      }
+    ]
+  },
+  "localTranslationProbe": {
+    "count": 11,
+    "minMs": 34.65,
+    "medianMs": 96.02,
+    "maxMs": 139.21,
+    "scope": "Installed local translation sidecar only; synthetic examples; no GUI, speech recognition, cloud API or account state."
+  },
+  "uiProof": {
+    "date": "2026-10-02",
+    "scope": "Read-only inspection. No edit, upload, recording, generation, settings save or payment action was taken.",
+    "controls": [
+      {
+        "label": "首页",
+        "text": ""
+      },
+      {
+        "label": "",
+        "text": "分享"
+      },
+      {
+        "label": "",
+        "text": "下载"
+      },
+      {
+        "label": "播放",
+        "text": ""
+      },
+      {
+        "label": "静音",
+        "text": ""
+      },
+      {
+        "label": "",
+        "text": "概览"
+      },
+      {
+        "label": "笔记",
+        "text": ""
+      }
+    ],
+    "media": [
+      {
+        "paused": true,
+        "playbackRate": 1,
+        "tag": "AUDIO"
+      }
+    ],
+    "localTranslationStatus": {
+      "mode": "ready",
+      "reason": null,
+      "readyRoutes": [
+        {
+          "source": "en",
+          "target": "zh"
+        },
+        {
+          "source": "zh",
+          "target": "en"
+        }
+      ],
+      "engineStatuses": [
+        {
+          "engineKind": "bergamot",
+          "status": "ready",
+          "reason": null
+        }
+      ]
+    }
+  },
+  "lectureRelayComparedSources": [
+    {
+      "file": "apps/desktop/src-tauri/src/speech/streaming.rs",
+      "sha256": "91d783c27cee3d35d14d1c0c8d90288f313498274b2eb58bd87545a3ae9d4c8a"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/providers/official.rs",
+      "sha256": "3f2132ed48ed2543316937437a395ede0c7fe05675884d6685aaebf6e58a49f6"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/app/assistance.rs",
+      "sha256": "abff5df330891141170034c224a7db35de1c53f01673bfa3904198d35f04878f"
+    },
+    {
+      "file": "apps/desktop/src/features/live-lecture/LivePage.tsx",
+      "sha256": "8c49079167cbab70fc032af4be726415c5e3bfe4042e20f849097e54a0eff02f"
+    },
+    {
+      "file": "apps/desktop/src/features/lecture-history/LecturePage.tsx",
+      "sha256": "a8998437f5c7909b7766737e6d1d3f1173c070693934057556f52f03bdac5d3f"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/storage/recovery.rs",
+      "sha256": "98fd440aad1961f449289e1e27bdf0a38aed8e9879a87a827f42e0c53871a75f"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/app/jobs.rs",
+      "sha256": "fdf0d2ac113903a42f8515a20ea67ffe0644b962543f2cd8383306b402fe10a7"
+    },
+    {
+      "file": "apps/desktop/src/features/settings/AudioInputTest.tsx",
+      "sha256": "9a38cea0383e0c454a4b748d802fdc85e57be3093fa9b28dcb2b82b6a050e9a9"
+    },
+    {
+      "file": "apps/desktop/src/features/settings/RuntimePreferences.tsx",
+      "sha256": "e3db5445334f283efc51dea6f9774454787213f83dd1f47e5ef9b415963776ac"
+    },
+    {
+      "file": "apps/desktop/src/features/notes/NotesPanel.tsx",
+      "sha256": "a056d7d64bf14bf516baa874c4d46a76a881e46eb3178f4588c7aad9f54abcde"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/database/migrations/001_initial.sql",
+      "sha256": "f3c33c671bf8b3778ad04ff9ed135801e4668972b17b015ab3f15bb924794f6a"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/database/migrations/002_classroom.sql",
+      "sha256": "c231e41b6b64bbb8983949a4aad9732dbd1dcd9861fbe71c2e7024a258221d7d"
+    },
+    {
+      "file": "apps/desktop/src/i18n/index.ts",
+      "sha256": "b8344e6396b90757e3e001f51312535d3d77527100849d3c3a4edd982a2b42fe"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/security/credentials.rs",
+      "sha256": "853af0982c1086c7601a5c1f8a4a29d9f061fac64fb3fb5749610398c2acdd19"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/security/endpoints.rs",
+      "sha256": "1a4662c754b6690de9f5443cc493f1f9c391044c9830783f2aad181c8a22359e"
+    },
+    {
+      "file": "apps/desktop/src/components/MarkdownBody.tsx",
+      "sha256": "d8a7f0b9bcf52926cf74a5cf1b4e27b1916edaf24c84313779e8f58be9b7d0c9"
+    },
+    {
+      "file": "apps/desktop/src-tauri/src/app/mod.rs",
+      "sha256": "e597baf71f9c2994e0f006e65d4c30142431ef5200fcc14698d21933b8c39ced"
+    },
+    {
+      "file": "docs/releases/v0.2.0-preferences.md",
+      "sha256": "db36efe2e8d8e0167df98bff31518bb82dd83b599da36d8bc3da95caf8cce219"
+    }
+  ]
+}

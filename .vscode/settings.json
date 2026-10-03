@@ -1,0 +1,26 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[rust]": {
+    "editor.defaultFormatter": "rust-lang.rust-analyzer"
+  },
+  "files.watcherExclude": {
+    "**/.tools/**": true,
+    "**/.pnpm-store/**": true,
+    "**/target/**": true
+  },
+  "rust-analyzer.server.extraEnv": {
+    "CARGO_HOME": "${workspaceFolder}/.tools/cargo",
+    "RUSTUP_HOME": "${workspaceFolder}/.tools/rustup",
+    "PATH": "${workspaceFolder}/.tools/cargo/bin;${env:PATH}"
+  },
+  "rust-analyzer.cargo.extraEnv": {
+    "CARGO_TARGET_DIR": "${workspaceFolder}/target"
+  },
+  "terminal.integrated.env.windows": {
+    "CARGO_HOME": "${workspaceFolder}\\.tools\\cargo",
+    "RUSTUP_HOME": "${workspaceFolder}\\.tools\\rustup",
+    "CARGO_TARGET_DIR": "${workspaceFolder}\\target",
+    "PATH": "${workspaceFolder}\\.tools\\cargo\\bin;${env:PATH}"
+  }
+}

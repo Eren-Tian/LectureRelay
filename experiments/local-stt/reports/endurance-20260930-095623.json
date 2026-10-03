@@ -1,0 +1,23 @@
+{
+  "elapsedSeconds": 195.7028412001673,
+  "audioSeconds": 185.25,
+  "cpuAveragePercent": 0.43064415623618585,
+  "cpuPeakPercent": 0.6713441650312506,
+  "ramMiB": 456.7890625,
+  "ramPeakMiB": 466.9453125,
+  "sttMeanMs": 286.3944412927832,
+  "sttPeakMs": 326.300100190565,
+  "speechQueueMax": 1,
+  "translationQueueMax": 0,
+  "droppedSpeechChunks": 0,
+  "errors": ["Native worker failed 18"],
+  "scope": "Python harness + shipped 2-thread CPU native worker; translation queue pressure simulation",
+  "completed": false,
+  "wallSeconds": 198.98507910012268,
+  "segments": 46,
+  "pauseResumeVerified": true,
+  "wavFrames": 3016000,
+  "recoveryMatches": true,
+  "duplicates": 0,
+  "finalAudioSecondsFromWavFrames": 188.5
+}

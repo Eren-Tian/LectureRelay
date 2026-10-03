@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+
+storeDir: .pnpm-store
+engineStrict: true
+saveExact: true
+
+# Explicitly allow only the build tools required by Vite.
+allowBuilds:
+  esbuild: true

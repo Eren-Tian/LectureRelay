@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 256 256">
+  <title>LectureRelay — Ascend phoenix</title>
+  <desc>An original green phoenix lifting into flight, with swept wings and three flowing gold and green tail feathers.</desc>
+  <rect x="4" y="4" width="248" height="248" rx="56" fill="#f5f4eb"/>
+  <!-- The distant wing opens upward; generous gaps keep the silhouette clear. -->
+  <path fill="#8fa889" d="M133 129C152 95 149 51 172 25c-3 28 0 43-2 59 10-14 17-26 22-39 2 27-5 51-20 69-12 14-27 20-39 15Z"/>
+  <!-- Broad, rising near wing with a tapered, feathered trailing edge. -->
+  <path fill="#315e49" d="M151 124C122 104 94 77 40 41c8 29 29 52 57 70-25-8-44-18-62-33 13 29 36 43 65 52-21-1-39-5-54-13 21 26 51 29 82 20l23-13Z"/>
+  <path fill="#60866a" d="M48 48c36 19 69 42 90 67-36-16-60-40-90-67Z"/>
+  <!-- The neck draws a light upward arc toward the head. -->
+  <path fill="#315e49" d="M108 148c14-8 27-20 36-37l17-32c7-13 20-18 32-13l11 8-13 7c-8 2-11 8-14 19-6 24-19 45-40 57-12 7-23 6-29-9Z"/>
+  <path fill="#bd994e" d="m194 69 26 8-23 6 5-8Z"/>
+  <path fill="#bd994e" d="M177 66c-1-12 4-21 13-28-2 10 0 17 5 25-7-3-12-2-18 3Z"/>
+  <circle cx="189" cy="73" r="2.8" fill="#faf9f1"/>
+  <!-- Long separated tail ribbons suggest motion without a heavy body. -->
+  <path fill="#467359" d="M137 148c-13 34-40 61-86 76 20-25 40-36 51-61-19 24-38 37-72 41 28-15 45-40 66-52 13-8 26-9 41-4Z"/>
+  <path fill="#bd994e" d="M141 145c-3 36-18 63-47 86 9-23 17-41 23-57 6-14 14-23 24-29Z"/>
+  <path fill="#7f9b77" d="M151 139c5 28 0 56-14 82 1-28-4-48 14-82Z"/>
+  <path fill="#d0b16c" d="M159 100c-3 24-15 43-38 57 14-19 24-38 38-57Z"/>
+</svg>

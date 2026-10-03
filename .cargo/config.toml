@@ -1,0 +1,4 @@
+[build]
+target = "x86_64-pc-windows-msvc"
+# Keep initial native builds from occupying every CPU core.
+jobs = 4

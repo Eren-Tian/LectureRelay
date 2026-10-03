@@ -1,0 +1,38 @@
+[package]
+name = "lecturerelay-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+description = "LectureRelay local-first lecture companion"
+
+[lib]
+name = "lecturerelay_desktop_lib"
+crate-type = ["rlib"]
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+tauri = { workspace = true, features = ["protocol-asset"] }
+serde.workspace = true
+serde_json = "1"
+rusqlite.workspace = true
+dirs = "7"
+uuid = { version = "=1.26.1", features = ["v4"] }
+cpal = "=0.18.2"
+hound = "=3.5.1"
+reqwest = { version = "=0.13.5", default-features = false, features = ["json", "multipart", "rustls-no-provider"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+async-trait = "=0.1.92"
+zeroize = "=1.9.0"
+sha2 = "0.10"
+tokio = { version = "1", features = ["time", "sync"] }
+windows = { version = "=0.62.2", features = ["Win32_Security_Credentials", "Win32_UI_WindowsAndMessaging", "Win32_System_Threading", "Win32_System_JobObjects", "Win32_Security", "Win32_System_ProcessStatus", "Win32_System_SystemInformation"] }
+rfd = { version = "=0.15.4", default-features = false }
+symphonia = { version = "=0.5.5", default-features = false, features = ["wav", "pcm", "mp3", "aac", "isomp4", "flac", "ogg", "vorbis"] }
+
+
+[[test]]
+name = "native_audio"
+path = "tests/native_audio.rs"

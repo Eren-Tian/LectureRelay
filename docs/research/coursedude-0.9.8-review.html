@@ -1,0 +1,2627 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>Coursedude 0.9.8 客户端拆解与 LectureRelay 改进清单</title>
+    <style>
+      :root {
+        --ink: #172c32;
+        --muted: #5d6e72;
+        --bg: #f6f7f3;
+        --paper: #fff;
+        --line: #dce3df;
+        --accent: #176457;
+        --soft: #e9f1eb;
+        --amber: #925920;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+        scroll-padding-top: 24px;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          16px/1.78 'Segoe UI',
+          'Microsoft YaHei',
+          sans-serif;
+      }
+      a {
+        color: var(--accent);
+        text-decoration-thickness: 1px;
+        text-underline-offset: 3px;
+      }
+      a:hover {
+        color: #112f29;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      select {
+        cursor: pointer;
+      }
+      button:focus-visible,
+      input:focus-visible,
+      select:focus-visible,
+      a:focus-visible {
+        outline: 3px solid #3c9d88;
+        outline-offset: 3px;
+      }
+      main {
+        max-width: 1160px;
+        margin: auto;
+        padding: 52px 34px 80px;
+      }
+      header {
+        border-top: 4px solid var(--accent);
+        padding-top: 24px;
+      }
+      .eyebrow {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        color: var(--accent);
+      }
+      h1 {
+        font-size: 36px;
+        line-height: 1.35;
+        max-width: 900px;
+        margin: 14px 0 22px;
+        font-weight: 650;
+        letter-spacing: -0.7px;
+      }
+      h2 {
+        font-size: 25px;
+        line-height: 1.4;
+        margin: 0 0 18px;
+      }
+      h3 {
+        font-size: 19px;
+        line-height: 1.5;
+        margin: 10px 0 16px;
+      }
+      p {
+        margin: 10px 0;
+      }
+      .lead {
+        font-size: 19px;
+        max-width: 950px;
+        line-height: 1.9;
+      }
+      .meta {
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+        margin: 28px 0;
+      }
+      .stat {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        padding: 17px 20px;
+        border-radius: 10px;
+      }
+      .stat b {
+        font-size: 29px;
+        line-height: 1.2;
+        display: block;
+        font-weight: 650;
+      }
+      .stat span {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      nav {
+        display: flex;
+        gap: 10px 22px;
+        flex-wrap: wrap;
+        border-bottom: 1px solid var(--line);
+        padding: 0 0 22px;
+        margin-bottom: 30px;
+      }
+      nav a {
+        font-size: 14px;
+        font-weight: 600;
+      }
+      section {
+        margin-top: 40px;
+      }
+      .callout {
+        background: var(--soft);
+        padding: 20px 23px;
+        border-left: 3px solid var(--accent);
+        border-radius: 0 8px 8px 0;
+      }
+      .callout p {
+        margin: 4px 0;
+      }
+      .small {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--line);
+        border-radius: 9px;
+        background: var(--paper);
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 14px;
+        line-height: 1.75;
+      }
+      th,
+      td {
+        text-align: left;
+        vertical-align: top;
+        padding: 13px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+      th {
+        background: #edf1ed;
+        font-weight: 600;
+      }
+      tbody tr:last-child td,
+      tbody tr:last-child th {
+        border-bottom: 0;
+      }
+      th:first-child {
+        min-width: 104px;
+      }
+      .number {
+        text-align: right;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+      }
+      .overview-table td:first-child {
+        font-weight: 650;
+        white-space: nowrap;
+      }
+      .flow {
+        display: grid;
+        grid-template-columns: 1fr 1.3fr 1fr;
+        gap: 14px;
+        align-items: stretch;
+        margin: 20px 0;
+      }
+      .flow-box {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-top: 3px solid var(--accent);
+        border-radius: 7px;
+        padding: 19px;
+      }
+      .flow-box b {
+        display: block;
+        margin-bottom: 8px;
+      }
+      .flow-box p {
+        font-size: 14px;
+      }
+      .flow-label {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin: 18px 0;
+      }
+      .controls input,
+      .controls select {
+        border: 1px solid #b8c8c0;
+        border-radius: 7px;
+        padding: 9px 12px;
+        background: white;
+        color: var(--ink);
+      }
+      .controls input {
+        flex: 1;
+        min-width: 220px;
+      }
+      .count {
+        font-size: 13px;
+        color: var(--muted);
+        min-width: 105px;
+      }
+      .findings {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+      .finding {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 23px;
+        scroll-margin-top: 20px;
+      }
+      .finding[hidden] {
+        display: none;
+      }
+      .card-top {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 9px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .priority {
+        display: inline-block;
+        font-weight: 700;
+        line-height: 1.5;
+        padding: 3px 7px;
+        border-radius: 4px;
+      }
+      .P0 {
+        background: #fae7d9;
+        color: #8a3c10;
+      }
+      .P1 {
+        background: #e4efeb;
+        color: #155c4a;
+      }
+      .P2 {
+        background: #e9edf1;
+        color: #415368;
+      }
+      .hold {
+        background: #eeece8;
+        color: #655c4c;
+      }
+      .evidence {
+        margin-left: auto;
+        font-size: 11px;
+      }
+      .finding-id {
+        font-size: 12px;
+        font-weight: 500;
+        color: #748883;
+        vertical-align: middle;
+      }
+      .finding dl {
+        margin: 0;
+        font-size: 14px;
+      }
+      .finding dt {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        color: var(--accent);
+        margin-top: 14px;
+      }
+      .finding dd {
+        margin: 4px 0 0;
+      }
+      .references {
+        border-top: 1px solid var(--line);
+        padding-top: 12px;
+        margin-top: 18px;
+      }
+      .references summary {
+        cursor: pointer;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .references div {
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+        padding-top: 12px;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      .roadmap {
+        list-style: none;
+        padding: 0;
+      }
+      .roadmap li {
+        display: flex;
+        gap: 22px;
+        padding: 20px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .step {
+        background: var(--accent);
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        text-align: center;
+        color: #fff;
+        font-size: 15px;
+        line-height: 32px;
+        margin-top: 9px;
+      }
+      .roadmap h3 {
+        margin: 7px 0;
+      }
+      .gate {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .gate b {
+        color: var(--accent);
+        margin-right: 8px;
+      }
+      .passed {
+        color: var(--accent);
+        font-size: 12px;
+        font-weight: 700;
+      }
+      details.block {
+        background: var(--paper);
+        border: 1px solid var(--line);
+        padding: 18px 22px;
+        border-radius: 8px;
+        margin-top: 16px;
+      }
+      details.block > summary {
+        font-weight: 600;
+        cursor: pointer;
+      }
+      details.block .table-wrap {
+        margin-top: 18px;
+        border: 0;
+      }
+      .hash {
+        font:
+          11px/1.7 Consolas,
+          monospace;
+        overflow-wrap: anywhere;
+        max-width: 450px;
+      }
+      .evidence-links {
+        display: flex;
+        gap: 10px 22px;
+        flex-wrap: wrap;
+        font-size: 14px;
+      }
+      .unknowns {
+        padding-left: 22px;
+      }
+      .unknowns li {
+        padding: 5px 0;
+        font-size: 14px;
+      }
+      .command-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding-top: 20px;
+      }
+      .command-list code {
+        background: var(--bg);
+        border: 1px solid var(--line);
+        font:
+          11px/1.6 Consolas,
+          monospace;
+        padding: 3px 6px;
+        border-radius: 3px;
+        overflow-wrap: anywhere;
+      }
+      .footer {
+        margin-top: 42px;
+        padding-top: 20px;
+        border-top: 1px solid var(--line);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .print {
+        background: transparent;
+        color: var(--accent);
+        border: 1px solid #aabfb5;
+        border-radius: 5px;
+        padding: 4px 12px;
+      }
+      .empty {
+        display: none;
+        color: var(--muted);
+        padding: 20px;
+      }
+      .empty.visible {
+        display: block;
+      }
+      @media (max-width: 760px) {
+        main {
+          padding: 30px 18px 50px;
+        }
+        h1 {
+          font-size: 29px;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .findings,
+        .flow {
+          grid-template-columns: 1fr;
+        }
+        .finding {
+          padding: 20px;
+        }
+        .evidence {
+          margin-left: 0;
+        }
+        th,
+        td {
+          padding: 10px;
+        }
+        .lead {
+          font-size: 17px;
+        }
+      }
+      @media print {
+        body {
+          background: white;
+          font-size: 12px;
+        }
+        main {
+          max-width: none;
+          padding: 0;
+        }
+        h1 {
+          font-size: 25px;
+        }
+        .controls,
+        nav,
+        .print {
+          display: none !important;
+        }
+        .findings {
+          display: block;
+        }
+        .finding {
+          break-inside: avoid;
+          margin-bottom: 15px;
+        }
+        .finding[hidden] {
+          display: block;
+        }
+        .stats {
+          margin: 15px 0;
+        }
+        .finding dl {
+          font-size: 12px;
+        }
+        .references {
+          display: none;
+        }
+        section {
+          margin-top: 24px;
+        }
+        table {
+          font-size: 11px;
+        }
+        .flow-box {
+          break-inside: avoid;
+        }
+        .table-wrap {
+          overflow: visible;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div class="eyebrow">LECTURERELAY · CLIENT RESEARCH · 02 OCT 2026</div>
+        <h1>Coursedude 客户端拆解<br />我们可以学什么</h1>
+        <p class="lead">
+          最值得学习的是实时字幕的一致性控制、录音与处理分离的状态模型、可恢复的持久任务，以及围绕时间戳组织的学习工作流。不能据此认定参考产品的翻译更准确，也不应照搬其服务器依赖和所有界面选项。
+        </p>
+        <p class="meta">
+          参考版本 0.9.8 · 本地安装产物与当前 LectureRelay 源码对照 · 24 项发现
+        </p>
+      </header>
+      <div class="stats">
+        <div class="stat"><b>18</b><span>提取并记录哈希的静态资源</span></div>
+        <div class="stat"><b>86</b><span>提取到的原生命令名称</span></div>
+        <div class="stat"><b>110</b><span>业务路径模板</span></div>
+        <div class="stat"><b>6 / 6</b><span>隔离逻辑检查通过</span></div>
+      </div>
+      <nav aria-label="报告导航">
+        <a href="#decisions">优先结论</a><a href="#coverage">检查范围</a
+        ><a href="#findings">24 项发现</a><a href="#tests">实测证据</a
+        ><a href="#roadmap">落地顺序</a><a href="#limits">未确认内容</a
+        ><a href="#sources">证据索引</a>
+      </nav>
+      <div class="callout">
+        <p>
+          <b>阅读证据时请区分：</b
+          >动态实测、静态代码、资源声明和未确认内容。文件里存在某个功能，不表示真实课堂中已经成功运行。
+        </p>
+        <p class="small">
+          安装版客户端资源、前端控制流、原生命令边界、二进制内嵌结构、只读界面检查和本地翻译辅助进程。没有恢复服务端源码，也没有完成整个
+          Rust 二进制的函数级反编译。 未启动录音、文件上传、云端 AI
+          生成或付费流程；未修改参考应用课程、账户或设置；未读取账户凭据或用户数据库。本轮仅新增研究产物，未修改
+          LectureRelay 产品代码。
+        </p>
+      </div>
+      <section id="decisions">
+        <h2>先补可靠性，再扩展学习功能</h2>
+        <div class="table-wrap">
+          <table class="overview-table">
+            <thead>
+              <tr>
+                <th>优先级</th>
+                <th>最有价值的改进</th>
+                <th>我们已有的基础</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>P0</td>
+                <td>处理任务持久化、识别缺失区间、可恢复重试</td>
+                <td>本地 WAV、检查点、重启恢复、缺失译文补处理</td>
+              </tr>
+              <tr>
+                <td>P0</td>
+                <td>字幕 revision / 语言 / 会话代次校验</td>
+                <td>有界队列、片段 ID 保存、错误与延后状态</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>离线翻译与明确的模式选择，先做质量基线</td>
+                <td>本地英文识别、课程背景、术语、云端提供者接口</td>
+              </tr>
+              <tr>
+                <td>P1</td>
+                <td>文件导入、PDF、时间戳笔记、章节与产物版本</td>
+                <td>回放、搜索、编辑、笔记、导出和课程组织</td>
+              </tr>
+              <tr>
+                <td>P2</td>
+                <td>浮动字幕、中日韩界面、更新与可选同步</td>
+                <td>浅色/深色、全局 Quiet Mode、录音中关闭保护</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">
+          LectureRelay 已有独立 WAV 保存与恢复、本地英文识别、课程背景和术语、8
+          批有界翻译队列、译文按 ID
+          保存、缺失译文补处理、停止后保存/处理提示、时间戳回放、手动修订、课程回收站、浅色/深色主题、全局
+          Quiet Mode 和 Windows
+          凭据管理器。本次是源码对照，不是对当前工作区的新一轮构建或安装版验收。
+        </p>
+        <h3>最重要的架构发现：本地推理与云端处理可以同时存在</h3>
+        <div
+          class="flow"
+          role="group"
+          aria-label="静态代码表达的数据流，未做真实会话抓包"
+        >
+          <div class="flow-box">
+            <span class="flow-label">原生采集</span><b>音频进入</b>
+            <p>
+              本地录音文件与耐久状态独立保存；网络故障有仅本地模式和恢复边界。
+            </p>
+          </div>
+          <div class="flow-box">
+            <span class="flow-label">实时字幕与混合翻译</span
+            ><b>云端转写 ⇄ 客户端调度</b>
+            <p>
+              本地临时译文、服务端最终译文、超时本地兜底；版本检查避免旧结果覆盖。
+            </p>
+          </div>
+          <div class="flow-box">
+            <span class="flow-label">课后处理</span><b>任务与学习产物</b>
+            <p>
+              同步、校验、转写、翻译、概览和笔记分阶段；语言和结果有独立版本。
+            </p>
+          </div>
+        </div>
+        <p class="small">
+          示意来自可见客户端分支。不能把“Local”标签解释为整个课堂数据绝不上传。参考
+          F03。
+        </p>
+      </section>
+      <section id="coverage">
+        <h2>本轮检查范围</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>模块</th>
+                <th>做了什么</th>
+                <th>范围限制</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">安装产物</th>
+                <td>
+                  版本资源确认 0.9.8；检查主程序、辅助进程、模型、工具与哈希
+                </td>
+                <td>没有重装或触发更新</td>
+              </tr>
+              <tr>
+                <th scope="row">前端</th>
+                <td>18 个 JS/CSS 资源；主 bundle 格式化并追踪业务控制流</td>
+                <td>第三方库代码未逐函数审计</td>
+              </tr>
+              <tr>
+                <th scope="row">原生边界</th>
+                <td>86 个提取到的原生命令名、内嵌 DDL 和模块路径</td>
+                <td>不等于完整原生源码或实际启用命令清单</td>
+              </tr>
+              <tr>
+                <th scope="row">服务通信</th>
+                <td>110 个业务路径模板，以及 WebSocket 协议分支</td>
+                <td>模板扫描并非完整 API 契约；没有主动遍历服务端接口</td>
+              </tr>
+              <tr>
+                <th scope="row">安装版界面</th>
+                <td>首页、设置、导入入口、已有课堂回放控件的只读检查</td>
+                <td>未录音、未改数据、未上传、未分享、未付款</td>
+              </tr>
+              <tr>
+                <th scope="row">翻译引擎</th>
+                <td>本地辅助进程健康/加载/11 句推理；原生状态 en↔zh Ready</td>
+                <td>没有测日/韩、云端、90 分钟或普通笔记本</td>
+              </tr>
+              <tr>
+                <th scope="row">纯 JS 行为</th>
+                <td>6 项隔离逻辑检查通过，使用假翻译 Promise</td>
+                <td>不执行真实原生 WebView 集成和云服务</td>
+              </tr>
+              <tr>
+                <th scope="row">LectureRelay</th>
+                <td>逐项对照当前源码，确认已有功能与差距</td>
+                <td>没有重跑产品构建或全套回归</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">
+          窗口采集曾返回错误窗口，已停止使用该方式；安装版界面核对改用应用
+          WebDriver。保存的 UI 证据只含公共控件名和状态，不含账户或课堂内容。
+        </p>
+      </section>
+      <section id="findings">
+        <h2>可筛选的对照发现</h2>
+        <p class="small">
+          P0：核心可靠性与验收；P1：高价值产品能力；P2：后续完善；保留判断：不要照单实现。优先级是对
+          LectureRelay 的建议，不是参考产品漏洞严重性。
+        </p>
+        <div class="controls">
+          <input
+            id="search"
+            type="search"
+            placeholder="搜索：离线、笔记、录音、PDF……"
+            aria-label="搜索发现"
+          /><select id="priority" aria-label="筛选优先级">
+            <option value="all">所有优先级</option>
+            <option>P0</option>
+            <option>P1</option>
+            <option>P2</option>
+            <option>保留判断</option></select
+          ><span class="count" id="count" role="status" aria-live="polite"
+            >24 / 24 项</span
+          ><button class="print" id="print" type="button">
+            打印 / 保存 PDF
+          </button>
+        </div>
+        <div class="findings">
+          <article class="finding" id="F01" data-priority="P2">
+            <div class="card-top">
+              <span class="priority P2">P2</span><span>架构</span
+              ><span class="evidence">静态代码 + 安装资源</span>
+            </div>
+            <h3>
+              <span class="finding-id">F01</span>
+              按能力分层，避免把完整云端架构搬进来
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                可见 Tauri/Rust 原生层、React 前端、SQLite 持久结构、WebSocket
+                实时会话和 REST 业务接口；随包包含 FFmpeg、yt-dlp、QuickJS
+                和本地翻译辅助进程。录音、翻译、同步和生成各有独立边界。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                我们同样以 Tauri/React/Rust
+                为主体，录音和本地英文识别已有独立实现。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                保留本地录音主链路，为翻译、导入、笔记生成定义可替换的能力接口。仅在需要时增加子进程和资源，不以接入参考产品服务器为实现方式。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                每项 AI
+                能力都能单独取消、失败和重启；其故障不能阻塞音频文件写入。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 17484-17492"
+                  >客户端 JS · L17484-17492</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 22216-22289"
+                  >客户端 JS · L22216-22289</a
+                ><a
+                  href="../../target/reference-coursedude/client-inventory.json"
+                  title="target/reference-coursedude/client-inventory.json"
+                  >命令 / 路径 / 界面文案清单</a
+                ><a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F02" data-priority="P0">
+            <div class="card-top">
+              <span class="priority P0">P0</span><span>实时字幕</span
+              ><span class="evidence">静态代码 + 隔离逻辑实测</span>
+            </div>
+            <h3>
+              <span class="finding-id">F02</span> 用版本号防止旧译文覆盖新字幕
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                字幕调度携带 segmentId、sourceRevision、translationEpoch 和
+                routeGeneration；替换待处理的旧 partial，优先处理
+                final，并丢弃过期结果。默认每个 route 最多 16 项待处理
+                final，队列等待上限 1 秒；partial 默认节流 400
+                毫秒。隔离检查确认旧 revision 的结果不发布，18 项排队会留下 16
+                项并产生 2 次超载通知。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已有 8 批有界队列、单一翻译消费者和按片段 ID
+                保存；尚未形成参考应用这样的
+                partial/final、目标语言和会话代次联合身份机制。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                将字幕修订、切换语言、重开课堂和请求取消纳入同一结果有效性检查。引入临时译文时先补版本机制；容量和节流值通过我们的课堂测试确定。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                人为延迟旧请求，随后修订英文、切换语言或重开课堂；迟到结果不能覆盖新内容。最终字幕不能退回临时状态，队列增长有明确上限。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 53808-53859"
+                  >客户端 JS · L53808-53859</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 53977-54087"
+                  >客户端 JS · L53977-54087</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 54609-54661"
+                  >客户端 JS · L54609-54661</a
+                ><a
+                  href="../../target/reference-coursedude/client-logic-probe.json"
+                  title="target/reference-coursedude/client-logic-probe.json"
+                  >6 项纯客户端逻辑检查</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/speech/streaming.rs"
+                  title="apps/desktop/src-tauri/src/speech/streaming.rs · lines 205"
+                  >LectureRelay · speech/streaming.rs:205</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F03" data-priority="P0">
+            <div class="card-top">
+              <span class="priority P0">P0</span><span>翻译与隐私</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F03</span> “本地翻译”存在混合云端路径
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                协议版本 7 的英中路径包含本地 partial、服务端 final 和 2.5
+                秒本地 final 兜底。即使模式名是
+                local，也有接受服务端最终译文，以及发送原文和本地译文给服务器的代码。未通过网络抓包确认某次真实课堂实际走了哪条分支。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                当前本地能力是英文识别；翻译、笔记和问答仍由所选云服务完成。尚未提供独立离线翻译。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                新增翻译模式时明确区分离线、云端和用户主动启用的混合模式。界面显示译文来源、临时/最终状态、是否会上传文本；离线模式不能因故障悄悄上传。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                离线模式断网仍可翻译，网络拦截验证无课堂内容外发；混合模式可以单独关闭，停用后取消已有云请求并拒绝迟到结果。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 54288-54325"
+                  >客户端 JS · L54288-54325</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 54591-54606"
+                  >客户端 JS · L54591-54606</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 54807-54851"
+                  >客户端 JS · L54807-54851</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 55522-55543"
+                  >客户端 JS · L55522-55543</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 22647-22656"
+                  >客户端 JS · L22647-22656</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F04" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>翻译质量</span
+              ><span class="evidence">本地辅助进程实测 + 隔离逻辑实测</span>
+            </div>
+            <h3>
+              <span class="finding-id">F04</span> 本地翻译很快，但课堂术语仍会错
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                现有英中模型在 11 条合成句子上的单次调用约 35–139 毫秒，中位数约
+                96 毫秒；这是本机辅助进程请求耗时。race condition
+                被译为“比赛条件”，meiosis
+                被译为“减生”，切线斜率也出现不准确措辞。结构检查能拦乱码、照抄原文、重复循环，却放过术语错误。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                我们的云端翻译已传课程背景和术语，但真实认证云端质量仍未验收；没有证据说明任一方整体准确率更高。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                先建立中/日/韩课堂样本集，覆盖否定、数值、公式、跨句指代和专业术语，再决定默认模型。用户优先看到“离线
+                / 快速云端 / 高质量云端”等用途选项，高级设置再开放模型名称。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                用固定英文文本单独评翻译，再用相同音频评识别加翻译；记录术语、数字、否定的错误率和端到端延迟。当前
+                11 句不能推出总体准确率。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/local-translation-probe.json"
+                  title="target/reference-coursedude/local-translation-probe.json"
+                  >11 条本地翻译样本原始请求与结果</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 54151-54170"
+                  >客户端 JS · L54151-54170</a
+                ><a
+                  href="../../target/reference-coursedude/client-logic-probe.json"
+                  title="target/reference-coursedude/client-logic-probe.json"
+                  >6 项纯客户端逻辑检查</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/providers/official.rs"
+                  title="apps/desktop/src-tauri/src/providers/official.rs · lines 145"
+                  >LectureRelay · providers/official.rs:145</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/app/assistance.rs"
+                  title="apps/desktop/src-tauri/src/app/assistance.rs · lines 9"
+                  >LectureRelay · app/assistance.rs:9</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F05" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>模型管理</span
+              ><span class="evidence">资源声明 + 静态代码 + 原生只读状态</span>
+            </div>
+            <h3>
+              <span class="finding-id">F05</span> 模型清单不等于已经能用的语言
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                资源清单有 54 个模型条目：2 个随包 Bergamot 和 52
+                个下载项；说明文件描述 19 种语言。当前前端允许的本地翻译只有
+                en↔zh，原生状态也仅返回这两个 ready route，Bergamot
+                ready。未找到清单对应的 CT2 辅助进程。日/韩的 M2M100
+                条目不能据此算作可用功能。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                当前只支持一个本地英文识别模型，模型下载、大小和校验已有实现。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                能力列表应由实际引擎、已安装模型和健康检查共同决定。下载中、校验失败、加载失败、可用状态必须分开；每个语言对单独验收。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                缺模型、缺可执行文件、哈希错误或加载失败时不出现
+                Ready。资源安装完成后进行真实短句健康检查，保留旧的可用版本。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/app/resources/local-translation/manifest.v1.json"
+                  title="target/reference-coursedude/app/resources/local-translation/manifest.v1.json"
+                  >安装包模型清单</a
+                ><a
+                  href="../../target/reference-coursedude/app/resources/local-translation/SCHEMA.md"
+                  title="target/reference-coursedude/app/resources/local-translation/SCHEMA.md"
+                  >随包模型规范（声明）</a
+                ><a
+                  href="../../target/reference-coursedude/inspection-summary.json"
+                  title="target/reference-coursedude/inspection-summary.json"
+                  >模型包装、哈希与清单检查</a
+                ><a
+                  href="../../target/reference-coursedude/ui-proof.json"
+                  title="target/reference-coursedude/ui-proof.json"
+                  >只读界面与原生翻译状态</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 23288-23316"
+                  >客户端 JS · L23288-23316</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F06" data-priority="P0">
+            <div class="card-top">
+              <span class="priority P0">P0</span><span>录音安全</span
+              ><span class="evidence">静态代码 + 二进制内嵌结构</span>
+            </div>
+            <h3>
+              <span class="finding-id">F06</span> 将录音安全和 AI
+              完成度分成两组状态
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                客户端区分本地耐久保存、待上传、上传中、远端校验、重试等待、认证受阻、本地文件丢失/损坏，并另行表示分析阶段。录音保存状态不依赖分析成功。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已在停止后显示 Recording saved 和剩余字幕/翻译处理中，并有 WAV
+                检查点和中断恢复。这不是一个完全缺失的功能。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                在已有提示上补持久状态：录音是否安全、还缺哪些处理、失败原因、可重试项。退出后重开也能看到相同结论，不能只依赖内存任务状态。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                停止后立即可打开录音；AI
+                超时、取消或程序重启后，保存状态保持明确，用户能直接播放并只重试失败阶段。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 67845-67872"
+                  >客户端 JS · L67845-67872</a
+                ><a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                ><a
+                  href="../../apps/desktop/src/features/live-lecture/LivePage.tsx"
+                  title="apps/desktop/src/features/live-lecture/LivePage.tsx · lines 26"
+                  >LectureRelay · live-lecture/LivePage.tsx:26</a
+                ><a
+                  href="../../apps/desktop/src/features/lecture-history/LecturePage.tsx"
+                  title="apps/desktop/src/features/lecture-history/LecturePage.tsx · lines 238"
+                  >LectureRelay · lecture-history/LecturePage.tsx:238</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/storage/recovery.rs"
+                  title="apps/desktop/src-tauri/src/storage/recovery.rs · lines 5"
+                  >LectureRelay · storage/recovery.rs:5</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F07" data-priority="P0">
+            <div class="card-top">
+              <span class="priority P0">P0</span><span>断线恢复</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3><span class="finding-id">F07</span> 记录丢失的是哪个时间段</h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                实时通道维护音频 sequence/sample
+                cursor、最后服务端确认序号、字幕 revision
+                和中断边界；断线采用退避重连并拒绝旧连接事件。具备耐久录音能力时可以进入仅本地保存状态，再保存恢复计划。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                现有完整本地音频可以保留，缺失译文可以补处理；对识别中断区间、连接代次及精确补处理边界还可加强。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                为识别和翻译分别保存覆盖区间，重启后从缺失区间继续。字幕列表插入可读的中断提示，避免让用户以为空白处就是没有授课。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                在受控录音中中断 worker
+                或网络后，完整音频仍可播放，缺失区间有时间戳，恢复后没有重复或跳漏的字幕。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 22531-22549"
+                  >客户端 JS · L22531-22549</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 22619-22625"
+                  >客户端 JS · L22619-22625</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 51220-51252"
+                  >客户端 JS · L51220-51252</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 52570-52587"
+                  >客户端 JS · L52570-52587</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 52760-53182"
+                  >客户端 JS · L52760-53182</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 53278-53339"
+                  >客户端 JS · L53278-53339</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F08" data-priority="P0">
+            <div class="card-top">
+              <span class="priority P0">P0</span><span>任务管理</span
+              ><span class="evidence">静态代码 + 二进制内嵌结构</span>
+            </div>
+            <h3><span class="finding-id">F08</span> 把后台任务写进数据库</h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                可见持久任务结构保存
+                retryCount、nextRetryAt、上传进度、文件校验、恢复计划和边界信息；启动后可找出中断任务。分析接口按转写、翻译、摘要分别重试，多语言任务有独立阶段状态。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                当前 JobStatus 主要在 Mutex&lt;Option&lt;JobStatus&gt;&gt;
+                中，取消标记也在内存；已有空译文筛选、分批保存和补翻译，不能说我们每次必须整节课重做。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                增加本地处理任务表，保存
+                lecture/stage/language/inputVersion/进度/重试时间/错误类别；用已有增量处理做执行器，不先引入云同步。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                处理一半强制退出并重开，已成功片段不重复收费或覆盖，未完成阶段恢复到可继续状态。取消是可见终态，用户重试有明确入口。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 68855-68938"
+                  >客户端 JS · L68855-68938</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 69750-69775"
+                  >客户端 JS · L69750-69775</a
+                ><a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/app/jobs.rs"
+                  title="apps/desktop/src-tauri/src/app/jobs.rs · lines 19"
+                  >LectureRelay · app/jobs.rs:19</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/app/assistance.rs"
+                  title="apps/desktop/src-tauri/src/app/assistance.rs · lines 137"
+                  >LectureRelay · app/assistance.rs:137</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F09" data-priority="P2">
+            <div class="card-top">
+              <span class="priority P2">P2</span><span>同步与清理</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F09</span>
+              只有远端校验完成，才能称为可靠备份
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                新同步路径记录分片 CRC64、整体 SHA256/CRC64 和远端版本，区分
+                REMOTE_VERIFIED 与兼容分支
+                REMOTE_ACCEPTED；清理未验证本地录音有单独提示。并非所有兼容分支都完成同等级校验。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>我们以本地文件为主，暂没有账号云同步。</dd>
+              <dt>建议</dt>
+              <dd>
+                若以后加同步，先设计可验证的备份和失败后的原件保留策略。现在先做本地备份、导出和磁盘占用提示，不把云同步设为录音的前置条件。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                远端拒绝、部分上传或校验不匹配时不能自动删除唯一原件；重试能复用已验证分片，并正确隔离不同音频版本。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 68330-68361"
+                  >客户端 JS · L68330-68361</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 68500-68535"
+                  >客户端 JS · L68500-68535</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 68999-69045"
+                  >客户端 JS · L68999-69045</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 12915-12922"
+                  >客户端 JS · L12915-12922</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F10" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>音频设备</span
+              ><span class="evidence">静态代码 + 界面观察</span>
+            </div>
+            <h3>
+              <span class="finding-id">F10</span> 设备状态要显示实际采集源
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                原生接口覆盖设备列表、输入测试、切换、暂停/恢复和磁盘容量检查；设备中断
+                UI
+                有降级与重新选择的流程。当前没有做拔设备实测，不能证明所有切换分支稳定。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已有麦克风/系统音频选择和输入测试，也能选择具体设备；可以补设备断开后的明确状态和恢复策略。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                显示实际工作的设备、是否自动回退，以及需要用户重新选择的原因。降级不能悄悄把系统音频变成麦克风，也不能自动解除暂停。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                断开选定设备、切换默认设备和休眠恢复后，录音安全、状态准确；暂停状态不被自动恢复打破。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 22216-22289"
+                  >客户端 JS · L22216-22289</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 135568-135724"
+                  >客户端 JS · L135568-135724</a
+                ><a
+                  href="../../apps/desktop/src/features/settings/AudioInputTest.tsx"
+                  title="apps/desktop/src/features/settings/AudioInputTest.tsx · lines 1"
+                  >LectureRelay · settings/AudioInputTest.tsx:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F11" data-priority="保留判断">
+            <div class="card-top">
+              <span class="priority hold">保留判断</span><span>设置</span
+              ><span class="evidence">静态代码 + 界面观察</span>
+            </div>
+            <h3>
+              <span class="finding-id">F11</span> 可点击开关不代表处理链路接通
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                降噪、回声消除在设置中可见，但追踪到的 preference 仅被读取和写回
+                localStorage；未追到传入 start_recording
+                或其他音频处理调用。原生层是否默认带 DSP
+                仍未知。部分快捷键文字也未找到对应绑定，不能仅凭文案宣布功能完整。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                浅色/深色主题和全局 Quiet Mode
+                已有状态保存与运行时处理，应该保留当前实际功能。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                每个设置同时验证 UI → 保存 → 原生执行 →
+                重启后的结果。没有接通的选项先不展示为可用功能。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                开关前后的真实行为能通过测量或可复现操作观察；音频开关要用录入波形/回声样本验证，CPU
+                开关要观察实际预算。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 77128-77216"
+                  >客户端 JS · L77128-77216</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 77339-77350"
+                  >客户端 JS · L77339-77350</a
+                ><a
+                  href="../../apps/desktop/src/features/settings/RuntimePreferences.tsx"
+                  title="apps/desktop/src/features/settings/RuntimePreferences.tsx · lines 1"
+                  >LectureRelay · settings/RuntimePreferences.tsx:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F12" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>文件导入</span
+              ><span class="evidence">静态代码 + 界面观察 + 安装资源</span>
+            </div>
+            <h3>
+              <span class="finding-id">F12</span>
+              音频和视频导入能直接扩大使用场景
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                文件分析界面支持音视频文件和 YouTube 链接，代码限制音频 512
+                MiB、视频 2 GiB、时长 300 分钟；随包 FFmpeg 和 yt-dlp
+                提供媒体处理工具。没有选择文件或执行上传分析。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>当前主要面向实时课堂录音，缺少文件导入工作流。</dd>
+              <dt>建议</dt>
+              <dd>
+                优先支持本地 MP3/WAV/M4A/MP4
+                导入，检查时长、磁盘空间和音轨；复用转写、翻译、回放、导出。链接导入可以后置。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                损坏文件、无音轨视频、超长素材和取消转码都有明确结果；源文件不被覆盖，转换临时文件可回收。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 84559-84584"
+                  >客户端 JS · L84559-84584</a
+                ><a
+                  href="../../target/reference-coursedude/client-inventory.json"
+                  title="target/reference-coursedude/client-inventory.json"
+                  >命令 / 路径 / 界面文案清单</a
+                ><a
+                  href="../../target/reference-coursedude/analysis-provenance.json"
+                  title="target/reference-coursedude/analysis-provenance.json"
+                  >可执行文件与 18 个静态资源的哈希</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F13" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>课程资料</span
+              ><span class="evidence">静态代码 + 资源 + 二进制内嵌结构</span>
+            </div>
+            <h3>
+              <span class="finding-id">F13</span> PDF 课件与课堂放在同一个工作区
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                存在课程/录音 slides 接口、PDF 选择和保存命令、PDF.js
+                worker；结果页有课件面板。course_documents
+                内嵌结构含摘要、excerpt、token_count
+                等字段，但仅凭字段不能证明服务端问答真实检索课件。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                课程背景和术语已经用于 AI 上下文；还没有 PDF
+                课件面板和对应来源引用。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                先做本地 PDF
+                查看与课程关联，再实现明确带页码来源的问答。区分教师在课堂说过的内容和课件背景，不混作证据。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                断网仍可打开本地课件；问答引用能跳到实际页码，无法提取的扫描页不冒充已理解。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                ><a
+                  href="../../target/reference-coursedude/client-inventory.json"
+                  title="target/reference-coursedude/client-inventory.json"
+                  >命令 / 路径 / 界面文案清单</a
+                ><a
+                  href="../../target/reference-coursedude/analysis-provenance.json"
+                  title="target/reference-coursedude/analysis-provenance.json"
+                  >可执行文件与 18 个静态资源的哈希</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/app/assistance.rs"
+                  title="apps/desktop/src-tauri/src/app/assistance.rs · lines 9"
+                  >LectureRelay · app/assistance.rs:9</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/providers/official.rs"
+                  title="apps/desktop/src-tauri/src/providers/official.rs · lines 202"
+                  >LectureRelay · providers/official.rs:202</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F14" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>回放复习</span
+              ><span class="evidence">静态代码 + 只读界面</span>
+            </div>
+            <h3>
+              <span class="finding-id">F14</span>
+              章节、说话人和时间戳形成复习索引
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                结果数据支持章节、概览、关键词和 speaker
+                aliases；回放组件支持字幕与时间位置联动。实际结果页能看到播放、静音、概览、笔记、分享和下载控件；本轮没有播放或生成新内容。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已有时间戳跳转、0.5–2× 速度、前后 10
+                秒和双语搜索。还没有稳定的章节对象和说话人标签。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                先补有证据时间区间的章节导航和课堂书签；说话人区分放在需要讨论课/多人录音的场景，未确认身份时使用中性编号。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                点击章节跳到正确音频位置，搜索和章节不改变导出内容；章节标题有对应讲课证据。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 20978-20986"
+                  >客户端 JS · L20978-20986</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 104053-104073"
+                  >客户端 JS · L104053-104073</a
+                ><a
+                  href="../../target/reference-coursedude/ui-proof.json"
+                  title="target/reference-coursedude/ui-proof.json"
+                  >只读界面与原生翻译状态</a
+                ><a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                ><a
+                  href="../../apps/desktop/src/features/lecture-history/LecturePage.tsx"
+                  title="apps/desktop/src/features/lecture-history/LecturePage.tsx · lines 1"
+                  >LectureRelay · lecture-history/LecturePage.tsx:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F15" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>笔记</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F15</span> 时间戳笔记和可靠自动保存
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                笔记使用
+                Tiptap/ProseMirror，含标题、表格、任务清单、代码和时间戳；约 2
+                秒防抖保存，并在页面隐藏/卸载时尝试刷新。异步 beforeunload
+                并不能证明崩溃时最后编辑一定保存。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已有 Markdown 笔记编辑、显式保存、AI
+                生成和导出；课程笔记与音频时间点的快速连接还不够直接。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                提供当前时间点插入、编辑中本地草稿和明确保存状态；保持简洁编辑方式，避免为富文本外观增加不必要复杂度。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                连续输入后突然退出，重开可找回最近本地草稿；课堂笔记时间戳可跳转，保存失败不显示已保存。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 129457-129552"
+                  >客户端 JS · L129457-129552</a
+                ><a
+                  href="../../apps/desktop/src/features/notes/NotesPanel.tsx"
+                  title="apps/desktop/src/features/notes/NotesPanel.tsx · lines 1"
+                  >LectureRelay · notes/NotesPanel.tsx:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F16" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>AI 产物</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F16</span> 重新生成不应抹掉上一次成功结果
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                存在结果版本、语言任务、deep note
+                版本和独立图片重生成接口；阶段包括等待原文、运行、失败、取消、复用等。界面逻辑保留旧成功产物直到新结果可用。选区解释/整理走单独流式任务。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已有字幕修改历史和增量译文保存；笔记及每片段译文主要保存当前版本，还没有完整的按语言
+                AI 产物版本体系。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                将原文版本、目标语言、模型配置和生成时间绑定到产物。先保存新版本，再允许用户采纳；手动笔记与
+                AI 草稿分开。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                重生成失败时旧笔记仍可读；换语言不覆盖其他语言；原文修订后旧产物标明过期，用户可以比较和恢复。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 69669-69717"
+                  >客户端 JS · L69669-69717</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 69750-69795"
+                  >客户端 JS · L69750-69795</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 20978-20986"
+                  >客户端 JS · L20978-20986</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/database/migrations/001_initial.sql"
+                  title="apps/desktop/src-tauri/src/database/migrations/001_initial.sql · lines 28"
+                  >LectureRelay · migrations/001_initial.sql:28</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/database/migrations/002_classroom.sql"
+                  title="apps/desktop/src-tauri/src/database/migrations/002_classroom.sql · lines 13"
+                  >LectureRelay · migrations/002_classroom.sql:13</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F17" data-priority="P2">
+            <div class="card-top">
+              <span class="priority P2">P2</span><span>课堂界面</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F17</span> 浮动字幕适合边看课件边听课
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                独立 WebView
+                字幕窗口支持置顶、透明度和尺寸保存；应用资源还包含中、英、日、韩界面文案。资源存在不代表全部翻译或布局已验收。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                现有主窗口有双语字幕和字号设置，当前 UI
+                文案入口仍导出英文；尚无独立浮动字幕窗口。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                在主界面稳定后增加可收起的浮动字幕，并优先完成中/日/韩核心操作文案。继续遵循只在标题保留
+                logo、去掉口号的简洁方向。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                高 DPI
+                和双屏下不遮挡关键操作，不抢焦点；关闭浮窗不停止录音，内存不随字幕持续增长。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 23159-23202"
+                  >客户端 JS · L23159-23202</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 132320-132399"
+                  >客户端 JS · L132320-132399</a
+                ><a
+                  href="../../target/reference-coursedude/client-inventory.json"
+                  title="target/reference-coursedude/client-inventory.json"
+                  >命令 / 路径 / 界面文案清单</a
+                ><a
+                  href="../../apps/desktop/src/i18n/index.ts"
+                  title="apps/desktop/src/i18n/index.ts · lines 1"
+                  >LectureRelay · i18n/index.ts:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F18" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>导出与分享</span
+              ><span class="evidence">静态代码 + 界面观察</span>
+            </div>
+            <h3>
+              <span class="finding-id">F18</span> 本地导出比账号分享更适合先做
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                结果页下载会请求服务端 PDF，再由原生保存；分享会创建 shareCode
+                并复制链接，包含所选语言/版本参数。没有执行这两个操作，也没有发布任何课堂。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                已有笔记和字幕 Markdown/JSON 导出，尚无字幕 SRT/VTT 和本地 PDF
+                导出。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                优先增加带时间戳的 SRT/VTT 与可读
+                PDF，并保证本地已保存内容断网可导出。公共分享属于后续独立能力，需要用户明确发布。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                导出保留修订和语言选择，字幕时间合法且不交叉错位，离线导出成功；导出中不包含
+                Key、内部日志或私人路径。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 20829-20840"
+                  >客户端 JS · L20829-20840</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 103265-103399"
+                  >客户端 JS · L103265-103399</a
+                ><a
+                  href="../../target/reference-coursedude/ui-proof.json"
+                  title="target/reference-coursedude/ui-proof.json"
+                  >只读界面与原生翻译状态</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F19" data-priority="保留判断">
+            <div class="card-top">
+              <span class="priority hold">保留判断</span><span>凭据安全</span
+              ><span class="evidence">静态代码 + 二进制内嵌结构</span>
+            </div>
+            <h3>
+              <span class="finding-id">F19</span> 不要照搬令牌存放和传递方式
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                内嵌 SQLite 表结构含 access_token/refresh_token TEXT
+                字段，前端调用
+                save_auth_session；实际数据库内容未读取，是否有额外加密未确认。WebSocket
+                将令牌放在 URL 查询参数中；这有日志暴露面，但未观察到实际泄露。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                我们使用 Windows Credential Manager 和
+                Zeroizing，提供者地址有明确限制。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                保留 OS
+                凭据存储；未来实时连接优先考虑短期票据等方式，统一对请求、异常、诊断和导出做脱敏。仅搜不到
+                Key 不能作为完整安全验收。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                用受控假凭据遍历无效认证、超时、取消、日志与导出，检查无凭据回显；不使用真实用户
+                Key 做泄漏试验。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 18273-18289"
+                  >客户端 JS · L18273-18289</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 22488-22500"
+                  >客户端 JS · L22488-22500</a
+                ><a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/security/credentials.rs"
+                  title="apps/desktop/src-tauri/src/security/credentials.rs · lines 38"
+                  >LectureRelay · security/credentials.rs:38</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/security/endpoints.rs"
+                  title="apps/desktop/src-tauri/src/security/endpoints.rs · lines 1"
+                  >LectureRelay · security/endpoints.rs:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F20" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>渲染与诊断</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F20</span>
+              诊断可以记录阶段，不必记录课堂原文
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                客户端有录音/播放诊断命令和错误分类；部分外部 HTML 使用
+                DOMPurify 清理，生成页面限制脚本、表单和
+                iframe。还存在事件追踪接口。没有执行独立安全审计，不能据此确认所有渲染入口安全。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                现有 Markdown 渲染不直接执行原始
+                HTML，链接被转为文本；已有部分错误脱敏规则。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                诊断记录阶段、持续时间、队列长度、错误类别和匿名任务标识即可。新增富文本/PDF/导出时保持不可信内容隔离，诊断外发应有明确开关。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                构造脚本、恶意链接和伪指令内容验证不会执行；诊断包不包含课堂文本、Key、完整用户路径或访问令牌。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 76100-76104"
+                  >客户端 JS · L76100-76104</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 101118-101123"
+                  >客户端 JS · L101118-101123</a
+                ><a
+                  href="../../target/reference-coursedude/client-inventory.json"
+                  title="target/reference-coursedude/client-inventory.json"
+                  >命令 / 路径 / 界面文案清单</a
+                ><a
+                  href="../../apps/desktop/src/components/MarkdownBody.tsx"
+                  title="apps/desktop/src/components/MarkdownBody.tsx · lines 1"
+                  >LectureRelay · components/MarkdownBody.tsx:1</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F21" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>退出与更新</span
+              ><span class="evidence">静态代码</span>
+            </div>
+            <h3>
+              <span class="finding-id">F21</span>
+              退出、更新和账号变化走同一录音保护入口
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                protected action 协调器合并相同请求、阻止并发动作，在确认后核对
+                captureId/generation，再提交录音并执行退出或更新。更新还有版本匹配、进度、取消和诊断分类。日志中的签名验证字样不等于已完成安装包篡改测试。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                原生 CloseRequested
+                已在录音时阻止直接关闭；非录音时会取消后台任务。尚未建立完整持久任务恢复与更新协调。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                将关闭、升级和重启统一接入录音保存及任务落盘流程。更新只在合适时机应用，失败后能够保留可用版本。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                录音中关闭或更新不会丢文件；确认期间新开课堂时旧确认失效；安装包版本不匹配或校验失败不执行。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 76294-76338"
+                  >客户端 JS · L76294-76338</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 76395-76402"
+                  >客户端 JS · L76395-76402</a
+                ><a
+                  href="../../target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js"
+                  title="target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js · lines 76462-76558"
+                  >客户端 JS · L76462-76558</a
+                ><a
+                  href="../../apps/desktop/src-tauri/src/app/mod.rs"
+                  title="apps/desktop/src-tauri/src/app/mod.rs · lines 89"
+                  >LectureRelay · app/mod.rs:89</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F22" data-priority="P2">
+            <div class="card-top">
+              <span class="priority P2">P2</span><span>课程与商业模块</span
+              ><span class="evidence">静态代码 + 界面观察</span>
+            </div>
+            <h3>
+              <span class="finding-id">F22</span>
+              组织课程可以学，订阅和运营模块暂缓
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                客户端含课程、收藏集合、置顶、归档/恢复、通知、个人资料、套餐、订单、用量和付款流程的路径；部分首页
+                AI 文案不能证明对应服务实际可用。没有进入付款或修改账户流程。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                课程组织、课堂历史和回收站已具备；不需要账号即可完成本地录音。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                按需要补课堂置顶、标签或跨课程搜索。订阅、内容运营卡片、云端账号系统优先级低于录音可靠性和学习效果。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                课程归档和恢复保留所有本地关联；没有账号、额度或网络时仍可录音和回放本地内容。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/client-inventory.json"
+                  title="target/reference-coursedude/client-inventory.json"
+                  >命令 / 路径 / 界面文案清单</a
+                ><a
+                  href="../../target/reference-coursedude/native-schema.json"
+                  title="target/reference-coursedude/native-schema.json"
+                  >二进制内嵌表结构（未读取用户数据库）</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F23" data-priority="P0">
+            <div class="card-top">
+              <span class="priority P0">P0</span><span>性能与验证</span
+              ><span class="evidence">资源测量 + 已知验收缺口</span>
+            </div>
+            <h3>
+              <span class="finding-id">F23</span>
+              丰富界面不能代替完整应用长时测试
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                提取了主 JS、PDF worker、播放器分块和样式资源；主 JS 原始 UTF-8
+                约 3.49
+                MB。大小只能提示检查加载策略，不能直接推出运行内存或耗电。当前研究没有进行完整应用长时录音。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>
+                此前长时测试与安装版验收有范围限制，普通笔记本性能和已记录的
+                WebView2 内存增长问题仍需独立验证。
+              </dd>
+              <dt>建议</dt>
+              <dd>
+                新功能按需加载，限制字幕 DOM
+                和缓存增长；先短时完整流程，再跑安装版真实 90
+                分钟。录音保护、翻译可取消和停止后的状态必须一起测。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                记录音频到字幕延迟、译文延迟、整个进程组
+                CPU/内存、队列、播放完整性和重启恢复；另测普通笔记本。真实云端部分待用户以后允许付费测试再补。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/analysis-provenance.json"
+                  title="target/reference-coursedude/analysis-provenance.json"
+                  >可执行文件与 18 个静态资源的哈希</a
+                ><a
+                  href="../../target/reference-coursedude/local-translation-probe.json"
+                  title="target/reference-coursedude/local-translation-probe.json"
+                  >11 条本地翻译样本原始请求与结果</a
+                ><a
+                  href="../releases/v0.2.0-preferences.md"
+                  title="docs/releases/v0.2.0-preferences.md · lines 31"
+                  >LectureRelay · releases/v0.2.0-preferences.md:31</a
+                >
+              </div>
+            </details>
+          </article>
+          <article class="finding" id="F24" data-priority="P1">
+            <div class="card-top">
+              <span class="priority P1">P1</span><span>维护与来源</span
+              ><span class="evidence">本地资源声明 + 官方上游资料</span>
+            </div>
+            <h3>
+              <span class="finding-id">F24</span>
+              学接口和工作流，模型从上游独立接入
+            </h3>
+            <dl>
+              <dt>观察</dt>
+              <dd>
+                随包模型有归属和许可说明，包装有模型大小与 SHA256。其 CT2
+                清单版本字段不能证明已安装对应运行时。Mozilla 旧
+                firefox-translations-models
+                仓库现已归档，并指向新的评估仓库和模型注册表。
+              </dd>
+              <dt>我们已有</dt>
+              <dd>已有本地模型校验与第三方许可目录，可以沿用这一管理方式。</dd>
+              <dt>建议</dt>
+              <dd>
+                未来离线翻译从正式上游取得模型和引擎，记录具体版本、许可、哈希和课堂评测。不要直接分发参考应用的私有封装、程序和品牌资源。
+              </dd>
+              <dt>验收门槛</dt>
+              <dd>
+                每个可下载模型可追溯到上游版本与许可，下载和安装可取消且验证完整性；升级不会破坏正在使用的版本。
+              </dd>
+            </dl>
+            <details class="references">
+              <summary>证据位置</summary>
+              <div>
+                <a
+                  href="../../target/reference-coursedude/app/resources/local-translation/manifest.v1.json"
+                  title="target/reference-coursedude/app/resources/local-translation/manifest.v1.json"
+                  >安装包模型清单</a
+                ><a
+                  href="../../target/reference-coursedude/app/resources/local-translation/SCHEMA.md"
+                  title="target/reference-coursedude/app/resources/local-translation/SCHEMA.md"
+                  >随包模型规范（声明）</a
+                ><a
+                  href="../../target/reference-coursedude/inspection-summary.json"
+                  title="target/reference-coursedude/inspection-summary.json"
+                  >模型包装、哈希与清单检查</a
+                ><a
+                  href="https://github.com/mozilla/firefox-translations-models"
+                  title="https://github.com/mozilla/firefox-translations-models"
+                  >Mozilla 官方旧模型仓库：已归档及迁移说明</a
+                ><a
+                  href="https://opennmt.net/CTranslate2/"
+                  title="https://opennmt.net/CTranslate2/"
+                  >CTranslate2 官方文档</a
+                >
+              </div>
+            </details>
+          </article>
+        </div>
+        <p class="empty" id="empty">没有匹配项，请更换关键词或优先级。</p>
+      </section>
+      <section id="tests">
+        <h2>实测证据：证明了什么，也没证明什么</h2>
+        <h3>纯客户端逻辑：6 项检查通过</h3>
+        <p>
+          直接取已提取 bundle 中的调度器和输出校验函数，在隔离环境中使用假翻译
+          Promise。测试的是这些函数的行为，不是整套应用或云服务。
+        </p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>检查项</th>
+                <th>结果</th>
+                <th>观察</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>replacement character rejected</td>
+                <td><span class="passed">PASS</span></td>
+                <td>
+                  {&quot;valid&quot;:false,&quot;reason&quot;:&quot;replacement_character&quot;}
+                </td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>unchanged English rejected</td>
+                <td><span class="passed">PASS</span></td>
+                <td>
+                  {&quot;valid&quot;:false,&quot;reason&quot;:&quot;source_copy&quot;}
+                </td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>repetitive output rejected</td>
+                <td><span class="passed">PASS</span></td>
+                <td>
+                  {&quot;valid&quot;:false,&quot;reason&quot;:&quot;decoder_loop&quot;}
+                </td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td>semantic terminology error passes structural guard</td>
+                <td><span class="passed">PASS</span></td>
+                <td>{&quot;valid&quot;:true}</td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td>stale source revision result discarded</td>
+                <td><span class="passed">PASS</span></td>
+                <td>仅发布 revision 2</td>
+              </tr>
+              <tr>
+                <td>6</td>
+                <td>final queue capacity enforced</td>
+                <td><span class="passed">PASS</span></td>
+                <td>排队 16 项，超载通知 2 次</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>真实本地辅助进程：11 条英中样本</h3>
+        <p>
+          请求耗时 34.65–139.21 ms，中位数 96.02
+          ms；健康检查和模型加载不计入该统计。这不包含录音、语音识别、WebView
+          字幕上屏或云端往返，也不代表普通笔记本性能。
+        </p>
+        <div class="callout">
+          <p>
+            <b>质量结论：</b
+            >发现了专业术语和数值关系的具体错误，不能据此给出总体准确率。当前没有证据证明
+            Coursedude 或 LectureRelay 的课堂翻译整体更准确。
+          </p>
+        </div>
+        <details class="block">
+          <summary>展开 11 条非敏感测试句与原始译文</summary>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>英文输入</th>
+                  <th>本地输出</th>
+                  <th>耗时 ms</th>
+                  <th>人工观察</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    Today we will discuss the relationship between supply and
+                    demand.
+                  </td>
+                  <td>今天我们来讨论供求关系。</td>
+                  <td class="number">56.6</td>
+                  <td>普通课堂句：表达基本准确</td>
+                </tr>
+                <tr>
+                  <td>Correlation does not imply causation.</td>
+                  <td>相关性并不意味着因果关系。</td>
+                  <td class="number">41.66</td>
+                  <td>否定关系：表达基本准确</td>
+                </tr>
+                <tr>
+                  <td>
+                    The temperature increased from 15 degrees Celsius to 50
+                    degrees Celsius, not by 50 degrees.
+                  </td>
+                  <td>气温从15摄氏度提高到50摄氏度,而不是50摄氏度。</td>
+                  <td class="number">91.74</td>
+                  <td>丢失“增加了 50 度”与“增加到 50 度”的区别</td>
+                </tr>
+                <tr>
+                  <td>
+                    Failing to reject the null hypothesis does not prove that
+                    the null hypothesis is true.
+                  </td>
+                  <td>不拒绝零假说并不能证明零假说是真。</td>
+                  <td class="number">96.02</td>
+                  <td>表达可理解；术语可进一步规范</td>
+                </tr>
+                <tr>
+                  <td>
+                    A race condition occurs when the result depends on the order
+                    in which concurrent threads execute.
+                  </td>
+                  <td>当结果取决于并发线程执行的顺序时,会发生比赛条件。</td>
+                  <td class="number">104.62</td>
+                  <td>race condition 误译为“比赛条件”</td>
+                </tr>
+                <tr>
+                  <td>
+                    Mitosis produces two genetically identical daughter cells,
+                    whereas meiosis produces four haploid cells.
+                  </td>
+                  <td>
+                    有丝分裂产生两个基因相同的子细胞,而减生产生四个单倍体细胞。
+                  </td>
+                  <td class="number">139.21</td>
+                  <td>meiosis 误译为“减生”</td>
+                </tr>
+                <tr>
+                  <td>
+                    The derivative of x squared is two x. This is the slope of
+                    the tangent line.
+                  </td>
+                  <td>x平方的导数是两个x。 这是切线的斜坡。</td>
+                  <td class="number">104.78</td>
+                  <td>slope 译词不准确</td>
+                </tr>
+                <tr>
+                  <td>
+                    The assignment is due next Thursday, not this Thursday, at
+                    11:59 p.m.
+                  </td>
+                  <td>任务定于下周四,而不是本周四,晚上11:59。</td>
+                  <td class="number">110.72</td>
+                  <td>保留样本，未给出统一质量分数</td>
+                </tr>
+                <tr>
+                  <td>If we increase the sample size,</td>
+                  <td>如果我们增加样本量,</td>
+                  <td class="number">34.65</td>
+                  <td>保留样本，未给出统一质量分数</td>
+                </tr>
+                <tr>
+                  <td>
+                    it decreases, assuming everything else stays the same.
+                  </td>
+                  <td>它减少了,假设其他一切都保持不变。</td>
+                  <td class="number">52.36</td>
+                  <td>保留样本，未给出统一质量分数</td>
+                </tr>
+                <tr>
+                  <td>
+                    We are measuring the standard error. If we increase the
+                    sample size, it decreases, assuming everything else stays
+                    the same.
+                  </td>
+                  <td>
+                    我们测量了标准误差。
+                    如果我们增加样本大小,它就会减少,假设其他一切都保持不变。
+                  </td>
+                  <td class="number">139.02</td>
+                  <td>保留样本，未给出统一质量分数</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <p class="small">
+          本次原生只读状态：ready；已准备语言对：en → zh、zh →
+          en。回放元素检查时处于暂停状态，速度为 1.0×。
+        </p>
+      </section>
+      <section id="roadmap">
+        <h2>建议落地顺序</h2>
+        <p>
+          以下是研究后的实施建议，尚未作为本轮产品修改执行。先复用现有能力，逐项补齐证据与恢复流程。
+        </p>
+        <ol class="roadmap">
+          <li>
+            <div class="step">1</div>
+            <div>
+              <h3>把现有保存提示升级为可恢复处理记录</h3>
+              <p>
+                持久 AI 任务、缺失区间、分阶段重试、关闭后恢复。复用已有 WAV
+                保护、停止提示和增量补翻译。
+              </p>
+              <p class="gate">
+                <b>通过条件</b> 受控 worker
+                退出/断网/写入失败/强制退出后，音频可恢复播放；未完成工作可见，不重复覆盖成功结果。
+              </p>
+            </div>
+          </li>
+          <li>
+            <div class="step">2</div>
+            <div>
+              <h3>补字幕结果一致性与翻译质量基线</h3>
+              <p>
+                字幕
+                revision、语言和会话代次校验；受控样本评测、术语与数字检查。
+              </p>
+              <p class="gate">
+                <b>通过条件</b>
+                乱序结果不覆盖、队列有界；翻译准确性用固定文本与完整语音两组评测分别说明。
+              </p>
+            </div>
+          </li>
+          <li>
+            <div class="step">3</div>
+            <div>
+              <h3>提供少量用途明确的翻译选择</h3>
+              <p>
+                离线优先候选引擎，云端速度/质量预设，高级模型配置；本地和混合上传边界明确。
+              </p>
+              <p class="gate">
+                <b>通过条件</b>
+                离线无课堂内容外发；每个语言对可用性经实测。当前不执行付费云端测试。
+              </p>
+            </div>
+          </li>
+          <li>
+            <div class="step">4</div>
+            <div>
+              <h3>补学生复习工作流</h3>
+              <p>
+                本地音视频导入、PDF 课件、时间戳笔记/书签、章节、AI
+                版本保留、离线导出。
+              </p>
+              <p class="gate">
+                <b>通过条件</b>
+                一份素材从导入到回放、修订和导出完整走通；重新生成失败不丢笔记。
+              </p>
+            </div>
+          </li>
+          <li>
+            <div class="step">5</div>
+            <div>
+              <h3>再完善浮窗、语言、更新与可选同步</h3>
+              <p>字幕浮窗、中日韩 UI、更新保护；云同步只有在确有需求时增加。</p>
+              <p class="gate">
+                <b>通过条件</b> 通过安装版短时 GUI 和 90
+                分钟真实时长测试，并另测普通笔记本。
+              </p>
+            </div>
+          </li>
+        </ol>
+      </section>
+      <section id="limits">
+        <h2>仍然无法从客户端确认的内容</h2>
+        <ul class="unknowns">
+          <li>
+            服务端源码、云端实际模型/版本、提示词、检索策略、账户实际 ASR
+            服务商和真实费用。客户端有 volcano/soniox
+            分支标签，不足以断言当前账户使用其中哪个。
+          </li>
+          <li>
+            完整 Rust 原生实现、所有 IPC
+            权限、安装更新签名机制的端到端正确性；本轮没有函数级恢复整个本机二进制。
+          </li>
+          <li>
+            参考产品在真实课堂、长时间录音、设备拔出、磁盘故障、异常退出等情况下是否都满足代码表达的设计。
+          </li>
+          <li>
+            中日/英日/英韩的真实本地翻译可用性、质量和低功耗表现；模型清单存在不等于已发布。
+          </li>
+          <li>
+            任何一方的总体翻译准确率；小规模合成样本只能证明发现了具体问题，不能用于排名。
+          </li>
+          <li>
+            运行时凭据保存是否额外加密、是否发生网络/日志泄露；未读取凭据和用户数据库，也未进行独立安全审计。
+          </li>
+        </ul>
+        <p>
+          账户和套餐模块、营销卡片、大量模型名称及未接通的设置，不应挤占核心课堂流程的实现和验收时间。未来采用上游模型时独立核验版本、许可和质量；本报告不包含参考产品可直接移植的实现代码。
+        </p>
+      </section>
+      <section id="sources">
+        <h2>证据索引与复现边界</h2>
+        <p>
+          格式化后的客户端行号均指向
+          <code
+            >target/reference-coursedude/extracted/index-DoeYQLF4.formatted.js</code
+          >。这是分析用派生文件；重新格式化可能改变行号。原始资源以哈希定位。原始提取内容留在被
+          Git 忽略的 <code>target/</code> 中。
+        </p>
+        <div class="evidence-links">
+          <a
+            href="../../target/reference-coursedude/analysis-provenance.json"
+            title="target/reference-coursedude/analysis-provenance.json"
+            >可执行文件与 18 个静态资源的哈希</a
+          ><a
+            href="../../target/reference-coursedude/client-inventory.json"
+            title="target/reference-coursedude/client-inventory.json"
+            >命令 / 路径 / 界面文案清单</a
+          ><a
+            href="../../target/reference-coursedude/native-schema.json"
+            title="target/reference-coursedude/native-schema.json"
+            >二进制内嵌表结构（未读取用户数据库）</a
+          ><a
+            href="../../target/reference-coursedude/inspection-summary.json"
+            title="target/reference-coursedude/inspection-summary.json"
+            >模型包装、哈希与清单检查</a
+          ><a
+            href="../../target/reference-coursedude/local-translation-probe.json"
+            title="target/reference-coursedude/local-translation-probe.json"
+            >11 条本地翻译样本原始请求与结果</a
+          ><a
+            href="../../target/reference-coursedude/client-logic-probe.json"
+            title="target/reference-coursedude/client-logic-probe.json"
+            >6 项纯客户端逻辑检查</a
+          ><a
+            href="../../target/reference-coursedude/ui-proof.json"
+            title="target/reference-coursedude/ui-proof.json"
+            >只读界面与原生翻译状态</a
+          ><a href="coursedude-0.9.8-findings.json">结构化发现</a
+          ><a href="coursedude-0.9.8-evidence.json">本次证据摘要与源码哈希</a>
+        </div>
+        <p class="small">
+          主程序 SHA256：<span class="hash"
+            >77dcca988fe4348b86afd1e9bfacb7ad7c415b626f5d735d78f1cc973d86064b</span
+          ><br />主 JS SHA256：<span class="hash"
+            >71604aa73c38230c19ee6213c426f8c64f64836845896719b2faa5f9cf2d1b75</span
+          >
+        </p>
+        <details class="block">
+          <summary>18 个静态资源的大小与哈希</summary>
+          <p class="small">
+            大小取实际保存文件的 UTF-8 字节数。早期提取清单的 bytes 字段记录的是
+            JS 字符串长度，两者含义不同；本表以实际文件为准。
+          </p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>资源</th>
+                  <th>字节</th>
+                  <th>SHA256</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>errors-DvJOiYTP.js</td>
+                  <td class="number">1,169</td>
+                  <td class="hash">
+                    717a692bff9413a5931c1eb744e72f8f28c85868267f94a5a64c76f10e9e9c0a
+                  </td>
+                </tr>
+                <tr>
+                  <td>index-Ccme2c1U.js</td>
+                  <td class="number">2,211</td>
+                  <td class="hash">
+                    19264cb76da15c30ab51e05b73197f6bb4e410d3c9bb25bbc7bf5747a1bf1c0e
+                  </td>
+                </tr>
+                <tr>
+                  <td>index-DoeYQLF4.js</td>
+                  <td class="number">3,488,473</td>
+                  <td class="hash">
+                    71604aa73c38230c19ee6213c426f8c64f64836845896719b2faa5f9cf2d1b75
+                  </td>
+                </tr>
+                <tr>
+                  <td>index-zUWT3V_G.css</td>
+                  <td class="number">376,688</td>
+                  <td class="hash">
+                    bf26f679dd1795e0f47796da29ceb0bc9da4c613c0ce39ef62900d29ab7e29b6
+                  </td>
+                </tr>
+                <tr>
+                  <td>pdfWorker-DmU3NodM.js</td>
+                  <td class="number">1,241,045</td>
+                  <td class="hash">
+                    4d94e97a7c85de35da30c44ef8a511aa25b1f0e5006a0d434dcf975946652e8e
+                  </td>
+                </tr>
+                <tr>
+                  <td>prod-Dp-Cv9v3.js</td>
+                  <td class="number">18,431</td>
+                  <td class="hash">
+                    7b4b6da76dafeb5ad259738077011e079d918d721a8e0b4bab0dba5c17b22c14
+                  </td>
+                </tr>
+                <tr>
+                  <td>slidesMime--tZ9dQlt.js</td>
+                  <td class="number">389</td>
+                  <td class="hash">
+                    585b4052ea182c0b9d3ec92323c38c541eee23033941491c4ea4a04f842d66dc
+                  </td>
+                </tr>
+                <tr>
+                  <td>srt-parser-DyYuvAtt.js</td>
+                  <td class="number">541</td>
+                  <td class="hash">
+                    20cb591bf93f45d41ce03c1ef91a82431591c1daad5f253d88b534b01db42238
+                  </td>
+                </tr>
+                <tr>
+                  <td>ssa-parser-DDYfnhCA.js</td>
+                  <td class="number">5,114</td>
+                  <td class="hash">
+                    b614e4cf43dfa3df9766e1e0e2086c87761fd9ebb4f7bcb383d32d403552b472
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-BmcqUMKx-CXT7XdZl.js</td>
+                  <td class="number">6,016</td>
+                  <td class="hash">
+                    d4193f7093bd651dfd31af09ea581b0d7ee5ee4a757f25d8ffa92aec0f150430
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-C0fPJIzs-DKjUm9el.js</td>
+                  <td class="number">1,188</td>
+                  <td class="hash">
+                    16dcf156ed904e5bca3025bf36fcc09e56d28a82baa423f3b439bb2d6ec30849
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-CHcsWfRV-kRudhqy2.js</td>
+                  <td class="number">540</td>
+                  <td class="hash">
+                    6597ae5658a22bd7915f8048d7cdf75d085e371ee50154d21c4c7d4bb3e67913
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-CQuJTPFJ-D5a4MdBs.js</td>
+                  <td class="number">1,718</td>
+                  <td class="hash">
+                    a044ca00e9874085c5270cc7e5b557f7cf42db1d7682616e8b2823dbec35d7ec
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-D2vrrUMs-DOYQ0pZF.js</td>
+                  <td class="number">11,138</td>
+                  <td class="hash">
+                    9006584e3eb08271da70dec35ac3bd9afdd593a6a9d4da848966c8bf746916ac
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-Di0HObvT-C_OPaZiO.js</td>
+                  <td class="number">4,008</td>
+                  <td class="hash">
+                    7181a005162b5181104eec8e07b507af5bd62fcb7e1e9dee62546f346d597ac5
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-DiaLSJYx-BL0wmb4T.js</td>
+                  <td class="number">7,773</td>
+                  <td class="hash">
+                    8226f3d5c5f77093eccd6f2f8cbecc6aebfa39435e570b79808a9f7b490be67b
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-Dy74GavT-Ch7IL_1c.js</td>
+                  <td class="number">722</td>
+                  <td class="hash">
+                    f0439b7eef3a58070f2ab595e317cabc6e706f55c8cd1d1ca59dfd9030900ee4
+                  </td>
+                </tr>
+                <tr>
+                  <td>vidstack-GkTzay8D-CJBUBscP.js</td>
+                  <td class="number">9,694</td>
+                  <td class="hash">
+                    d00f8485a064f2cd3ba6e55bbd2e3dec98f028bf768fab1303b25c922cdeb955
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
+        <details class="block">
+          <summary>86 个原生命令名称</summary>
+          <p class="small">
+            来自前端可见调用点的静态提取；不能证明每个命令在当前发行配置中都被注册或成功执行。
+          </p>
+          <div class="command-list">
+            <code>append_live_recording_diagnostic</code
+            ><code>append_result_audio_diagnostic</code
+            ><code>bind_recording_to_session</code
+            ><code>bind_stopped_recording</code
+            ><code>cancel_app_update_download</code
+            ><code>cancel_local_translation_request</code
+            ><code>cancel_youtube_download</code
+            ><code>check_recording_storage_capacity</code
+            ><code>cleanup_converted_audio_file</code
+            ><code>clear_auth_session</code
+            ><code>clear_pending_recording_metadata</code
+            ><code>clear_recording_cache_for_job</code
+            ><code>clear_recording_cache_for_user</code
+            ><code>clear_youtube_login_test_state</code
+            ><code>close_youtube_player</code><code>commit_recording_save</code
+            ><code>confirm_app_exit</code><code>convert_video_to_audio</code
+            ><code>cos_put_file</code
+            ><code>declare_recording_transport_boundary</code
+            ><code>discard_downloaded_app_update</code
+            ><code>exit_youtube_player_fullscreen</code
+            ><code>export_app_update_diagnostics</code
+            ><code>export_recording_durability_file</code
+            ><code>extract_video_thumbnail</code><code>fetch_file_bytes</code
+            ><code>get_audio_input_permission_status</code
+            ><code>get_local_translation_status</code
+            ><code>get_network_path_snapshot</code
+            ><code>get_recording_backup</code
+            ><code>get_recording_cache_stats</code
+            ><code>get_recording_installation_id</code
+            ><code>get_screen_capture_permission_status</code
+            ><code>get_system_notification_permission</code
+            ><code>get_youtube_player_state</code
+            ><code>inspect_local_files</code
+            ><code>install_downloaded_app_update</code
+            ><code>is_recording_active</code><code>list_audio_sources</code
+            ><code>list_recording_finalize_jobs</code
+            ><code>list_recording_upload_parts</code
+            ><code>load_auth_session</code
+            ><code>mark_recording_technical_degradation</code
+            ><code>open_audio_permission_settings</code
+            ><code>open_system_notification_settings</code
+            ><code>open_youtube_login</code><code>pause_recording</code
+            ><code>persist_pending_recording_metadata</code
+            ><code>persist_recording_recovery_plan</code
+            ><code>pick_audio_files</code><code>pick_pdf_path</code
+            ><code>prepare_local_translation_route</code
+            ><code>prepare_recording_authoritative_cutoff</code
+            ><code>prepare_recording_cache_clear_for_job</code
+            ><code>prepare_recording_cache_clear_for_user</code
+            ><code>prepare_recording_checksums</code
+            ><code>probe_playback_audio_media_type</code
+            ><code>probe_youtube_browser_login</code
+            ><code>recover_interrupted_recording_durability</code
+            ><code>report_recording_transport_boundary</code
+            ><code>request_json</code><code>request_microphone_permission</code
+            ><code>request_screen_capture_permission</code
+            ><code>request_system_notification_permission</code
+            ><code>resume_recording</code
+            ><code>retry_local_translation_route</code
+            ><code>save_auth_session</code><code>save_pdf_file</code
+            ><code>save_recording_upload_part</code
+            ><code>seek_youtube_player</code
+            ><code>send_system_notification</code
+            ><code>set_native_window_background</code
+            ><code>show_youtube_player</code
+            ><code>start_app_update_download</code><code>start_audio_test</code
+            ><code>start_recording</code><code>start_text_stream</code
+            ><code>stop_audio_test</code><code>stop_recording</code
+            ><code>stop_text_stream</code><code>switch_recording_source</code
+            ><code>translate_local_text</code><code>ui_click</code
+            ><code>update_recording_finalize_job</code
+            ><code>update_youtube_player_bounds</code
+            ><code>upload_recording_file_part</code>
+          </div>
+        </details>
+        <h3>上游资料</h3>
+        <p>
+          Mozilla
+          旧模型仓库已归档并提供迁移说明，接入时应使用其指向的当前来源。<a
+            href="https://github.com/mozilla/firefox-translations-models"
+            >Mozilla 官方模型仓库</a
+          >。本地推理能力与配置应参考
+          <a href="https://opennmt.net/CTranslate2/">CTranslate2 官方文档</a
+          >，不能把参考应用清单中的版本字段当作运行时验证。安装版回归可继续采用
+          <a href="https://v2.tauri.app/develop/tests/">Tauri 官方测试路径</a
+          >；mock runtime 不能替代真实原生 WebView 的交互验收。
+        </p>
+        <p class="small">
+          资料核对日期：2026-10-02。报告不会复述参考账户、课程名称、令牌或实际课堂文本。
+        </p>
+      </section>
+      <footer class="footer">
+        研究结论与实施建议 · LectureRelay · 2026-10-02<br />本轮没有更改产品代码、替换模型或启动付费云端测试。
+      </footer>
+    </main>
+    <script>
+      const query = document.getElementById('search'),
+        priority = document.getElementById('priority'),
+        cards = [...document.querySelectorAll('.finding')];
+      function filter() {
+        const q = query.value.trim().toLocaleLowerCase();
+        let count = 0;
+        for (const card of cards) {
+          const visible =
+            (priority.value === 'all' ||
+              card.dataset.priority === priority.value) &&
+            (!q || card.textContent.toLocaleLowerCase().includes(q));
+          card.hidden = !visible;
+          if (visible) count++;
+        }
+        document.getElementById('count').textContent =
+          count + ' / ' + cards.length + ' 项';
+        document
+          .getElementById('empty')
+          .classList.toggle('visible', count === 0);
+      }
+      query.addEventListener('input', filter);
+      priority.addEventListener('change', filter);
+      document
+        .getElementById('print')
+        .addEventListener('click', () => window.print());
+    </script>
+  </body>
+</html>

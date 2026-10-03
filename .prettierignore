@@ -1,0 +1,10 @@
+.tools
+.pnpm-store
+node_modules
+target
+dist
+artifacts
+pnpm-lock.yaml
+Cargo.lock
+docs/requirements
+apps/desktop/src-tauri/gen

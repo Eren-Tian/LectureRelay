@@ -1,0 +1,66 @@
+# Development dependencies and project-local toolchains
+node_modules/
+.tools/
+.pnpm-store/
+
+# Build, generated schema, and test output
+target/
+__pycache__/
+*.pyc
+dist/
+/build/
+coverage/
+artifacts/
+apps/desktop/src-tauri/gen/
+*.tsbuildinfo
+
+# Credentials and private runtime data
+.env
+.env.*
+!.env.example
+*.db
+*.db-shm
+*.db-wal
+*.sqlite*
+*.log
+*.pem
+*.key
+*.pfx
+*.p12
+/data/
+/models/
+/recordings/
+/logs/
+/temp/
+*.gguf
+*.onnx
+*.safetensors
+*.bin
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.dmp
+*.crash
+*.tmp
+*.pending
+*.part
+*.exe
+*.msi
+*.dll
+*.obj
+*.pdb
+*.ilk
+*.zip
+*.7z
+secrets/
+tokens/
+
+# Editors and OS
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini
+# Generated runtime staging and web copy; source branding and licenses stay tracked.
+apps/desktop/src-tauri/resources/local-asr/
+apps/desktop/public/app-icon.svg

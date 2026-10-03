@@ -1,0 +1,37 @@
+{
+  "name": "lecturerelay",
+  "version": "0.2.0",
+  "private": true,
+  "description": "LectureRelay Windows development workspace",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=24.15.0 <25",
+    "pnpm": "11.25.0"
+  },
+  "scripts": {
+    "setup": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/dev/setup-dev.ps1",
+    "doctor": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/dev/check-env.ps1",
+    "dev": "node scripts/dev/run-native.mjs dev",
+    "dev:web": "pnpm --filter @lecturerelay/desktop dev",
+    "build": "node scripts/dev/run-native.mjs build",
+    "build:debug": "node scripts/dev/run-native.mjs build --debug --no-bundle",
+    "build:web": "pnpm --filter @lecturerelay/desktop build",
+    "check:web": "pnpm --filter @lecturerelay/desktop typecheck",
+    "check:rust": "node scripts/dev/run-native.mjs cargo check --workspace --locked",
+    "test:rust": "node scripts/dev/run-native.mjs cargo test --workspace --locked",
+    "lint:rust": "node scripts/dev/run-native.mjs cargo clippy --workspace --all-targets --locked -- -D warnings",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:rust": "node scripts/dev/run-native.mjs cargo fmt --all",
+    "format:rust:check": "node scripts/dev/run-native.mjs cargo fmt --all -- --check",
+    "build:asr": "node scripts/build/prepare-asr.mjs",
+    "verify:repo": "node scripts/verification/repository.mjs",
+    "verify:resources": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verification/runtime-resources.ps1",
+    "test:native": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test/native-smoke.ps1",
+    "release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/release/package.ps1"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.12.0",
+    "prettier": "3.9.9"
+  }
+}

@@ -1,0 +1,143 @@
+[
+  {
+    "clip": "saved-boundary",
+    "sourceType": "synthetic annotated speech",
+    "ingressSeconds": 2.0,
+    "glossary": [],
+    "quietCpus": [0, 1, 2, 3],
+    "segments": [
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 20.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across space. Landsat imagery can inform GOAI models, but spatial.",
+        "inferenceSeconds": 0.6688643998932093
+      },
+      {
+        "audioStartSeconds": 20.0,
+        "audioEndSeconds": 24.0,
+        "text": "Homogeneity remains important.",
+        "inferenceSeconds": 0.6793090000282973
+      },
+      {
+        "audioStartSeconds": 24.0,
+        "audioEndSeconds": 32.0,
+        "text": "CUDA kernels execute on the graphics processor shared memory and occupancy effect performance.",
+        "inferenceSeconds": 0.7130545999389142
+      },
+      {
+        "audioStartSeconds": 32.0,
+        "audioEndSeconds": 40.0,
+        "text": "A transformer uses self attention to combine information from tokens. Kernel synchronization and memory",
+        "inferenceSeconds": 0.1338447998277843
+      }
+    ],
+    "partials": [
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 2.0,
+        "text": "",
+        "inferenceSeconds": 0.8459441000595689
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 4.0,
+        "text": "Moran's eye measures global spatial",
+        "inferenceSeconds": 0.5208507999777794
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 6.0,
+        "text": "Moran's eye measures global spatial autocorrelation",
+        "inferenceSeconds": 0.5702915000729263
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 8.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star ident",
+        "inferenceSeconds": 0.5207146999891847
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 10.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters",
+        "inferenceSeconds": 0.5723997999448329
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 12.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression",
+        "inferenceSeconds": 0.5472802999429405
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 14.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across",
+        "inferenceSeconds": 0.5811322999652475
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 16.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across space",
+        "inferenceSeconds": 0.555489300051704
+      },
+      {
+        "audioStartSeconds": 0,
+        "audioEndSeconds": 18.0,
+        "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across space. Landsat imagery can inform GO",
+        "inferenceSeconds": 0.6045238000806421
+      },
+      {
+        "audioStartSeconds": 20.0,
+        "audioEndSeconds": 22.0,
+        "text": "Homogeneity remains important",
+        "inferenceSeconds": 0.5356801999732852
+      },
+      {
+        "audioStartSeconds": 24.0,
+        "audioEndSeconds": 26.0,
+        "text": "CUDA kern",
+        "inferenceSeconds": 0.5654033999890089
+      },
+      {
+        "audioStartSeconds": 24.0,
+        "audioEndSeconds": 28.0,
+        "text": "CUDA kernels execute on the graphics processor",
+        "inferenceSeconds": 0.5516556999646127
+      },
+      {
+        "audioStartSeconds": 24.0,
+        "audioEndSeconds": 30.0,
+        "text": "CUDA kernels execute on the graphics processor shared memory and",
+        "inferenceSeconds": 0.6265575001016259
+      },
+      {
+        "audioStartSeconds": 32.0,
+        "audioEndSeconds": 34.0,
+        "text": "A transformer uses",
+        "inferenceSeconds": 0.5764831998385489
+      },
+      {
+        "audioStartSeconds": 32.0,
+        "audioEndSeconds": 36.0,
+        "text": "A transformer uses self attention to combine information",
+        "inferenceSeconds": 0.5411280000116676
+      },
+      {
+        "audioStartSeconds": 32.0,
+        "audioEndSeconds": 38.0,
+        "text": "A transformer uses self attention to combine information from tokens",
+        "inferenceSeconds": 0.5854857999365777
+      },
+      {
+        "audioStartSeconds": 32.0,
+        "audioEndSeconds": 40.0,
+        "text": "A transformer uses self attention to combine information from tokens. Kernel synchronization and memory",
+        "inferenceSeconds": 0.5269978998694569
+      }
+    ],
+    "text": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across space. Landsat imagery can inform GOAI models, but spatial. Homogeneity remains important. CUDA kernels execute on the graphics processor shared memory and occupancy effect performance. A transformer uses self attention to combine information from tokens. Kernel synchronization and memory",
+    "computeWallSeconds": 12.069086600095034,
+    "cpuSeconds": 46.390625,
+    "rssBytes": 980520960
+  }
+]

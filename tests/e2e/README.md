@@ -55,3 +55,43 @@ Do not infer authenticated cloud behavior, device-unplug behavior, disk-full rec
 `caption-reader.mjs` is a separate deterministic browser fixture. Start Vite and an Edge WebDriver on port 4446, then run the script. The page at `/tests/fixtures/captions.html` imports the production `LiveCaptions` component and supplies explicitly synthetic delayed translations. It verifies Chinese/Japanese/Korean ordering, partial-to-final DOM identity, manual-reading anchors when translations arrive and history is trimmed, Jump to Live, failure text and compact layout. It makes no provider requests. This fixture is not an installed-app or authenticated-cloud acceptance claim; Vite's production build does not include the fixture entry.
 
 Both scripts write evidence under `target/product-iteration`. Screenshots of the installed app use the existing screenshot helper and have the `design-` prefix under `target/installed-acceptance/screenshots`.
+
+## Installed v0.3 local AI acceptance
+
+The October 3 scripts use the exact course `[ACCEPTANCE 2026-10-03] Local AI classroom` and the installed EXE under `target/acceptance-v0.3-2026-10-03/app`. They require disconnected cloud text (`provider: none`), downloaded Nemotron/Hy-MT2/Qwen models, local speech/translation/study, live translation enabled and shared Quiet Mode for the capture baseline. Set `LECTURERELAY_WEBDRIVER_PORT` when using a driver other than port 4444. Back up the actual Windows Known Folders library before running; the production EXE does not redirect it to a fixture root.
+
+Move and resize the **native outer window** with native window controls before testing. Do not reuse the older scripts' `window/rect` or `window/maximize` commands for this WebView2: EdgeDriver may move the embedded child while leaving the outer Tauri frame in place.
+
+```powershell
+$env:LECTURERELAY_WEBDRIVER_PORT = '4448'
+node tests/e2e/installed-local-live.mjs short
+node tests/e2e/installed-local-study.mjs
+node tests/e2e/installed-local-live.mjs soak
+python tests/e2e/local-soak-progress.py
+python tests/e2e/analyse-local-soak.py
+node tests/e2e/post-soak-memory.mjs
+node tests/e2e/installed-long-review.mjs
+node tests/e2e/installed-local-faults.mjs
+```
+
+Run the capture modes sequentially and leave their playback device, app navigation and performance settings unchanged during the 90-minute baseline. This version samples the actual caption DOM every five seconds and takes exactly one screenshot per 15-minute milestone. It enforces 5,400 real seconds, then stops, waits for the replay view and remaining translation, and exercises five playback positions across transcript pagination. It does **not** automatically restart the application; verify persistence afterwards. Run the WAV-envelope check documented above against the new evidence root as a separate check.
+
+`post-soak-memory.mjs` checks idle process/heap memory only after the completed recording and inference drain. Its optional explicit garbage collection is diagnostic, excluded from the baseline, and is not a product memory-management strategy. `local-runtime-audit.py --exe <installed-exe> --output <evidence.json>` checks the simultaneous speech/text worker affinity, loopback-only text listener and rejection of an unauthenticated metadata request without reading tokens. Add `--performance full` when explicitly testing Quiet Mode off.
+
+`installed-long-review.mjs` processes the saved full recording with real Qwen and checks that the result is a new version without replacing manual notes or transcript. `installed-local-languages.mjs` separately enters a fixed synthetic sentence in Chinese/Japanese/Korean test courses and calls both installed translation models. These manually entered fixtures isolate translation wiring; they do not establish speech recognition or classroom translation quality.
+
+The local fault suite checks ASR exit, translator exit, a single test lecture's checkpoint write failure and app exit. It ends with `crash-pending.json`; restart the same installed EXE, reposition the native window and verify recovered audio before recording crash recovery as passed. It neither disables real devices nor fills the disk. `verify-preserved-library.py` compares original content rows with the backup read-only, allowing new test rows and schema columns. See the [v0.3 acceptance report](../../docs/testing/installed-acceptance-v0.3.md) for results and exclusions.
+
+After restarting the fault-test EXE, `installed-final-restart.mjs` checks recovered playback and preservation of the earlier short/long lectures. The language script can resume its labelled existing fixtures. It waits for transient toasts and uses a valid explicit segment end time; the product's invalid fractional default is recorded as a defect, not hidden by the fixture workaround.
+
+The original EdgeDriver callback path retained native results in long timers. `webdriver.mjs` now returns a Promise through W3C `execute/sync`; avoid restoring its old `execute/async` polling. `capture-webview-heap.mjs` and `analyse-driver-retention.py` are diagnostic tools for this app only. Heap snapshots can contain app content and must remain local; never commit or publish them.
+
+For an independent ten-minute memory observation, close the WebDriver session, launch the same installed EXE normally, and move its native frame to the portrait screen. Through native UI start `[ACCEPTANCE] Standalone memory 10 minutes` in the October 3 test course with system audio, local speech/translation and Quiet Mode. Run `python tests/e2e/standalone-observe.py`, then Stop & save through native UI. It plays the known synthetic fixture and reads only process counters and SQLite; it does not inject JavaScript or call native IPC. This shorter comparison does not replace the full ninety-minute test.
+
+## 0.3.1 reliability checks
+
+See [the 0.3.1 evidence report](../../docs/testing/installed-acceptance-v0.3.1.md) for completed versus pending checks. `reliability-review.mjs cancel` and `resume` use the exact saved long transcript; restart the actual app between stages. `reliability-ui.mjs` asserts an explicitly labelled debug-only database root before destructive confirmation tests; never repoint it at the everyday library.
+
+`reliability-short.mjs` is a prepared installed-app capture/DOM-stage check, not a memory benchmark. Start its driver with `LECTURERELAY_TRACE_CAPTIONS=1` to obtain native timestamp-only stage logs. Do not use that trace environment or driver for `observe-installed-90.py --title "[ACCEPTANCE] v0.3.1 <unique title>"`. Launch the observer before starting that recording through native UI. It requires the stable installed EXE and refuses any running test driver or a requested duration below 5,400 seconds. Stop/save and verify replay/restart separately when observation finishes.
+
+`backup-v031.py` refuses to overwrite its pre-migration backup. `preservation-v031.py` compares original data with only the explicitly listed migration/test-course exceptions. `speech-reliability.py 2 [glossary]` and `1 [glossary]` run the pinned actual worker on matching synthetic and separately labelled natural samples; `LECTURERELAY_SAVED_BOUNDARY=1` selects the original saved-audio excerpt. These accelerated worker results must not be reported as end-to-end live latency.

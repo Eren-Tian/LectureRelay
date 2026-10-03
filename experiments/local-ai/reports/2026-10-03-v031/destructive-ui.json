@@ -1,0 +1,10 @@
+{
+  "passed": true,
+  "scope": "Isolated debug-only native WebView; no production data deletion",
+  "checks": [
+    "Fractional defaults and precise edits save through the native WebView",
+    "Beyond-duration input is rejected",
+    "Permanent delete requires exact text; Cancel preserves course; confirmed delete preserves other course",
+    "Free all storage requires DELETE ALL; clears app library, exports and model files; preferences preserved"
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "waves": [
+    {
+      "lectureId": "6e6f15ca-223f-4270-98f1-e54bb07b7aab",
+      "status": "interrupted",
+      "allFramesRead": true,
+      "seconds": 10.12
+    },
+    {
+      "lectureId": "6f84810f-2769-4ff1-bd0a-a1c110b379b7",
+      "status": "interrupted",
+      "allFramesRead": true,
+      "seconds": 9.11
+    },
+    {
+      "lectureId": "afca157a-0e2d-4540-966f-b9842e6f8ea1",
+      "status": "completed",
+      "allFramesRead": true,
+      "seconds": 15.75
+    },
+    {
+      "lectureId": "ebb22dc4-cb55-4b65-9d63-6c825dff1784",
+      "status": "completed",
+      "allFramesRead": true,
+      "seconds": 18.62
+    }
+  ],
+  "orphanedCrashChildren": []
+}

@@ -33,7 +33,7 @@ Never run the full soak in normal CI. Rerun it when relevant production streamin
 
 ## Installed application acceptance
 
-[Windows E2E harness](../../tests/e2e/README.md) drives the installed release through native WebDriver, actual audio capture and React/WebView2. Its full application soak is separate from the native harness above. See the [current acceptance report](installed-acceptance-v0.2.md) for completed 90-minute evidence, memory/viewport findings and explicit cloud/hardware/security limits.
+[Windows E2E harness](../../tests/e2e/README.md) drives the installed release through native WebDriver, actual audio capture and React/WebView2. Its full application soak is separate from the native harness above. The [current v0.3.1 acceptance](installed-acceptance-v0.3.1.md) covers recoverable long review, confirmed cleanup, final GUI regressions and a completed independent 90-minute run without injected driver polling. The [v0.3 report](installed-acceptance-v0.3.md) preserves the original review failures and driver-retention finding; [v0.2](installed-acceptance-v0.2.md) remains earlier evidence. These reports do not certify classroom accuracy, authenticated cloud services, ordinary laptops or every failure path.
 
 ## Packaging
 

@@ -10,6 +10,7 @@ parser.add_argument('--recording', type=Path, required=True)
 parser.add_argument('--source', type=Path, required=True)
 parser.add_argument('--references', type=Path, required=True)
 parser.add_argument('--output', type=Path, required=True)
+parser.add_argument('--played-seconds', type=float, help='Known source playback duration; exclude explicitly silent time after playback ended from correlation only')
 args = parser.parse_args()
 
 def read_envelope(path):
@@ -45,22 +46,27 @@ def correlation(a, b):
 # Estimate output/playback startup offset using the first known synthetic utterance.
 probe = source[200:1200]
 offset, initial = max(((shift, correlation(recorded[200 + shift:1200 + shift], probe)) for shift in range(0, 301)), key=lambda v: v[1])
+comparison_end = len(recorded)
+if args.played_seconds is not None:
+    assert args.played_seconds > 0
+    comparison_end = min(len(recorded), offset + round(args.played_seconds * 100))
 checks = []
 for clip in references:
     at = round((clip['voiceStartSeconds'] + 0.2) * 100)
     span = min(1000, round((clip['voiceEndSeconds'] - clip['voiceStartSeconds'] - 0.4) * 100))
-    if at + span + offset + 50 >= len(recorded):
+    if at + span + offset + 50 >= comparison_end:
         continue
     expected = source[at:at + span]
     shift, score = max(((delta, correlation(recorded[at + offset + delta:at + offset + delta + span], expected)) for delta in range(-50, 51) if at + offset + delta >= 0), key=lambda v: v[1])
     checks.append({'clip': clip['index'], 'fixture': clip['fixture'], 'sourceSeconds': at / 100, 'bestDriftSeconds': shift / 100, 'envelopeCorrelation': score})
 tail_span = 1000
-tail_at = len(recorded) - tail_span
-tail_candidates = [(delta, correlation(recorded[-tail_span:], source[tail_at - offset + delta:tail_at - offset + delta + tail_span]))
+tail_at = comparison_end - tail_span
+tail_candidates = [(delta, correlation(recorded[tail_at:comparison_end], source[tail_at - offset + delta:tail_at - offset + delta + tail_span]))
                    for delta in range(-50, 51)
                    if 0 <= tail_at - offset + delta <= len(source) - tail_span]
 tail_shift, tail_score = max(tail_candidates, key=lambda v: v[1]) if tail_candidates else (None, None)
 result = {'recording': str(args.recording), 'wave': info, 'source': source_info,
+          'knownPlayedSeconds': args.played_seconds, 'comparisonEndInRecordingSeconds': comparison_end / 100,
           'startupOffsetSeconds': offset / 100, 'startupCorrelation': initial,
           'checkedClips': len(checks), 'minEnvelopeCorrelation': min(c['envelopeCorrelation'] for c in checks),
           'maxAbsoluteDriftSeconds': max(abs(c['bestDriftSeconds']) for c in checks),

@@ -1,0 +1,9 @@
+{
+  "passed": true,
+  "originalCourseReturnedToTrash": true,
+  "quietMode": true,
+  "liveTranslation": false,
+  "theme": "light",
+  "audioSource": "microphone",
+  "originalModelsInstalled": true
+}

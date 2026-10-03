@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "first": {
+    "error": null,
+    "height": 858,
+    "hidden": false,
+    "page": "1",
+    "text": "Choose a PDF\nslides-sample.pdf\nAdd PDF\n←\nPage\n/ 2\n→\n75%\nFit width\n125%\n150%\nPage 1 text",
+    "width": 607,
+    "zoom": "1"
+  },
+  "second": {
+    "error": null,
+    "height": 858,
+    "hidden": false,
+    "page": "2",
+    "text": "Choose a PDF\nslides-sample.pdf\nAdd PDF\n←\nPage\n/ 2\n→\n75%\nFit width\n125%\n150%\nPage 2 text",
+    "width": 607,
+    "zoom": "1"
+  },
+  "zoomed": {
+    "error": null,
+    "height": 1073,
+    "hidden": false,
+    "page": "2",
+    "text": "Choose a PDF\nslides-sample.pdf\nAdd PDF\n←\nPage\n/ 2\n→\n75%\nFit width\n125%\n150%\nPage 2 text",
+    "width": 758,
+    "zoom": "1.25"
+  }
+}

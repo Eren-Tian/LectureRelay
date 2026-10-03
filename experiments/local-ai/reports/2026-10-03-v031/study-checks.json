@@ -1,0 +1,292 @@
+[
+  {
+    "name": "Edit transcript and regenerate missing translation with real Hy-MT2",
+    "details": {
+      "endSeconds": 8,
+      "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:0:0",
+      "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+      "origin": "manual",
+      "provider": "local",
+      "revision": 1,
+      "sourceText": "Today we will examine why observations close together in space may be more similar than observations far apart [ACCEPTANCE correction]",
+      "startSeconds": 0,
+      "status": "final",
+      "transcriptVersion": "live",
+      "translatedText": "今天我们将探讨为什么在空间中距离较近的观测结果可能比距离较远的观测结果更为相似 [ACCEPTANCE 修正]"
+    },
+    "utc": "2026-10-03T22:00:38.144Z"
+  },
+  {
+    "name": "Search, manual note draft/save, bookmark and chapter persist",
+    "utc": "2026-10-03T22:00:39.999Z"
+  },
+  {
+    "name": "Actual Qwen summary saved separately from manual notes",
+    "details": {
+      "milliseconds": 29165,
+      "versions": [
+        {
+          "body": "# [ACCEPTANCE] v0.3.1 stage latency 1791058544836\n\n- [00:00] 空间邻近观测值相似性高，但统计关联不等同于因果 [00:08]。\n- [00:28] Moran's eye 用于测量全局空间自相关。\n- [00:32] Get us/GI star 识别局部聚类；地理加权回归使关系随空间变化。\n- [00:42] Landsat 影像可辅助 GOAI 模型，但空间异质性仍关键。\n- [00:50] CUDA 内核在 GPU 共享内存执行，占用率影响性能；Transformer 用自注意力结合 token 信息。\n- [01:04] 内核同步与内存带宽限制并行速度。\n- [01:10] Crisp air canine 可修改靶向 DNA 序列；[02:42] Crisp Erica Nine 亦可。\n- [01:16] 表观遗传学研究基因调控变化；[02:52] RNA 聚合酶在转录中合成 RNA。\n- [01:20] 转录因子结合调控 DNA 改变基因表达。\n\n---\n\n## Source section notes\n\nCoverage: 1 of 1 source sections.\n\n### Section 1\n\n- [00:00] 空间邻近观测值相似性高，但统计关联不等同于因果 [00:08]。\n- [00:28] Moran's eye 用于测量全局空间自相关。\n- [00:32] Get us/GI star 识别局部聚类；地理加权回归使关系随空间变化。\n- [00:42] Landsat 影像可辅助 GOAI 模型，但空间异质性仍关键。\n- [00:50] CUDA 内核在 GPU 共享内存执行，占用率影响性能；Transformer 用自注意力结合 token 信息。\n- [01:04] 内核同步与内存带宽限制并行速度。\n- [01:10] Crisp air canine 可修改靶向 DNA 序列；[02:42] Crisp Erica Nine 亦可。\n- [01:16] 表观遗传学研究基因调控变化；[02:52] RNA 聚合酶在转录中合成 RNA。\n- [01:20] 转录因子结合调控 DNA 改变基因表达。",
+          "createdAt": 1791064867,
+          "id": "0da67ba8-0cad-42e1-803f-51c8a68b9c1d",
+          "language": "zh",
+          "origin": "local",
+          "sourceVersion": "91ae6ef7e9c047961a047c297f095262384f0fe00d4935be05d71085d71821f5"
+        }
+      ]
+    },
+    "utc": "2026-10-03T22:01:09.376Z"
+  },
+  {
+    "name": "Cancel review returns control without losing notes",
+    "details": {
+      "milliseconds": 3452
+    },
+    "utc": "2026-10-03T22:01:13.068Z"
+  },
+  {
+    "name": "User-directed Qwen full-class review creates a saved version",
+    "details": {
+      "body": "# [ACCEPTANCE] v0.3.1 stage latency 1791058544836\n\n- [00:00] 空间邻近观测值可能比远距离观测值更相似，但统计关联不等同于因果。\n- [00:08] 需对比解释机制并检验实验假设；测量尺度改变会导致结果变化。\n- [00:28] Moran's eye 用于衡量全局空间自相关；Geographically Weighted Regression 允许关系随空间变化。\n- [00:42] Landsat 影像可辅助 GOAI 模型，但空间异质性依然关键。\n- [00:50] CUDA 内核在 GPU 共享内存执行，占用率影响性能；Transformer 利用自注意力结合 token 信息。\n- [01:04] 内核同步与内存带宽可能限制并行速度。\n- [01:10] CRISPR 可修改靶向 DNA 序列；表观遗传学研究基因调控变化。\n- [01:20] RNA 聚合酶在转录期间合成 RNA；转录因子结合调控 DNA 改变基因表达。\n\n**练习问题**\n1. 根据 [00:08]，在评估空间相关性时，为什么仅凭统计关联不足以确立因果关系？\n2. 根据 [01:04]，在 GPU 并行计算中，哪些因素可能成为性能瓶颈？\n\n---\n\n## Source section notes\n\nCoverage: 1 of 1 source sections.\n\n### Section 1\n\n- [00:00] 空间邻近观测值可能比远距离观测值更相似，但统计关联不等同于因果。\n- [00:08] 需对比解释机制并检验实验假设；测量尺度改变会导致结果变化。\n- [00:28] Moran's eye 用于衡量全局空间自相关；Geographically Weighted Regression 允许关系随空间变化。\n- [00:42] Landsat 影像可辅助 GOAI 模型，但空间异质性依然关键。\n- [00:50] CUDA 内核在 GPU 共享内存执行，占用率影响性能；Transformer 利用自注意力结合 token 信息。\n- [01:04] 内核同步与内存带宽可能限制并行速度。\n- [01:10] CRISPR 可修改靶向 DNA 序列；表观遗传学研究基因调控变化。\n- [01:20] RNA 聚合酶在转录期间合成 RNA；转录因子结合调控 DNA 改变基因表达。\n\n**练习问题**\n1. 根据 [00:08]，在评估空间相关性时，为什么仅凭统计关联不足以确立因果关系？\n2. 根据 [01:04]，在 GPU 并行计算中，哪些因素可能成为性能瓶颈？",
+      "createdAt": 1791064903,
+      "id": "af3d6579-c0e4-4fa0-b818-fce492d5eba2",
+      "language": "zh",
+      "origin": "local",
+      "sourceVersion": "91ae6ef7e9c047961a047c297f095262384f0fe00d4935be05d71085d71821f5"
+    },
+    "utc": "2026-10-03T22:01:45.057Z"
+  },
+  {
+    "name": "Qwen Q&A produces source snapshots and playable citations",
+    "details": {
+      "answer": "根据讲座内容，统计关联并不能证明因果关系。我们需要将所提出的解释与其他机制进行比较，并考虑实验背后的假设 [S2]。此外，当测量尺度发生变化时，结果也可能随之改变 [S12]。",
+      "createdAt": 1791064920,
+      "id": "3a242aa6-52b2-45eb-8652-4f78d8cdff7e",
+      "question": "Does a statistical association establish causation? Explain from the lecture and cite sources.",
+      "sources": [
+        {
+          "endSeconds": 8,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:0:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "manual",
+          "provider": "local",
+          "revision": 1,
+          "sourceText": "Today we will examine why observations close together in space may be more similar than observations far apart [ACCEPTANCE correction]",
+          "startSeconds": 0,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "今天我们将探讨为什么在空间中距离较近的观测结果可能比距离较远的观测结果更为相似 [ACCEPTANCE 修正]"
+        },
+        {
+          "endSeconds": 26,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:8000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "A statistical association does not establish causation. We need to compare the proposed explanation with alternative mechanisms and consider the assumptions behind the experiment. When we change the scale of measurement, the result can also change.",
+          "startSeconds": 8,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "统计关联并不能证明因果关系。我们需要将所提出的解释与其他机制进行比较，并考虑实验背后的假设。当测量尺度发生变化时，结果也会随之改变。"
+        },
+        {
+          "endSeconds": 32,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:28000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Moran's eye measures global spatial autocorrelation.",
+          "startSeconds": 28,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "莫兰指数用于衡量全局空间自相关性。"
+        },
+        {
+          "endSeconds": 42,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:32000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across space.",
+          "startSeconds": 32,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "让我们获得 GI 星标识，以识别地理加权回归中的局部簇，从而揭示不同空间区域之间的关系。"
+        },
+        {
+          "endSeconds": 50,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:42000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Landsat imagery can inform GOAI models, but spatial heterogeneity remains important.",
+          "startSeconds": 42,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "Landsat 影像可以为 GOAI 模型提供信息，但空间异质性仍然很重要。"
+        },
+        {
+          "endSeconds": 64,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:50000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "CUDA kernels execute on the graphics processor shared memory and occupancy effect performance. A transformer uses self attention to combine information from tokens.",
+          "startSeconds": 50,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "CUDA 内核在图形处理器共享内存上执行，并受到占用率对性能的影响。Transformer 使用自注意力机制来整合令牌信息。"
+        },
+        {
+          "endSeconds": 70,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:64000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Kernel synchronization and memory bandwidth can limit parallel speed.",
+          "startSeconds": 64,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "内核同步和内存带宽会限制并行速度。"
+        },
+        {
+          "endSeconds": 76,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:70000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Crisp air canine can modify a targeted DNA sequence.",
+          "startSeconds": 70,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "清晰的空气使犬类能够修改特定的DNA序列。"
+        },
+        {
+          "endSeconds": 80,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:76000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Epigenetics studies changes in gene regulation.",
+          "startSeconds": 76,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "表观遗传学研究基因调控的变化。"
+        },
+        {
+          "endSeconds": 92,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:80000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "RNA polymerase synthesizes RNA during transcription. A transcription factor binds regulatory DNA and changes gene expression.",
+          "startSeconds": 80,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "转录过程中，RNA聚合酶会合成RNA。转录因子与调控DNA结合，从而改变基因表达。"
+        },
+        {
+          "endSeconds": 112,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:92000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Today we will examine why observations close together in space may be more similar than observations far apart. A statistical association does not establish causation. We need to compare the proposed explanation with alternative mechanisms and consider the assumptions behind the experiments.",
+          "startSeconds": 92,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "今天我们将探讨为什么在空间中靠近的观测结果可能比远离的观测结果更为相似。统计关联并不能证明因果关系。我们需要将所提出的解释与其他机制进行比较，并考虑实验背后的假设。"
+        },
+        {
+          "endSeconds": 118,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:112000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "When we change the scale of measurement, the result can also change.",
+          "startSeconds": 112,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "当我们改变测量尺度时，结果也会发生变化。"
+        },
+        {
+          "endSeconds": 134,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:120000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Moran's eye measures global spatial autocorrelation get us or GI star identifies local clusters geographically weighted regression allows relationships to vary across space.",
+          "startSeconds": 120,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "莫兰指数衡量全局空间自相关性，GI 星标用于识别局部簇，地理加权回归则允许关系在空间中发生变化。"
+        },
+        {
+          "endSeconds": 142,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:134000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Landsat imagery can inform GOAI models, but spatial heterogeneity remains important.",
+          "startSeconds": 134,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "Landsat 影像可以为 GOAI 模型提供信息，但空间异质性仍然很重要。"
+        },
+        {
+          "endSeconds": 162,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:142000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "CUDA kernels execute on the graphics processor shared memory and occupancy effect performance. A transformer uses self attention to combine information from tokens kernel synchronization and memory bandwidth can limit parallel speed",
+          "startSeconds": 142,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "CUDA 内核在图形处理器共享内存上执行，占用空间会影响性能。Transformer 使用自注意力机制来整合令牌信息，内核同步和内存带宽会限制并行速度。"
+        },
+        {
+          "endSeconds": 172,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:162000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "Crisp Erica Nine can modify a targeted DNA sequence. Epigenetics studies changes in gene regulation.",
+          "startSeconds": 162,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "Crisp Erica Nine 能够修改特定的 DNA 序列。表观遗传学研究基因调控的变化。"
+        },
+        {
+          "endSeconds": 180.9,
+          "id": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4:172000:0",
+          "lectureId": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4",
+          "origin": "local",
+          "provider": "local",
+          "revision": 0,
+          "sourceText": "RNA polymerase synthesizes RNA during transcription. A transcription factor binds regulatory DNA.",
+          "startSeconds": 172,
+          "status": "final",
+          "transcriptVersion": "live",
+          "translatedText": "转录过程中，RNA聚合酶会合成RNA。转录因子与调控DNA结合。"
+        }
+      ]
+    },
+    "utc": "2026-10-03T22:02:02.694Z"
+  }
+]

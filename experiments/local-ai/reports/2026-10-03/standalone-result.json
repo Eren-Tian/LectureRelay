@@ -1,0 +1,20 @@
+{
+  "scope": "Independent installed EXE, native UI control; external process counters and read-only SQLite only. No WebDriver/CDP/injected JS/native IPC. Ten minutes does not establish 90-minute memory stability.",
+  "lectureId": "7e6d21fc-9522-47ec-82d1-650aa1b02438",
+  "seconds": 601.125,
+  "samples": 298,
+  "earlyMinute1to3": {
+    "samples": 60,
+    "rssMedianMiB": 3828.962890625,
+    "webViewMedianMiB": 454.796875
+  },
+  "lateMinute8to10": {
+    "samples": 60,
+    "rssMedianMiB": 3856.423828125,
+    "webViewMedianMiB": 480.271484375
+  },
+  "cpuMeanPercent": 6.696259350916837,
+  "rssPeakMiB": 3861.1328125,
+  "finalSavedSegments": 49,
+  "finalSavedTranslations": 49
+}

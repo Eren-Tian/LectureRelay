@@ -87,8 +87,12 @@
   "allowedChanges": [
     "Only proven cloud/local -> local/local origins",
     "Only lectures with recorded import tasks -> import source",
-    "One existing labelled acceptance course restored from Trash for review; retained active when user paused UI",
+    "One existing labelled acceptance course restored from Trash for review and returned through UI; Trash timestamp may change",
     "Settings exercised separately; Windows credentials never read or changed"
   ],
+  "finalState": {
+    "testCourseReturnedToTrash": true,
+    "originalPreferencesRetained": true
+  },
   "scope": "All pre-existing content rows on original columns; new rows permitted. Original WAVs/models SHA-256 compared. Snapshot JSON may be refreshed from migrated database."
 }

@@ -1,0 +1,311 @@
+{
+  "scope": "Actual independent 90-minute run. Linear slopes describe this observation only. Sparse native log readings began around minute 31; they are not continuous queue or discontinuity telemetry.",
+  "windows": {
+    "early5to15": {
+      "wholeGroup": {
+        "workingSet": {
+          "medianMiB": 3865.67578125,
+          "linearSlopeMiBPerMinute": 3.667464300515361
+        },
+        "privateCommitted": {
+          "medianMiB": 5492.5625,
+          "linearSlopeMiBPerMinute": 3.713810559485859
+        }
+      },
+      "byProcessName": {
+        "asr-worker.exe": {
+          "workingSet": {
+            "medianMiB": 935.80078125,
+            "linearSlopeMiBPerMinute": 0.014508092972358763
+          },
+          "privateCommitted": {
+            "medianMiB": 3711.21484375,
+            "linearSlopeMiBPerMinute": 0.02009029270389892
+          }
+        },
+        "conhost.exe": {
+          "workingSet": {
+            "medianMiB": 16.0859375,
+            "linearSlopeMiBPerMinute": -0.004811625722115019
+          },
+          "privateCommitted": {
+            "medianMiB": 2.3671875,
+            "linearSlopeMiBPerMinute": -0.01100830462370146
+          }
+        },
+        "lecturerelay-desktop.exe": {
+          "workingSet": {
+            "medianMiB": 41.6796875,
+            "linearSlopeMiBPerMinute": 0.04932389559507876
+          },
+          "privateCommitted": {
+            "medianMiB": 10.90234375,
+            "linearSlopeMiBPerMinute": 0.05912682696968696
+          }
+        },
+        "llama-server.exe": {
+          "workingSet": {
+            "medianMiB": 2386.25390625,
+            "linearSlopeMiBPerMinute": 0.006593009094920566
+          },
+          "privateCommitted": {
+            "medianMiB": 1396.5859375,
+            "linearSlopeMiBPerMinute": -0.002728072516928864
+          }
+        },
+        "msedgewebview2.exe": {
+          "workingSet": {
+            "medianMiB": 485.8515625,
+            "linearSlopeMiBPerMinute": 3.6018509285751175
+          },
+          "privateCommitted": {
+            "medianMiB": 371.58984375,
+            "linearSlopeMiBPerMinute": 3.648329816952904
+          }
+        }
+      }
+    },
+    "middle40to50": {
+      "wholeGroup": {
+        "workingSet": {
+          "medianMiB": 3948.546875,
+          "linearSlopeMiBPerMinute": 0.6423901838645704
+        },
+        "privateCommitted": {
+          "medianMiB": 5593.5859375,
+          "linearSlopeMiBPerMinute": 0.6849276456335366
+        }
+      },
+      "byProcessName": {
+        "asr-worker.exe": {
+          "workingSet": {
+            "medianMiB": 935.89453125,
+            "linearSlopeMiBPerMinute": 0.0
+          },
+          "privateCommitted": {
+            "medianMiB": 3711.25,
+            "linearSlopeMiBPerMinute": 0.0
+          }
+        },
+        "conhost.exe": {
+          "workingSet": {
+            "medianMiB": 16.0859375,
+            "linearSlopeMiBPerMinute": 0.0
+          },
+          "privateCommitted": {
+            "medianMiB": 2.3671875,
+            "linearSlopeMiBPerMinute": 0.0
+          }
+        },
+        "lecturerelay-desktop.exe": {
+          "workingSet": {
+            "medianMiB": 43.1640625,
+            "linearSlopeMiBPerMinute": -0.024240425562087754
+          },
+          "privateCommitted": {
+            "medianMiB": 12.3515625,
+            "linearSlopeMiBPerMinute": 0.0699794598637071
+          }
+        },
+        "llama-server.exe": {
+          "workingSet": {
+            "medianMiB": 2386.30078125,
+            "linearSlopeMiBPerMinute": 0.003071201464726763
+          },
+          "privateCommitted": {
+            "medianMiB": 1396.5859375,
+            "linearSlopeMiBPerMinute": 0.0017184742694485238
+          }
+        },
+        "msedgewebview2.exe": {
+          "workingSet": {
+            "medianMiB": 567.1171875,
+            "linearSlopeMiBPerMinute": 0.6635594079619312
+          },
+          "privateCommitted": {
+            "medianMiB": 471.5390625,
+            "linearSlopeMiBPerMinute": 0.6132297115003809
+          }
+        }
+      }
+    },
+    "late80to90": {
+      "wholeGroup": {
+        "workingSet": {
+          "medianMiB": 3953.3125,
+          "linearSlopeMiBPerMinute": 0.18793196730069378
+        },
+        "privateCommitted": {
+          "medianMiB": 5584.12109375,
+          "linearSlopeMiBPerMinute": 1.0718167149318698
+        }
+      },
+      "byProcessName": {
+        "asr-worker.exe": {
+          "workingSet": {
+            "medianMiB": 936.1875,
+            "linearSlopeMiBPerMinute": 0.012552467426698298
+          },
+          "privateCommitted": {
+            "medianMiB": 3711.54296875,
+            "linearSlopeMiBPerMinute": 0.0050194321654736486
+          }
+        },
+        "conhost.exe": {
+          "workingSet": {
+            "medianMiB": 16.0859375,
+            "linearSlopeMiBPerMinute": 0.0
+          },
+          "privateCommitted": {
+            "medianMiB": 2.3671875,
+            "linearSlopeMiBPerMinute": 0.0
+          }
+        },
+        "lecturerelay-desktop.exe": {
+          "workingSet": {
+            "medianMiB": 43.81640625,
+            "linearSlopeMiBPerMinute": -0.003433385622308652
+          },
+          "privateCommitted": {
+            "medianMiB": 13.98828125,
+            "linearSlopeMiBPerMinute": 0.007842628796687167
+          }
+        },
+        "llama-server.exe": {
+          "workingSet": {
+            "medianMiB": 2386.33984375,
+            "linearSlopeMiBPerMinute": -0.0007585543233263386
+          },
+          "privateCommitted": {
+            "medianMiB": 1396.5859375,
+            "linearSlopeMiBPerMinute": -0.0022531795063040387
+          }
+        },
+        "msedgewebview2.exe": {
+          "workingSet": {
+            "medianMiB": 570.876953125,
+            "linearSlopeMiBPerMinute": 0.17957143981963047
+          },
+          "privateCommitted": {
+            "medianMiB": 459.69140625,
+            "linearSlopeMiBPerMinute": 1.0612078334760129
+          }
+        }
+      }
+    },
+    "last30": {
+      "wholeGroup": {
+        "workingSet": {
+          "medianMiB": 3952.50390625,
+          "linearSlopeMiBPerMinute": 0.05898475217940511
+        },
+        "privateCommitted": {
+          "medianMiB": 5585.7734375,
+          "linearSlopeMiBPerMinute": -0.09367487133443518
+        }
+      },
+      "byProcessName": {
+        "asr-worker.exe": {
+          "workingSet": {
+            "medianMiB": 936.0234375,
+            "linearSlopeMiBPerMinute": 0.012323240866087656
+          },
+          "privateCommitted": {
+            "medianMiB": 3711.4453125,
+            "linearSlopeMiBPerMinute": 0.011855748069309868
+          }
+        },
+        "conhost.exe": {
+          "workingSet": {
+            "medianMiB": 16.0859375,
+            "linearSlopeMiBPerMinute": 0.0
+          },
+          "privateCommitted": {
+            "medianMiB": 2.3671875,
+            "linearSlopeMiBPerMinute": 0.0
+          }
+        },
+        "lecturerelay-desktop.exe": {
+          "workingSet": {
+            "medianMiB": 43.564453125,
+            "linearSlopeMiBPerMinute": 0.027374960972162746
+          },
+          "privateCommitted": {
+            "medianMiB": 13.7421875,
+            "linearSlopeMiBPerMinute": 0.02837754171580973
+          }
+        },
+        "llama-server.exe": {
+          "workingSet": {
+            "medianMiB": 2386.33984375,
+            "linearSlopeMiBPerMinute": -6.544358469278078e-5
+          },
+          "privateCommitted": {
+            "medianMiB": 1396.5859375,
+            "linearSlopeMiBPerMinute": -0.0002809761356864707
+          }
+        },
+        "msedgewebview2.exe": {
+          "workingSet": {
+            "medianMiB": 570.6796875,
+            "linearSlopeMiBPerMinute": 0.019351993925847494
+          },
+          "privateCommitted": {
+            "medianMiB": 461.8515625,
+            "linearSlopeMiBPerMinute": -0.1336271849838683
+          }
+        }
+      }
+    }
+  },
+  "cpuMeanPercentOfMachine": 7.3190593257839405,
+  "cpuP95PercentOfMachine": 14.1357421875,
+  "maxSavedEnglishRowsNotYetTranslated": 2,
+  "workerPids": {
+    "asr-worker.exe": [115660],
+    "llama-server.exe": [126444]
+  },
+  "sparseHealthFirst": {
+    "utcSeconds": 1791060992.1505575,
+    "logModifiedSeconds": 1791060977.8857703,
+    "minutes": 31.24,
+    "segments": 157,
+    "translated": 157,
+    "rssMiB": 3926.7,
+    "privateMiB": 5574.9,
+    "cpuPercent": 5.35,
+    "processNames": [
+      "asr-worker.exe",
+      "conhost.exe",
+      "lecturerelay-desktop.exe",
+      "llama-server.exe",
+      "msedgewebview2.exe"
+    ],
+    "droppedChunks": 17,
+    "speechBacklogSeconds": 0.0,
+    "translationQueue": 0
+  },
+  "sparseHealthLast": {
+    "utcSeconds": 1791064461.1726274,
+    "logModifiedSeconds": 1791064450.5226321,
+    "minutes": 89.25,
+    "segments": 454,
+    "translated": 454,
+    "rssMiB": 3956.5,
+    "privateMiB": 5600.5,
+    "cpuPercent": 12.7,
+    "processNames": [
+      "asr-worker.exe",
+      "conhost.exe",
+      "lecturerelay-desktop.exe",
+      "llama-server.exe",
+      "msedgewebview2.exe"
+    ],
+    "droppedChunks": 17,
+    "speechBacklogSeconds": 0.0,
+    "translationQueue": 0
+  },
+  "sparseHealthMaxDroppedOrDiscontinuous": 17,
+  "sparseHealthMaxSpeechBacklogSeconds": 0.0,
+  "sparseHealthMaxTranslationQueue": 0
+}

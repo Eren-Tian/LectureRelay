@@ -11,7 +11,7 @@ use windows::Win32::{
     },
 };
 
-/// One policy for every local recognizer, including workers already processing audio.
+/// One shared CPU mask for all local AI, including workers already processing audio.
 pub struct Performance {
     available: usize,
     state: Mutex<Policy>,
@@ -21,6 +21,10 @@ struct Policy {
     workers: Vec<Weak<OwnedHandle>>,
 }
 impl Performance {
+    pub fn threads(&self) -> usize {
+        let quiet = self.state.lock().map(|p| p.quiet).unwrap_or(true);
+        mask(self.available, quiet).count_ones() as usize
+    }
     pub fn new(quiet: bool) -> AppResult<Self> {
         let (mut available, mut system) = (0, 0);
         unsafe { GetProcessAffinityMask(GetCurrentProcess(), &mut available, &mut system) }

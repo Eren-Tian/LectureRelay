@@ -5,7 +5,7 @@ use crate::{
     domain::*,
     error::{AppResult, UserFacing},
     models::manager as model_manager,
-    providers::{OfficialProvider, TranscriptionProvider, TranslationProvider},
+    providers::{OfficialProvider, Role, TranscriptionProvider, configured_text},
     security::credentials,
     speech::local::worker::LocalSpeech,
     speech::translation_progress::TranslationProgress,
@@ -52,6 +52,9 @@ pub struct Live {
     pub status: Mutex<LiveStatus>,
 }
 impl Live {
+    pub fn cancelled(&self) -> bool {
+        self.cancel.load(Ordering::Relaxed)
+    }
     pub fn active(&self) -> bool {
         self.running.load(Ordering::Relaxed)
     }
@@ -179,10 +182,17 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
     let course = state.storage.course(&lecture.course_id)?;
     let context = ai::course_context(state, &course)?;
     let settings = state.storage.settings()?;
-    let translation_configured = settings.provider != "none"
-        && credentials::status(&settings.provider).is_ok_and(|status| status.has_key);
+    let translation_configured = match settings.translation_mode.as_str() {
+        "local" => model_manager::status_for(state, &settings.translation_model)?.installed,
+        "cloud" => {
+            settings.provider != "none"
+                && credentials::status(&settings.provider).is_ok_and(|status| status.has_key)
+        }
+        _ => false,
+    };
     if let Ok(mut status) = state.live.status.lock() {
-        status.translation.enabled = settings.live_translation;
+        status.translation.enabled =
+            settings.live_translation && settings.translation_mode != "none";
         status.translation.configured = translation_configured;
     }
     let mut local = if settings.speech_provider == "local" {
@@ -223,8 +233,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
         let monitor = monitor.clone();
         let queue = queue.clone();
         Some(std::thread::spawn(move || {
-            let Ok(provider) = OfficialProvider::new(&settings.provider, &settings.chat_model)
-            else {
+            let Ok(provider) = configured_text(&state, Role::Translation, true) else {
                 return;
             };
             while let Ok(batch) = receiver.recv() {
@@ -235,7 +244,11 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                 let at = Instant::now();
                 let result = tauri::async_runtime::block_on(async {
                     tokio::time::timeout(
-                        Duration::from_secs(20),
+                        Duration::from_secs(if settings.translation_mode == "local" {
+                            180
+                        } else {
+                            20
+                        }),
                         provider.translate(&context, &batch, &course.assistance_language),
                     )
                     .await
@@ -269,9 +282,10 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                             let _ = app.emit("live-status", &*s);
                         }
                     }
-                    Err(_) => {
+                    Err(error) => {
                         queue.fetch_sub(1, Ordering::Relaxed);
                         if let Ok(mut s) = state.live.status.lock() {
+                            s.message = Some(error);
                             for segment in &batch {
                                 s.translation.complete(&segment.id, false);
                             }
@@ -539,6 +553,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
         Ok(())
     })();
     drop(translations);
+    drop(local);
     if let Ok(mut status) = state.live.status.lock() {
         status.state = "finalizing".into();
         status.draft = None;

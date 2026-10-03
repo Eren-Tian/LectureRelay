@@ -79,6 +79,9 @@ export interface AppSettings {
   assistanceLanguage: AssistanceLanguage;
   provider: ProviderName;
   chatModel: string;
+  translationMode: 'local' | 'cloud' | 'none';
+  translationModel: 'hy-mt2-1.8b' | 'qwen3.5-4b';
+  studyMode: 'local' | 'cloud' | 'none';
   speechProvider: 'none' | 'local' | 'openai' | 'groq';
   localModel: string;
   audioSource: 'microphone' | 'system';
@@ -109,10 +112,16 @@ export interface RecordingStatus {
 export interface JobStatus {
   lectureId: string;
   kind:
-    'transcription' | 'translation' | 'notes' | 'question' | 'provider-test';
+    | 'transcription'
+    | 'translation'
+    | 'notes'
+    | 'review'
+    | 'question'
+    | 'provider-test';
   completed: number;
   total: number;
   cancelling: boolean;
+  message: string;
 }
 export interface InputDevice {
   id: string;

@@ -3,7 +3,7 @@ use crate::{
     AppState,
     domain::*,
     error::{AppResult, UserFacing},
-    providers::{NotesProvider, Provider, QuestionAnsweringProvider, configured},
+    providers::{Provider, Role, configured_text},
 };
 
 pub fn course_context(state: &AppState, course: &Course) -> AppResult<String> {
@@ -114,7 +114,7 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
         if translate && !segments.is_empty() {
             translate_batch(
                 state,
-                &configured(&state.storage.settings()?)?,
+                configured_text(state, Role::Translation, false)?.as_ref(),
                 &context,
                 &detail.course.assistance_language,
                 id,
@@ -130,7 +130,7 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
 
 pub async fn translate_all(state: &AppState, id: &str) -> AppResult<()> {
     let detail = state.storage.detail(id)?;
-    let provider = configured(&state.storage.settings()?)?;
+    let provider = configured_text(state, Role::Translation, false)?;
     let context = course_context(state, &detail.course)?;
     let pending: Vec<_> = detail
         .segments
@@ -147,7 +147,7 @@ pub async fn translate_all(state: &AppState, id: &str) -> AppResult<()> {
         state.jobs.checkpoint()?;
         translate_batch(
             state,
-            &provider,
+            provider.as_ref(),
             &context,
             &detail.course.assistance_language,
             id,
@@ -211,13 +211,28 @@ async fn translate_batch(
 }
 
 pub async fn notes(state: &AppState, id: &str) -> AppResult<()> {
+    review(state, id, "").await
+}
+
+pub async fn review(state: &AppState, id: &str, request: &str) -> AppResult<()> {
+    if request.chars().count() > 2000 {
+        return Err("Keep review instructions under 2,000 characters.".into());
+    }
     let detail = state.storage.detail(id)?;
     if detail.segments.is_empty() {
         return Err("Transcribe audio or add transcript segments before generating notes.".into());
     }
     let source_version = state.storage.source_version(id)?;
-    let provider = configured(&state.storage.settings()?)?;
-    let context = course_context(state, &detail.course)?;
+    let provider = configured_text(state, Role::Study, false)?;
+    let context = format!(
+        "Requested focus: {}\n{}",
+        if request.trim().is_empty() {
+            "Summarize the full class: concepts, definitions, examples and main takeaways."
+        } else {
+            request.trim()
+        },
+        course_context(state, &detail.course)?
+    );
     let mut chunks = Vec::new();
     let mut chunk = String::new();
     for segment in &detail.segments {
@@ -226,10 +241,12 @@ pub async fn notes(state: &AppState, id: &str) -> AppResult<()> {
             timestamp(segment.start_seconds),
             segment.source_text
         );
-        if !chunk.is_empty() && chunk.len() + line.len() > 14000 {
-            chunks.push(std::mem::take(&mut chunk));
+        for piece in crate::providers::local::chunks(&line, 6000) {
+            if !chunk.is_empty() && chunk.len() + piece.len() > 6000 {
+                chunks.push(std::mem::take(&mut chunk));
+            }
+            chunk.push_str(&piece);
         }
-        chunk.push_str(&line);
     }
     if !chunk.is_empty() {
         chunks.push(chunk);
@@ -251,20 +268,52 @@ pub async fn notes(state: &AppState, id: &str) -> AppResult<()> {
         partials.remove(0)
     } else {
         let combined = partials.join("\n\n---\n\n");
-        if combined.len() > 50000 {
-            // Preserve all partial notes rather than silently discarding evidence.
-            format!("# {}\n\n{}", detail.lecture.title, combined)
-        } else {
-            provider
-                .combine_notes(&context, &combined, &detail.course.assistance_language)
-                .await?
+        // Reduce bounded groups, but retain every section draft in the saved guide.
+        // This prevents the final model context from silently omitting late-class evidence.
+        let mut level = partials.clone();
+        let mut rounds = 0;
+        while level.join("\n\n").len() > 7500 && rounds < 4 {
+            let groups = crate::providers::local::chunks(&level.join("\n\n"), 7000);
+            let mut next = Vec::new();
+            for group in groups {
+                state.jobs.checkpoint()?;
+                next.push(
+                    provider
+                        .combine_notes(&context, &group, &detail.course.assistance_language)
+                        .await?,
+                );
+            }
+            if next.join("\n").len() >= level.join("\n").len() {
+                break;
+            }
+            level = next;
+            rounds += 1;
         }
+        let overview = if level.join("\n\n").len() <= 7500 {
+            provider
+                .combine_notes(
+                    &context,
+                    &level.join("\n\n"),
+                    &detail.course.assistance_language,
+                )
+                .await?
+        } else {
+            "Overview exceeded the model context; all section notes are preserved below.".into()
+        };
+        format!(
+            "# {}\n\n{}\n\n---\n\n## Section notes\n\n{}",
+            detail.lecture.title, overview, combined
+        )
     };
     state.jobs.checkpoint()?;
     state.storage.add_note_version(
         id,
         &body,
-        "cloud",
+        if state.storage.settings()?.study_mode == "local" {
+            "local"
+        } else {
+            "cloud"
+        },
         &detail.course.assistance_language,
         &source_version,
     )?;
@@ -282,7 +331,7 @@ pub async fn answer(state: &AppState, id: &str, question: &str) -> AppResult<Ans
     if detail.segments.is_empty() {
         return Err("A transcript is needed to answer from lecture evidence.".into());
     }
-    let provider = configured(&state.storage.settings()?)?;
+    let provider = configured_text(state, Role::Study, false)?;
     let context = course_context(state, &detail.course)?;
     let sources = select_evidence(&detail.segments, question);
     if sources.is_empty() {
@@ -330,7 +379,7 @@ pub fn select_evidence(segments: &[TranscriptSegment], question: &str) -> Vec<Tr
         .iter()
         .map(|s| s.source_text.len() + s.translated_text.len())
         .sum::<usize>()
-        <= 28000
+        <= 10000
     {
         return segments.to_vec();
     }
@@ -373,7 +422,7 @@ pub fn select_evidence(segments: &[TranscriptSegment], question: &str) -> Vec<Tr
         .into_iter()
         .take_while(|(_, s)| {
             size += s.source_text.len() + s.translated_text.len();
-            size <= 28000
+            size <= 10000
         })
         .map(|(_, s)| s.clone())
         .collect()

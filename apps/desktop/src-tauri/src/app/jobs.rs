@@ -12,6 +12,7 @@ pub struct JobStatus {
     pub completed: u32,
     pub total: u32,
     pub cancelling: bool,
+    pub message: String,
 }
 
 #[derive(Default)]
@@ -80,6 +81,7 @@ impl Jobs {
             completed: 0,
             total: 0,
             cancelling: false,
+            message: String::new(),
         });
         Ok(JobGuard(self))
     }
@@ -89,6 +91,13 @@ impl Jobs {
             Err("Task cancelled. Saved results are preserved.".into())
         } else {
             Ok(())
+        }
+    }
+    pub fn message(&self, message: &str) {
+        if let Ok(mut status) = self.status.lock()
+            && let Some(status) = status.as_mut()
+        {
+            status.message = message.into();
         }
     }
 

@@ -4,15 +4,16 @@ LectureRelay is a **Windows desktop app** for recording classes, reading English
 
 ## Download and install
 
-**[Download LectureRelay 0.2.0 for Windows x64 (.exe)](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.2.0/LectureRelay_0.2.0_x64-setup.exe)**
+**[Download LectureRelay 0.3.0 for Windows x64 (.exe)](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.3.0/LectureRelay_0.3.0_x64-setup.exe)**
 
-[Release notes and all downloads](https://github.com/Ellen-Tian/LectureRelay/releases/tag/v0.2.0) · [SHA-256 checksum](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.2.0/LectureRelay_0.2.0_x64-setup.exe.sha256)
+[Release notes and all downloads](https://github.com/Ellen-Tian/LectureRelay/releases/tag/v0.3.0) · [SHA-256 checksum](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.3.0/LectureRelay_0.3.0_x64-setup.exe.sha256)
 
-1. Download **`LectureRelay_0.2.0_x64-setup.exe`** from the release's **Assets** section. The automatically generated **Source code** archives are for developers.
+1. Download **`LectureRelay_0.3.0_x64-setup.exe`** from the release's **Assets** section. The automatically generated **Source code** archives are for developers.
 2. Run the installer and follow the setup wizard. It installs for your Windows user and downloads Microsoft WebView2 if it is missing; that step needs an internet connection.
 3. Open **LectureRelay** from the Start menu or desktop shortcut. No LectureRelay account is required.
 4. For local English captions, open **Settings → Local AI**, download the speech model once (about 667 MiB), then select **Local English** in **AI Providers**.
-5. Create a course, add its background and terminology, select your microphone or system audio, and start a class.
+5. For offline translation and study, download **Hy-MT2** and **Qwen** in Local AI, then choose **Local** in AI Providers. Qwen is also an alternative translator.
+6. Create a course, add its background and terminology, select your microphone or system audio, and start a class.
 
 This package targets **64-bit Intel/AMD Windows PCs**. A GPU is not required. The speech model is downloaded separately. You do not need Node.js, pnpm, Rust or Python to use the installed app.
 
@@ -26,22 +27,28 @@ This is an **unsigned development preview**; Windows may display an unknown-publ
 - Replay recordings, follow timestamps, search and correct transcripts.
 - Import supported media, attach PDF slides, and keep timestamped notes, bookmarks and chapters.
 - Review note versions and unfinished processing tasks, and export transcripts, subtitles and notes.
-- Choose Light or Dark appearance and a global Quiet Mode for local speech.
+- Choose Light or Dark appearance and a global Quiet Mode for all local AI.
 - Restore courses from Trash and keep your library between app sessions.
 
-See the [getting-started guide](docs/user-guide/getting-started.md) and [local speech guide](docs/user-guide/local-speech.md).
+See the [getting-started guide](docs/user-guide/getting-started.md), [local AI guide](docs/user-guide/local-ai.md) and [0.3.0 changes](docs/releases/v0.3.0.md).
 
 ## Local and optional cloud AI
 
-**Local English transcription runs on your computer with no per-minute speech API charge.** After the model download, recording, local captions, playback and manual notes can work offline. Quiet Mode limits local speech's CPU budget; actual speed, power use and fan noise depend on your computer.
+English transcription, translation, summaries and full-class review can run on your computer after model downloads. No LectureRelay login or hosted inference bill. Quiet Mode gives local AI a shared CPU budget.
 
-**Translation, AI-generated notes and Q&A currently use an optional OpenAI/Groq provider configured with your own API key.** Provider charges or usage limits apply to your account. Cloud providers are disabled by default, and there is no automatic cloud fallback.
+- **Speech:** Nemotron Streaming EN 0.6B.
+- **Translation:** Hy-MT2-1.8B Q4_K_M; optional Qwen3.5-4B alternative.
+- **Summary, deep review and Q&A:** the same Qwen3.5-4B Q4_K_M download (Unsloth conversion).
 
-Offline translation and local AI summaries are being evaluated; they are **not included in this release**. Read [provider setup](docs/providers/setup.md) before enabling cloud processing.
+Download only the models you need; all three use about 4.3 GiB of disk space. During class, speech and translation run. Study generation starts after live processing ends. Models are released when work finishes or is cancelled. See [local AI setup](docs/user-guide/local-ai.md).
+
+These are **preview candidates**. Small classroom samples revealed terminology and negation errors; they are not certified as the best or uniformly accurate models. [Evaluation and limitations](docs/testing/local-ai-v0.3.md) distinguish real model tests from full-app and laptop acceptance.
+
+OpenAI/Groq remain optional, with your own API key and provider charges. Local mode never automatically falls back to cloud. Read [provider setup](docs/providers/setup.md) before enabling uploads.
 
 ## Preview status
 
-Version 0.2.0 includes the classroom, appearance and study-workspace changes. The GitHub installer is rebuilt from the published source; its release page records the packaging checks and checksum.
+Version 0.3.0 adds offline text AI, separate translation/study choices and user-directed whole-class review. The GitHub installer is rebuilt from the published source; its release page records the packaging checks and checksum.
 
 Authenticated cloud workflows and ordinary-laptop power/noise behavior remain unverified. A previous 90-minute installed-app run found WebView2 memory growth; this release does not claim that issue is resolved. Earlier reports describe the specific builds and scenarios tested, rather than certifying every feature in the current installer: [installed acceptance](docs/testing/installed-acceptance-v0.2.md), [preferences](docs/releases/v0.2.0-preferences.md), [product iteration](docs/releases/v0.2.0-product-iteration.md).
 
@@ -57,7 +64,7 @@ pnpm run doctor
 pnpm dev
 ```
 
-The first build downloads a hash-pinned CPU SDK; model weights are downloaded separately in the app. Python is only for opt-in experiments/soak tests. Details: [environment](docs/development/environment.md), [contributing](CONTRIBUTING.md).
+The first build downloads hash-pinned CPU speech and text runtimes; model weights are downloaded separately in the app. Python is only for opt-in experiments/soak tests. Details: [environment](docs/development/environment.md), [contributing](CONTRIBUTING.md).
 
 | Command                                       | Purpose                                            |
 | --------------------------------------------- | -------------------------------------------------- |
@@ -69,7 +76,7 @@ The first build downloads a hash-pinned CPU SDK; model weights are downloaded se
 | `pnpm build:debug`                            | Native debug executable                            |
 | `pnpm release`                                | Release EXE + current-user English NSIS + checksum |
 
-Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.2.0_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
+Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.0_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
 
 ## Repository
 
@@ -80,6 +87,7 @@ apps/desktop/native/         production C++ speech-worker source and runtime man
 assets/branding/             canonical phoenix SVG
 scripts/                    dev, build, test, release and verification
 experiments/local-stt/       development-only model comparisons and preserved reports
+experiments/local-ai/        local translation/study comparisons and preserved reports
 tests/                      fixture policy and opt-in long soak
 docs/                       architecture, providers, security, user guides and releases
 target/                     ignored builds, SDKs, fixtures, experiment downloads and installers

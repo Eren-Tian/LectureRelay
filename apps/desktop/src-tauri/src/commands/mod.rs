@@ -1,3 +1,4 @@
+use tauri::Emitter;
 pub(crate) mod study;
 use crate::{
     AppState,
@@ -188,7 +189,7 @@ pub async fn start_lecture(
         {
             return Err("Wait for the five-second audio test to finish before recording.".into());
         }
-        if state.live.active() || crate::models::manager::status(&state)?.downloading {
+        if state.live.active() || crate::models::manager::downloading(&state)? {
             return Err("Wait for caption processing or model download to finish.".into());
         }
         let settings = state.storage.settings()?;
@@ -353,7 +354,7 @@ pub fn save_settings(state: App<'_>, mut settings: AppSettings) -> AppResult<()>
     if state.jobs.status()?.is_some()
         || state.live.active()
         || state.recorder.status()?.is_some()
-        || crate::models::manager::status(&state)?.downloading
+        || crate::models::manager::downloading(&state)?
     {
         return Err("Wait for active work before changing preferences.".into());
     }
@@ -417,7 +418,7 @@ pub async fn test_provider(state: App<'_>, provider: String, model: String) -> A
             .user_error("The app is busy. Try again.")?;
         if state.recorder.status()?.is_some()
             || state.live.active()
-            || crate::models::manager::status(&state)?.downloading
+            || crate::models::manager::downloading(&state)?
         {
             return Err("Test provider connections after active work ends.".into());
         }
@@ -438,7 +439,7 @@ fn begin_job<'a>(state: &'a AppState, id: &str, kind: &str) -> AppResult<JobGuar
         .gate
         .lock()
         .user_error("The app is busy. Try again.")?;
-    if state.live.active() || crate::models::manager::status(state)?.downloading {
+    if state.live.active() || crate::models::manager::downloading(state)? {
         return Err("Wait for live captions or model download to finish.".into());
     }
     if state.recorder.status()?.is_some() {
@@ -470,6 +471,45 @@ pub async fn generate_notes(state: App<'_>, id: String) -> AppResult<()> {
     let result = ai::notes(&state, &id).await;
     _job.finish(&result)?;
     result
+}
+
+#[tauri::command]
+pub async fn generate_review(state: App<'_>, id: String, request: String) -> AppResult<()> {
+    if request.trim().is_empty() {
+        return Err("Describe what you want to review.".into());
+    }
+    let job = begin_job(&state, &id, "review")?;
+    let result = ai::review(&state, &id, &request).await;
+    job.finish(&result)?;
+    result
+}
+
+#[tauri::command]
+pub fn local_text_models(state: App<'_>) -> AppResult<Vec<crate::models::manager::ModelStatus>> {
+    [
+        crate::models::catalog::TRANSLATION,
+        crate::models::catalog::STUDY,
+    ]
+    .into_iter()
+    .map(|id| crate::models::manager::status_for(&state, id))
+    .collect()
+}
+
+#[tauri::command]
+pub async fn download_text_model(
+    state: App<'_>,
+    app: tauri::AppHandle,
+    id: String,
+) -> AppResult<()> {
+    crate::models::manager::download_model_with(&state, &id, |status| {
+        let _ = app.emit("model-status", status);
+    })
+    .await
+}
+
+#[tauri::command]
+pub fn remove_text_model(state: App<'_>, id: String) -> AppResult<()> {
+    crate::models::manager::remove_model(&state, &id)
 }
 
 #[tauri::command]

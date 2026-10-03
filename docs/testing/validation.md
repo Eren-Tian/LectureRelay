@@ -21,6 +21,10 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test/native-smoke.ps
 
 Authenticated cloud acceptance is separate and requires an explicitly supplied valid key. Do not infer success from connection metadata, mock results or missing-key checks.
 
+## Local text AI preview
+
+The [0.3 evaluation report](local-ai-v0.3.md) records actual Hy-MT2/Qwen/Bergamot comparisons, isolated native WebView checks and their limits. Opt-in commands and model prerequisites are in [local AI experiments](../../experiments/local-ai/README.md). These are separate from installed-release and endurance acceptance.
+
 ## Long soak
 
 `tests/soak/local-stt.py` is the opt-in real wall-clock native/WAV/SQLite harness using the preserved experimental worker policy. It defaults to 5,400 seconds; translation pressure is simulated. Prepare its worker with `experiments/local-stt/scripts/build-nemo.ps1`, then run with developer Python 3.12. New runs write timestamped `target/asr-evaluation/endurance-*` directories. A short path smoke can set `LECTURERELAY_SOAK_SECONDS=12`; that is not a replacement for the prior 90-minute result.

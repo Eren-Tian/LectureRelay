@@ -2,7 +2,7 @@ param([string]$InstallerPath)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 . (Join-Path $PSScriptRoot 'file-hash.ps1')
-if (!$InstallerPath) { $InstallerPath=Join-Path $projectRoot 'target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.2.0_x64-setup.exe' }
+if (!$InstallerPath) { $InstallerPath=Join-Path $projectRoot 'target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.0_x64-setup.exe' }
 $testRoot=Join-Path $projectRoot ('target/installer-cleanup-'+[Guid]::NewGuid().ToString())
 $data=Join-Path $env:LOCALAPPDATA 'LectureRelay/app.db'
 $before=if (Test-Path -LiteralPath $data) { Get-SourceSha256 $data } else { $null }
@@ -11,7 +11,7 @@ $installed=Start-Process -FilePath $InstallerPath -ArgumentList "/S /D=$testRoot
 if ($installed.ExitCode -ne 0) { throw "Installer failed: $($installed.ExitCode)" }
 $exe=Join-Path $testRoot 'lecturerelay-desktop.exe'
 $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
-if ($version.ProductVersion -notmatch '^0\.2\.0') { throw 'Installed application version differs' }
+if ($version.ProductVersion -notmatch '^0\.3\.0') { throw 'Installed application version differs' }
 & (Join-Path $PSScriptRoot 'runtime-resources.ps1') -RuntimePath (Join-Path $testRoot 'local-asr')
 $icon=Join-Path $projectRoot 'apps/desktop/src-tauri/icons/icon.ico'
 $release=Join-Path $projectRoot 'target/x86_64-pc-windows-msvc/release/lecturerelay-desktop.exe'

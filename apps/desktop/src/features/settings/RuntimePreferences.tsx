@@ -45,7 +45,9 @@ export function RuntimePreferences() {
         <label className="toggle-row performance-toggle">
           <span>
             <strong>Quiet Mode</strong>
-            <small>Use up to four logical CPU cores for local speech.</small>
+            <small>
+              All local AI shares a budget of up to four logical CPU cores.
+            </small>
           </span>
           <input
             type="checkbox"
@@ -60,8 +62,8 @@ export function RuntimePreferences() {
           {quietMode
             ? 'On · Reduced CPU budget.'
             : 'Off · Full CPU performance. All available CPU cores are allowed.'}{' '}
-          Applies to all courses, including speech recognition already running.
-          Saved automatically.
+          Applies to all courses, including speech and text models already
+          running. Saved automatically.
         </p>
       </section>
     </>

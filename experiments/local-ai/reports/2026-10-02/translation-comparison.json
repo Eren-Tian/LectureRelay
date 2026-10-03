@@ -1,0 +1,386 @@
+[
+  {
+    "case": "concurrency",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+    "language": "zh",
+    "milliseconds": 3049,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "concurrency",
+          "text": "竞态条件不是比赛。使用互斥锁来保护共享计数器。"
+        }
+      ]
+    },
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex."
+  },
+  {
+    "case": "numbers",
+    "context": "Chemistry: preserve concentrations, units and negation.",
+    "language": "zh",
+    "milliseconds": 1024,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "numbers",
+          "text": "浓度从 0.25 mol/L 降至 0.05 mol/L；没有增加 20%。"
+        }
+      ]
+    },
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent."
+  },
+  {
+    "case": "causality",
+    "context": "Statistics lecture on hypothesis testing.",
+    "language": "zh",
+    "milliseconds": 817,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "causality",
+          "text": "相关性并不等于因果关系。不拒绝零假设并不能证明零假设为真。"
+        }
+      ]
+    },
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true."
+  },
+  {
+    "case": "condition",
+    "context": "Calculus: critical points and the second derivative test.",
+    "language": "zh",
+    "milliseconds": 1025,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "condition",
+          "text": "如果导数等于零，该点可能是最大值、最小值或两者都不是。在得出结论之前，需检查二阶导数。"
+        }
+      ]
+    },
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion."
+  },
+  {
+    "case": "concurrency",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+    "language": "ja",
+    "milliseconds": 1250,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "concurrency",
+          "text": "競合状態は競争ではありません。ミューテックスを使用して共有カウンターを保護してください。"
+        }
+      ]
+    },
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex."
+  },
+  {
+    "case": "numbers",
+    "context": "Chemistry: preserve concentrations, units and negation.",
+    "language": "ja",
+    "milliseconds": 1399,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "numbers",
+          "text": "濃度は0.25 mol/Lから0.05 mol/Lに減少しました。20％増加することはありませんでした。"
+        }
+      ]
+    },
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent."
+  },
+  {
+    "case": "causality",
+    "context": "Statistics lecture on hypothesis testing.",
+    "language": "ja",
+    "milliseconds": 1518,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "causality",
+          "text": "相関関係は因果関係を意味しない。空の仮説を棄却しなかったからといって、それが真であることを証明するわけではない。"
+        }
+      ]
+    },
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true."
+  },
+  {
+    "case": "condition",
+    "context": "Calculus: critical points and the second derivative test.",
+    "language": "ja",
+    "milliseconds": 2037,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "condition",
+          "text": "導数がゼロの場合、その点は最大値、最小値、またはどちらでもない可能性があります。結論を出す前に、二番目の導数を確認する必要があります。"
+        }
+      ]
+    },
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion."
+  },
+  {
+    "case": "concurrency",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+    "language": "ko",
+    "milliseconds": 1308,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "concurrency",
+          "text": "경쟁 상태는 경기나 대결이 아닙니다. 미ューテックス를 사용하여 공유되는 카운터를 보호하세요."
+        }
+      ]
+    },
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex."
+  },
+  {
+    "case": "numbers",
+    "context": "Chemistry: preserve concentrations, units and negation.",
+    "language": "ko",
+    "milliseconds": 1342,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "numbers",
+          "text": "농도는 0.25 mol/L에서 0.05 mol/L로 감소했으며, 20% 증가하지 않았습니다."
+        }
+      ]
+    },
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent."
+  },
+  {
+    "case": "causality",
+    "context": "Statistics lecture on hypothesis testing.",
+    "language": "ko",
+    "milliseconds": 1669,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "causality",
+          "text": "상관관계는 인과관계를 의미하지 않습니다. 귀무가설을 기각하지 않은 것은 그 가설이 참임을 증명하는 것이 아닙니다."
+        }
+      ]
+    },
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true."
+  },
+  {
+    "case": "condition",
+    "context": "Calculus: critical points and the second derivative test.",
+    "language": "ko",
+    "milliseconds": 2005,
+    "model": "hy-mt2-1.8b",
+    "result": {
+      "Ok": [
+        {
+          "id": "condition",
+          "text": "미분값이 0이면 그 점은 최대점, 최소점, 또는 둘 다가 될 수 있습니다. 결론을 내리기 전에 2차 미분값을 확인해야 합니다."
+        }
+      ]
+    },
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion."
+  },
+  {
+    "case": "concurrency",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+    "language": "zh",
+    "milliseconds": 6517,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "concurrency",
+          "text": "竞态条件并非竞争。请使用互斥锁保护共享计数器。"
+        }
+      ]
+    },
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex."
+  },
+  {
+    "case": "numbers",
+    "context": "Chemistry: preserve concentrations, units and negation.",
+    "language": "zh",
+    "milliseconds": 2971,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "numbers",
+          "text": "浓度从 0.25 降至 0.05 mol/L；未增加 20%。"
+        }
+      ]
+    },
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent."
+  },
+  {
+    "case": "causality",
+    "context": "Statistics lecture on hypothesis testing.",
+    "language": "zh",
+    "milliseconds": 2085,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "causality",
+          "text": "相关性并不蕴含因果性。未能拒绝原假设并不能证明其为真。"
+        }
+      ]
+    },
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true."
+  },
+  {
+    "case": "condition",
+    "context": "Calculus: critical points and the second derivative test.",
+    "language": "zh",
+    "milliseconds": 3641,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "condition",
+          "text": "若导数为零，该点可能是极大值点、极小值点或都不是。在得出结论前，请先检查二阶导数。"
+        }
+      ]
+    },
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion."
+  },
+  {
+    "case": "concurrency",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+    "language": "ja",
+    "milliseconds": 2639,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "concurrency",
+          "text": "競合状態は競争ではありません。共有カウンタをミューテックスで保護してください。"
+        }
+      ]
+    },
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex."
+  },
+  {
+    "case": "numbers",
+    "context": "Chemistry: preserve concentrations, units and negation.",
+    "language": "ja",
+    "milliseconds": 3544,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "numbers",
+          "text": "濃度は 0.25 mol/L から 0.05 mol/L に低下し、20% 増加しなかった。"
+        }
+      ]
+    },
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent."
+  },
+  {
+    "case": "causality",
+    "context": "Statistics lecture on hypothesis testing.",
+    "language": "ja",
+    "milliseconds": 3167,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "causality",
+          "text": "相関は因果を意味しない。帰無仮説を棄却しないことは、それが真であることを証明するものではない。"
+        }
+      ]
+    },
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true."
+  },
+  {
+    "case": "condition",
+    "context": "Calculus: critical points and the second derivative test.",
+    "language": "ja",
+    "milliseconds": 3597,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "condition",
+          "text": "微分がゼロである点は、最大値、最小値、またはどちらでもない可能性がある。結論を引く前に、2 階微分を確認すること。"
+        }
+      ]
+    },
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion."
+  },
+  {
+    "case": "concurrency",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+    "language": "ko",
+    "milliseconds": 2769,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "concurrency",
+          "text": "경쟁 상태는 경쟁이 아닙니다. 공유 카운터를 뮤텍스로 보호하세요."
+        }
+      ]
+    },
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex."
+  },
+  {
+    "case": "numbers",
+    "context": "Chemistry: preserve concentrations, units and negation.",
+    "language": "ko",
+    "milliseconds": 3323,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "numbers",
+          "text": "농도는 0.25 mol/L 에서 0.05 mol/L 로 감소했으며, 20% 증가하지 않았다."
+        }
+      ]
+    },
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent."
+  },
+  {
+    "case": "causality",
+    "context": "Statistics lecture on hypothesis testing.",
+    "language": "ko",
+    "milliseconds": 3379,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "causality",
+          "text": "상관관계는 인과관계를 의미하지 않는다. 귀무가설을 기각하지 않는 것은 그것이 참임을 증명하는 것이 아니다."
+        }
+      ]
+    },
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true."
+  },
+  {
+    "case": "condition",
+    "context": "Calculus: critical points and the second derivative test.",
+    "language": "ko",
+    "milliseconds": 4212,
+    "model": "qwen3.5-4b",
+    "result": {
+      "Ok": [
+        {
+          "id": "condition",
+          "text": "미분이 0 이라면 해당 점은 최대값, 최소값 또는 둘 다 아닐 수 있습니다. 결론을 내리기 전에 2 차 도함수를 확인하세요."
+        }
+      ]
+    },
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion."
+  }
+]

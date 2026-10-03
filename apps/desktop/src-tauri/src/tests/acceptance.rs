@@ -1,6 +1,37 @@
 use super::*;
 
 #[test]
+#[ignore = "prepares a fresh debug-only UI fixture with pinned downloaded text models"]
+fn prepare_local_ai_ui_fixture() {
+    prepare_isolated_native_ui_fixture();
+    let paths = AppPaths::production().unwrap();
+    let db = Storage::open(&paths.data.join("app.db")).unwrap();
+    db.save_settings(AppSettings {
+        quiet_mode: false,
+        ..Default::default()
+    })
+    .unwrap();
+    for id in [
+        crate::models::catalog::TRANSLATION,
+        crate::models::catalog::STUDY,
+    ] {
+        let model = crate::models::catalog::get(id).unwrap();
+        let source = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../../target/local-ai-evaluation/models")
+            .join(model.file);
+        std::fs::hard_link(source, paths.data.join("models").join(model.file)).unwrap();
+        let manifest = serde_json::json!({"id":id,"revision":model.revision,"sha256":model.sha256,"runtimeVersion":model.runtime});
+        std::fs::write(
+            paths.data.join(format!("models/{id}.json")),
+            manifest.to_string(),
+        )
+        .unwrap();
+        db.install_model(id, model.revision, model.sha256, model.size)
+            .unwrap();
+    }
+}
+
+#[test]
 #[ignore = "downloads the official 667 MiB model twice to verify cancellation, install and removal"]
 fn official_model_download_cancel_install_and_remove() {
     use std::sync::{Arc, Mutex, atomic::Ordering};

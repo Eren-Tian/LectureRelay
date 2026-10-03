@@ -143,7 +143,9 @@ export function LiveCaptions({
                         {!translation.enabled
                           ? 'Live translation is off'
                           : !translation.configured
-                            ? 'Connect a text provider to translate'
+                            ? settings.translationMode === 'local'
+                              ? 'Download your translation model in Settings → Local AI'
+                              : 'Choose a translation provider in Settings'
                             : translation.deferredIds.includes(segment.id)
                               ? 'Translation can be retried after class'
                               : translation.pendingIds.includes(segment.id)

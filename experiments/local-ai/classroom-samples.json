@@ -1,0 +1,22 @@
+[
+  {
+    "id": "concurrency",
+    "source": "A race condition is not a competition. Protect the shared counter with a mutex.",
+    "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스"
+  },
+  {
+    "id": "numbers",
+    "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent.",
+    "context": "Chemistry: preserve concentrations, units and negation."
+  },
+  {
+    "id": "causality",
+    "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true.",
+    "context": "Statistics lecture on hypothesis testing."
+  },
+  {
+    "id": "condition",
+    "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion.",
+    "context": "Calculus: critical points and the second derivative test."
+  }
+]

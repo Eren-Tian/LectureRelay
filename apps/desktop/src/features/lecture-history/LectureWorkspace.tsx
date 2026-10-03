@@ -87,9 +87,18 @@ export function LecturePage({ id }: { id: string }) {
   };
   const beginAI = async (kind: 'transcription' | 'translation' | 'notes') => {
     const local =
-      kind === 'transcription' &&
-      workspace.data.settings.speechProvider === 'local';
-    if (!local && !configured) {
+      kind === 'transcription'
+        ? workspace.data.settings.speechProvider === 'local'
+        : (kind === 'translation'
+            ? workspace.data.settings.translationMode
+            : workspace.data.settings.studyMode) === 'local';
+    const off =
+      kind === 'transcription'
+        ? false
+        : (kind === 'translation'
+            ? workspace.data.settings.translationMode
+            : workspace.data.settings.studyMode) === 'none';
+    if (off || (!local && !configured)) {
       workspace.notify('Choose an AI provider in Settings.', true);
       workspace.navigate({ view: 'settings' });
       return;
@@ -100,6 +109,7 @@ export function LecturePage({ id }: { id: string }) {
         : (workspace.data.settings.speechProvider as 'openai' | 'groq'),
     );
     if (
+      !local &&
       !(await workspace.confirm({
         title:
           kind === 'notes'
@@ -136,7 +146,10 @@ export function LecturePage({ id }: { id: string }) {
   };
   const ask = (e: FormEvent) => {
     e.preventDefault();
-    if (!configured) {
+    if (
+      workspace.data.settings.studyMode === 'none' ||
+      (workspace.data.settings.studyMode === 'cloud' && !configured)
+    ) {
       workspace.notify('Configure a text provider in Settings.', true);
       return;
     }
@@ -233,7 +246,10 @@ export function LecturePage({ id }: { id: string }) {
               {ownJob.total
                 ? `${ownJob.completed} / ${ownJob.total}`
                 : 'Working…'}{' '}
-              · {ownJob.cancelling ? 'Cancelling…' : 'Audio is saved.'}
+              ·{' '}
+              {ownJob.cancelling
+                ? 'Cancelling…'
+                : ownJob.message || 'Audio is saved.'}
             </p>
           </div>
           <button
@@ -498,7 +514,10 @@ export function LecturePage({ id }: { id: string }) {
             questions={
               <QuestionsPanel
                 answers={answers}
-                cloud={cloud}
+                cloud={
+                  settings.studyMode === 'local' ? 'Qwen3.5 · local' : cloud
+                }
+                local={settings.studyMode === 'local'}
                 blocked={blocked}
                 question={question}
                 segments={segments}

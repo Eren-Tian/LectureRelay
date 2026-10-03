@@ -1,10 +1,10 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "LectureRelay",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "identifier": "com.lecturerelay.desktop",
   "build": {
-    "beforeDevCommand": "pnpm -w build:asr && pnpm dev",
+    "beforeDevCommand": "pnpm -w build:asr && pnpm -w build:text && pnpm dev",
     "devUrl": "http://127.0.0.1:5173",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
@@ -53,7 +53,8 @@
       }
     },
     "resources": {
-      "resources/local-asr/": "local-asr/"
+      "resources/local-asr/": "local-asr/",
+      "resources/local-text/": "local-text/"
     }
   }
 }

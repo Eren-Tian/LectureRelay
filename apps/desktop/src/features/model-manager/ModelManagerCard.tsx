@@ -16,12 +16,24 @@ export function ModelManagerCard({
   setModel: (model: ModelStatus) => void;
 }) {
   const workspace = useWorkspace();
+  const speech = !model || model.id === 'nemotron-streaming';
+  const translation = model?.id === 'hy-mt2-1.8b';
+  const title = speech
+    ? 'English transcription'
+    : translation
+      ? 'English → Chinese / Japanese / Korean'
+      : 'Summary & deep review';
+  const hint = speech
+    ? 'Nemotron runs during class. No speech API charges.'
+    : translation
+      ? 'Hy-MT2 translates finalized sentences on this computer. Classroom quality and latency depend on the material and hardware.'
+      : 'Qwen is shared by summaries, full-class review and Q&A. Loaded only after recording and live processing finish.';
   return (
     <section className="settings-card">
       <div className="settings-title">
         <div>
-          <h3>Local English speech</h3>
-          <p>Private recognition. No per-minute speech charges.</p>
+          <h3>{title}</h3>
+          <p>{hint}</p>
         </div>
         <span className="pill">
           {!model
@@ -29,7 +41,7 @@ export function ModelManagerCard({
             : model.downloading
               ? 'Downloading'
               : model.installed
-                ? 'Ready'
+                ? 'Downloaded'
                 : 'Not downloaded'}
         </span>
       </div>
@@ -44,7 +56,10 @@ export function ModelManagerCard({
             <p className="field-hint">
               {model.runtimeVersion} · {model.revision.slice(0, 7)}
             </p>
-            <p className="field-hint">{ui.modelHint}</p>
+            <p className="field-hint">
+              Loads when needed; released when the task ends. Quiet Mode applies
+              to all local AI. No login or API key required.
+            </p>
           </details>
         </>
       )}
@@ -78,14 +93,19 @@ export function ModelManagerCard({
                 if (
                   !(await workspace.confirm({
                     title: ui.removeModel,
-                    body: ui.modelHint,
+                    body: 'Remove this downloaded model? Your recordings, transcripts and notes remain saved. You can download the model again.',
                     action: ui.removeModel,
                   }))
                 )
                   return;
-                await api.removeModel();
-              } else await api.downloadModel();
-              setModel(await api.localModel());
+                if (speech) await api.removeModel();
+                else await api.removeTextModel(model.id);
+              } else if (speech) await api.downloadModel();
+              else if (model) await api.downloadTextModel(model.id);
+              const next = speech
+                ? await api.localModel()
+                : (await api.textModels()).find((m) => m.id === model?.id);
+              if (next) setModel(next);
             })
           }
         >

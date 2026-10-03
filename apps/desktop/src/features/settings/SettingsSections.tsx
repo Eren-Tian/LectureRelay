@@ -279,8 +279,8 @@ export function CaptionSettings({
       <div className="settings-inline-note">
         <Icon name="cloud" size={18} />
         <p>
-          Live translation uses your cloud text provider. Choose it in AI
-          Providers.
+          Choose local Hy-MT2 or your own cloud provider for live translation in
+          AI Providers.
         </p>
         <button className="text-button" onClick={onProviders}>
           Set up
@@ -350,18 +350,85 @@ export function ProviderSettings({
         <div className="settings-title">
           <div>
             <h3>Translation & study tools</h3>
-            <p>One text provider for live translation, notes and Q&A.</p>
+            <p>
+              Dedicated translation. One shared model for summaries and review.
+            </p>
           </div>
-          <span className={`pill ${!hasKey ? 'gold' : ''}`}>
-            {settings.provider === 'none'
-              ? 'Off'
-              : hasKey
-                ? 'Key saved'
-                : 'Key needed'}
+          <span className="pill">
+            {settings.translationMode === 'local' &&
+            settings.studyMode === 'local'
+              ? 'On this computer'
+              : 'Separate providers'}
           </span>
         </div>
         <label>
-          Cloud text provider
+          Translation
+          <select
+            disabled={blocked}
+            value={settings.translationMode}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                translationMode: e.target
+                  .value as AppSettings['translationMode'],
+              })
+            }
+          >
+            <option value="local">Local · on this computer</option>
+            <option value="cloud">Cloud · my provider below</option>
+            <option value="none">Off</option>
+          </select>
+        </label>
+        {settings.translationMode === 'local' && (
+          <label>
+            Local translation model
+            <select
+              disabled={blocked}
+              value={settings.translationModel}
+              onChange={(e) =>
+                setSettings({
+                  ...settings,
+                  translationModel: e.target
+                    .value as AppSettings['translationModel'],
+                })
+              }
+            >
+              <option value="hy-mt2-1.8b">
+                Hy-MT2-1.8B · smaller, faster candidate
+              </option>
+              <option value="qwen3.5-4b">
+                Qwen3.5-4B · alternative, shares study download
+              </option>
+            </select>
+            <span className="field-hint">
+              Preview models. Verify technical terms, numbers and negation
+              against the English transcript; neither model is guaranteed
+              accurate.
+            </span>
+          </label>
+        )}
+        <label>
+          Summary, deep review & Q&A
+          <select
+            disabled={blocked}
+            value={settings.studyMode}
+            onChange={(e) =>
+              setSettings({
+                ...settings,
+                studyMode: e.target.value as AppSettings['studyMode'],
+              })
+            }
+          >
+            <option value="local">Local · Qwen3.5-4B</option>
+            <option value="cloud">Cloud · my provider below</option>
+            <option value="none">Off</option>
+          </select>
+        </label>
+        <button className="button text" onClick={onLocal}>
+          Download and manage local models <Icon name="arrow" size={16} />
+        </button>
+        <label>
+          Optional cloud text provider
           <select
             disabled={blocked}
             value={settings.provider}

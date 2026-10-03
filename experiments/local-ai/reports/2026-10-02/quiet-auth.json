@@ -1,0 +1,23 @@
+[
+  {
+    "language": "Simplified Chinese",
+    "milliseconds": 1211,
+    "sharedCpuMask": "f",
+    "text": "浓度从0.25摩尔/升降至0.05摩尔/升，没有增加20%。",
+    "threads": 4
+  },
+  {
+    "language": "Japanese",
+    "milliseconds": 1496,
+    "sharedCpuMask": "f",
+    "text": "濃度は0.25 mol/Lから0.05 mol/Lに減少し、20％も増加することはなかった。",
+    "threads": 4
+  },
+  {
+    "language": "Korean",
+    "milliseconds": 1659,
+    "sharedCpuMask": "f",
+    "text": "농도는 0.25 mol/L에서 0.05 mol/L로 감소했으며, 20% 증가하지 않았습니다.",
+    "threads": 4
+  }
+]

@@ -1,0 +1,597 @@
+{
+  "samples": [
+    {
+      "elapsedMs": 25,
+      "seconds": 0.21,
+      "backlog": 0,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 957,
+      "seconds": 1.05,
+      "backlog": 0,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 1890,
+      "seconds": 2.1,
+      "backlog": 2.02,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 2831,
+      "seconds": 2.94,
+      "backlog": 2.02,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 3759,
+      "seconds": 3.77,
+      "backlog": 0.020000000000000018,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 4693,
+      "seconds": 4.81,
+      "backlog": 2.04,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 5621,
+      "seconds": 5.64,
+      "backlog": 0.040000000000000036,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 6556,
+      "seconds": 6.57,
+      "backlog": 2.0599999999999996,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 7481,
+      "seconds": 7.62,
+      "backlog": 0.05999999999999961,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 8402,
+      "seconds": 8.46,
+      "backlog": 2.17,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 9331,
+      "seconds": 9.51,
+      "backlog": 0.16999999999999993,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 10268,
+      "seconds": 10.35,
+      "backlog": 2.1899999999999995,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 11200,
+      "seconds": 11.4,
+      "backlog": 0.1899999999999995,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 12132,
+      "seconds": 12.24,
+      "backlog": 0.1899999999999995,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 13065,
+      "seconds": 13.07,
+      "backlog": 0.34999999999999964,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 13994,
+      "seconds": 14.12,
+      "backlog": 0.34999999999999964,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 14920,
+      "seconds": 14.96,
+      "backlog": 2.369999999999999,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 15847,
+      "seconds": 16.01,
+      "backlog": 0.3699999999999992,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 16769,
+      "seconds": 16.85,
+      "backlog": 2.3900000000000006,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 17693,
+      "seconds": 17.9,
+      "backlog": 0.39000000000000057,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 18619,
+      "seconds": 18.74,
+      "backlog": 2.41,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 19549,
+      "seconds": 19.58,
+      "backlog": 0.41000000000000014,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 20482,
+      "seconds": 20.63,
+      "backlog": 2.4299999999999997,
+      "queue": 0,
+      "english": 0,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 21413,
+      "seconds": 21.47,
+      "backlog": 0.4299999999999997,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 22336,
+      "seconds": 22.52,
+      "backlog": 2.4499999999999993,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 23267,
+      "seconds": 23.36,
+      "backlog": 0.4499999999999993,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 24201,
+      "seconds": 24.41,
+      "backlog": 0.4499999999999993,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 25136,
+      "seconds": 25.25,
+      "backlog": 0.46999999999999886,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 26068,
+      "seconds": 26.09,
+      "backlog": 0.46999999999999886,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 27011,
+      "seconds": 27.14,
+      "backlog": 2.4899999999999984,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 27937,
+      "seconds": 27.98,
+      "backlog": 0.48999999999999844,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 28869,
+      "seconds": 29.03,
+      "backlog": 2.5100000000000016,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 29801,
+      "seconds": 29.87,
+      "backlog": 0.5100000000000016,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 30736,
+      "seconds": 30.92,
+      "backlog": 2.530000000000001,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 31669,
+      "seconds": 31.75,
+      "backlog": 0.5300000000000011,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 32601,
+      "seconds": 32.79,
+      "backlog": 2.549999999999997,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 33536,
+      "seconds": 33.63,
+      "backlog": 0.5499999999999972,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 34469,
+      "seconds": 34.47,
+      "backlog": 2.5700000000000003,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 35400,
+      "seconds": 35.51,
+      "backlog": 0.5700000000000003,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 36321,
+      "seconds": 36.35,
+      "backlog": 0.5700000000000003,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 37253,
+      "seconds": 37.4,
+      "backlog": 2.5900000000000034,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 38186,
+      "seconds": 38.22,
+      "backlog": 2.5900000000000034,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 39119,
+      "seconds": 39.27,
+      "backlog": 2.5900000000000034,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 40050,
+      "seconds": 40.11,
+      "backlog": 2.5900000000000034,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 40986,
+      "seconds": 41.16,
+      "backlog": 3.6199999999999974,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 41919,
+      "seconds": 42,
+      "backlog": 3.6199999999999974,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 42852,
+      "seconds": 43.05,
+      "backlog": 3.6400000000000006,
+      "queue": 1,
+      "english": 1,
+      "translated": 0,
+      "visible": []
+    },
+    {
+      "elapsedMs": 43786,
+      "seconds": 43.89,
+      "backlog": 3.6599999999999966,
+      "queue": 1,
+      "english": 2,
+      "translated": 1,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。"
+      ]
+    },
+    {
+      "elapsedMs": 44720,
+      "seconds": 44.72,
+      "backlog": 3.6599999999999966,
+      "queue": 1,
+      "english": 2,
+      "translated": 1,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。"
+      ]
+    },
+    {
+      "elapsedMs": 45653,
+      "seconds": 45.77,
+      "backlog": 3.6799999999999997,
+      "queue": 1,
+      "english": 2,
+      "translated": 1,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。"
+      ]
+    },
+    {
+      "elapsedMs": 46582,
+      "seconds": 46.61,
+      "backlog": 3.6799999999999997,
+      "queue": 1,
+      "english": 2,
+      "translated": 1,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。"
+      ]
+    },
+    {
+      "elapsedMs": 47511,
+      "seconds": 47.66,
+      "backlog": 2.6899999999999977,
+      "queue": 0,
+      "english": 2,
+      "translated": 2,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。",
+        "当我们改变测量尺度时，结果也会发生变化。莫兰指数 I 用于衡量全局空间自相关性，而 I 星则用于识别局部聚类关系。"
+      ]
+    },
+    {
+      "elapsedMs": 48443,
+      "seconds": 48.49,
+      "backlog": 0.6899999999999977,
+      "queue": 0,
+      "english": 2,
+      "translated": 2,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。",
+        "当我们改变测量尺度时，结果也会发生变化。莫兰指数 I 用于衡量全局空间自相关性，而 I 星则用于识别局部聚类关系。"
+      ]
+    },
+    {
+      "elapsedMs": 49361,
+      "seconds": 49.53,
+      "backlog": 0.7100000000000009,
+      "queue": 0,
+      "english": 2,
+      "translated": 2,
+      "visible": [
+        "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。",
+        "当我们改变测量尺度时，结果也会发生变化。莫兰指数 I 用于衡量全局空间自相关性，而 I 星则用于识别局部聚类关系。"
+      ]
+    }
+  ],
+  "inferenceCancelMs": 713,
+  "id": "cce61ca3-71e0-4a01-90c0-2c4dacf91817",
+  "firstTranslationMs": 43786,
+  "audioSavedAfterStopMs": 127,
+  "processingFinishedAfterStopMs": 1870,
+  "detail": {
+    "answers": [],
+    "course": {
+      "assistanceLanguage": "zh",
+      "code": "BIO101",
+      "createdAt": 1790995218,
+      "description": "Isolated verification data; no real lecture content.",
+      "id": "a79a7144-60c3-494e-81dd-d2a552b7a22f",
+      "lectureCount": 3,
+      "name": "[TEST] Biology — synthetic fixture",
+      "subject": "Biology / Medicine"
+    },
+    "lecture": {
+      "courseId": "a79a7144-60c3-494e-81dd-d2a552b7a22f",
+      "durationSeconds": 50.74,
+      "endedAt": 1790996889,
+      "id": "cce61ca3-71e0-4a01-90c0-2c4dacf91817",
+      "recordingPath": "D:\\Programming\\LectureRelay\\target\\local-ai-gui\\library\\Courses\\a79a7144-60c3-494e-81dd-d2a552b7a22f\\cce61ca3-71e0-4a01-90c0-2c4dacf91817\\recording.wav",
+      "startedAt": 1790996837,
+      "status": "completed",
+      "title": "[ACCEPTANCE] Local captions and translation",
+      "transcribedUntil": 50.74
+    },
+    "note": null,
+    "segments": [
+      {
+        "endSeconds": 20,
+        "id": "cce61ca3-71e0-4a01-90c0-2c4dacf91817:0:0",
+        "lectureId": "cce61ca3-71e0-4a01-90c0-2c4dacf91817",
+        "origin": "cloud",
+        "provider": "local",
+        "revision": 0,
+        "sourceText": "Today we will examine why observations close together in space may be more similar than observations far apart. A statistical association does not establish causation. We need to compare the proposed explanation with alternative mechanisms and consider the assumptions behind the experiment.",
+        "startSeconds": 0,
+        "status": "final",
+        "transcriptVersion": "live",
+        "translatedText": "今天我们将探讨为什么在空间上靠近的观察结果可能比远离的观察结果更为相似。统计关联并不能证明因果关系。我们需要将提出的解释与其他机制进行比较，并考虑实验背后的假设。"
+      },
+      {
+        "endSeconds": 40,
+        "id": "cce61ca3-71e0-4a01-90c0-2c4dacf91817:20000:0",
+        "lectureId": "cce61ca3-71e0-4a01-90c0-2c4dacf91817",
+        "origin": "cloud",
+        "provider": "local",
+        "revision": 0,
+        "sourceText": "When we change the scale of measurement, the result can also change. Moran's I measures global spatial autocorrelation I star identifies local clusters relationships to.",
+        "startSeconds": 20,
+        "status": "final",
+        "transcriptVersion": "live",
+        "translatedText": "当我们改变测量尺度时，结果也会发生变化。莫兰指数 I 用于衡量全局空间自相关性，而 I 星则用于识别局部聚类关系。"
+      },
+      {
+        "endSeconds": 50.74,
+        "id": "cce61ca3-71e0-4a01-90c0-2c4dacf91817:40000:0",
+        "lectureId": "cce61ca3-71e0-4a01-90c0-2c4dacf91817",
+        "origin": "cloud",
+        "provider": "local",
+        "revision": 0,
+        "sourceText": "Across space imagery can inform TOA models, but spatial heterogeneity remains important.",
+        "startSeconds": 40,
+        "status": "final",
+        "transcriptVersion": "live",
+        "translatedText": "空间图像能够为 TOA 模型提供信息，但空间异质性仍然很重要。"
+      }
+    ]
+  },
+  "playback": {
+    "duration": 50.74,
+    "error": null
+  },
+  "build": "debug native executable with production frontend bundle; real WebView2; isolated library",
+  "limitations": [
+    "Cold start, segment finalization and polling are included in firstTranslationMs; this is not per-segment translation latency.",
+    "Not installed release or an ordinary laptop. Audio startup reported one dropped/discontinuous buffer; readable WAV duration is not an acoustic quality certification.",
+    "The earlier run was stopped by the user at 17.63 seconds; this repeat completed automatically."
+  ],
+  "processGroupMetrics": {
+    "samples": 26,
+    "intervalSeconds": 2,
+    "cpuPercentOf32LogicalCpusMean": 8.598484798818477,
+    "cpuPercentPeak": 13.439154048459706,
+    "rssSumPeakMib": 3866.01171875,
+    "privateSumPeakMib": 5525.2890625,
+    "rssCaveat": "Sum of RSS may count shared pages more than once."
+  }
+}

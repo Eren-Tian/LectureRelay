@@ -1,12 +1,12 @@
 {
   "name": "@lecturerelay/desktop",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node ../../scripts/build/prepare-branding.mjs && vite",
     "typecheck": "tsc --noEmit",
-    "build": "node ../../scripts/build/prepare-branding.mjs && pnpm -w build:asr && tsc --noEmit && vite build",
+    "build": "node ../../scripts/build/prepare-branding.mjs && pnpm -w build:asr && pnpm -w build:text && tsc --noEmit && vite build",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

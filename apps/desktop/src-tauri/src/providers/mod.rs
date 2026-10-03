@@ -1,6 +1,8 @@
 pub(crate) mod contracts;
 mod http;
+pub(crate) mod local;
 mod official;
+pub(crate) use local::{Role, configured_text};
 
 pub(crate) use contracts::*;
 pub(crate) use official::{OfficialProvider, configured};

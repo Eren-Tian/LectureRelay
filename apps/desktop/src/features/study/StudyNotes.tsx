@@ -204,8 +204,12 @@ export function StudyNotes({
                 <option value="">Current notes</option>
                 {study.versions.map((v) => (
                   <option key={v.id} value={v.id}>
-                    {v.origin === 'cloud' ? 'AI draft' : 'Previous notes'} ·{' '}
-                    {v.language.toUpperCase()} · {dateText(v.createdAt)}
+                    {v.origin === 'local'
+                      ? 'Local AI draft'
+                      : v.origin === 'cloud'
+                        ? 'Cloud AI draft'
+                        : 'Previous notes'}{' '}
+                    · {v.language.toUpperCase()} · {dateText(v.createdAt)}
                   </option>
                 ))}
               </select>

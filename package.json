@@ -1,6 +1,6 @@
 {
   "name": "lecturerelay",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "description": "LectureRelay Windows development workspace",
   "packageManager": "pnpm@11.25.0",
@@ -24,6 +24,7 @@
     "format:check": "prettier --check .",
     "format:rust": "node scripts/dev/run-native.mjs cargo fmt --all",
     "format:rust:check": "node scripts/dev/run-native.mjs cargo fmt --all -- --check",
+    "build:text": "node scripts/build/prepare-text-runtime.mjs",
     "build:asr": "node scripts/build/prepare-asr.mjs",
     "verify:repo": "node scripts/verification/repository.mjs",
     "verify:resources": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verification/runtime-resources.ps1",

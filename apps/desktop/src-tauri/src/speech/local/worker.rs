@@ -186,7 +186,7 @@ impl Drop for LocalSpeech {
         let _ = self.child.wait();
     }
 }
-fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundation::HANDLE> {
+pub(crate) fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundation::HANDLE> {
     use windows::Win32::{
         Foundation::{CloseHandle, HANDLE},
         System::JobObjects::*,

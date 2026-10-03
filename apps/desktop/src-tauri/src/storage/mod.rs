@@ -90,7 +90,7 @@ impl AppPaths {
             library: self.library.to_string_lossy().into(),
             exports: self.library.join("Exports").to_string_lossy().into(),
             state: self.data.to_string_lossy().into(),
-            version: "0.2.0",
+            version: env!("CARGO_PKG_VERSION"),
         }
     }
 

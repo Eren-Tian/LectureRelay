@@ -1,4 +1,5 @@
 mod acceptance;
+mod local_ai;
 mod study_workspace;
 
 #[test]

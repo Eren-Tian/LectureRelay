@@ -12,6 +12,7 @@ import { useAction } from '../../hooks/useAction';
 import { useWorkspace } from '../../app/Workspace';
 import { ResourceState } from '../../components/ResourceState';
 import { StudyNotes } from './StudyNotes';
+import { DeepReview } from './DeepReview';
 import { clock } from '../../lib/presentation';
 import type { LectureDetail } from '../../types/domain';
 const PdfPanel = lazy(() => import('./PdfPanel'));
@@ -31,7 +32,7 @@ export function StudyTools({
   onAI?: (kind: 'transcription' | 'translation' | 'notes') => void;
   questions?: ReactNode;
 }) {
-  const { job, live } = useWorkspace(),
+  const { job, live, recording } = useWorkspace(),
     { busy, run } = useAction();
   const id = detail.lecture.id;
   const load = useCallback(() => api.study(id), [id]);
@@ -104,6 +105,19 @@ export function StudyTools({
                 onGenerate={onAI ? () => onAI('notes') : undefined}
                 blocked={busy || !!job || !!live?.active}
               />
+              {onAI && (
+                <DeepReview
+                  id={id}
+                  blocked={
+                    busy ||
+                    !!job ||
+                    !!live?.active ||
+                    !!recording ||
+                    !detail.segments.length
+                  }
+                  onSaved={refresh}
+                />
+              )}
             </div>
             {tab === 'index' && (
               <>

@@ -1,0 +1,141 @@
+{
+  "engine": "fxtranslate 0.4.2",
+  "source": "https://github.com/gregtatum/translations",
+  "backend": "scalar",
+  "loadAndDownloadMs": {
+    "zh-Hans": 97,
+    "ja": 89,
+    "ko": 106
+  },
+  "rows": [
+    {
+      "id": "concurrency",
+      "source": "A race condition is not a competition. Protect the shared counter with a mutex.",
+      "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+      "language": "zh-Hans",
+      "milliseconds": 101.82,
+      "result": "比赛条件不是竞争。 用互斥器保护共享计数器。"
+    },
+    {
+      "id": "numbers",
+      "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent.",
+      "context": "Chemistry: preserve concentrations, units and negation.",
+      "language": "zh-Hans",
+      "milliseconds": 146.9,
+      "result": "浓度从0.25降低至0.05摩尔/升;未增加20%。"
+    },
+    {
+      "id": "causality",
+      "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true.",
+      "context": "Statistics lecture on hypothesis testing.",
+      "language": "zh-Hans",
+      "milliseconds": 125.56,
+      "result": "相关性并不意味着因果关系。 未能拒绝零假设并不能证明其属实。"
+    },
+    {
+      "id": "condition",
+      "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion.",
+      "context": "Calculus: critical points and the second derivative test.",
+      "language": "zh-Hans",
+      "milliseconds": 209.16,
+      "result": "如果导数为零,点可能是最大值、最小值,或两者兼有。 在得出结论之前先检查第二个导数。"
+    },
+    {
+      "id": "concurrency",
+      "source": "A race condition is not a competition. Protect the shared counter with a mutex.",
+      "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+      "language": "ja",
+      "milliseconds": 105.6,
+      "result": "ただ、人種条件は競争ではない。 口で共有カウンターを守る。"
+    },
+    {
+      "id": "numbers",
+      "source": "The concentration decreased from 0.25 to 0.05 mol/L; it did not increase by 20 percent.",
+      "context": "Chemistry: preserve concentrations, units and negation.",
+      "language": "ja",
+      "milliseconds": 194.24,
+      "result": "ざるを得なかった濃度は0.25から0.05モル/Lに低下したが、20%は増加しなかった。"
+    },
+    {
+      "id": "causality",
+      "source": "Correlation does not imply causation. Failing to reject the null hypothesis does not prove that it is true.",
+      "context": "Statistics lecture on hypothesis testing.",
+      "language": "ja",
+      "milliseconds": 178.32,
+      "result": "返しは因果関係を意味するものではない。 返題仮説を退けても、それが真実であることが証明されるわけではない。"
+    },
+    {
+      "id": "condition",
+      "source": "If the derivative is zero, the point may be a maximum, a minimum, or neither. Check the second derivative before drawing a conclusion.",
+      "context": "Calculus: critical points and the second derivative test.",
+      "language": "ja",
+      "milliseconds": 200.4,
+      "result": "れの場合、その数値は最大値、最小値、またはいずれも異なる場合がある。 あらかじめ2つ目の派生商品を確認してから結論を出す。"
+    },
+    {
+      "id": "concurrency",
+      "source": "A race condition is not a competition. Protect the shared counter with a mutex.",
+      "context": "race condition = 竞态条件 / 競合状態 / 경쟁 상태; mutex = 互斥锁 / ミューテックス / 뮤텍스",
+      "language": "ko",
+      "error": "range start index 22179072 out of range for slice of length 12288000"
+    }
+  ],
+  "files": [
+    {
+      "path": "en-ja\\lex.50.50.enja.s2t.bin",
+      "bytes": 4128360,
+      "sha256": "edfb7eb47b98a2689b804ab3614c31b24f1257aa54b1154da3d85e1ae8152d9f"
+    },
+    {
+      "path": "en-ja\\model.enja.intgemm.alphas.bin",
+      "bytes": 43849787,
+      "sha256": "59ae659f9bb63e4f81f474fe3c03d3f4499434b5f9e779fab7c12a45f31fd562"
+    },
+    {
+      "path": "en-ja\\srcvocab.enja.spm",
+      "bytes": 796275,
+      "sha256": "970c98d174fc01e0339fbabbf45af36a4be3f26f819ec1a5ea1189f71e091889"
+    },
+    {
+      "path": "en-ja\\trgvocab.enja.spm",
+      "bytes": 827144,
+      "sha256": "3b3d9f8f3a034d98d0a476f1794fa79c01e4e98a967ceb6777a66ba2d03ec1e1"
+    },
+    {
+      "path": "en-ko\\lex.50.50.enko.s2t.bin",
+      "bytes": 6449612,
+      "sha256": "96efba97d4bb93ab362e5569bea0f115184d2f68d63b67305ee663c18e32fbeb"
+    },
+    {
+      "path": "en-ko\\model.enko.intgemm.alphas.bin",
+      "bytes": 43849787,
+      "sha256": "ffe5ef2ce3f2e944055e35310bab186f6a70d533a0ee4394adf716a0e383afbb"
+    },
+    {
+      "path": "en-ko\\vocab.enko.spm",
+      "bytes": 1406926,
+      "sha256": "709bf0e425345e0e92ce41ed84348a1296a2107c92bdb6624404450ffecbd1f9"
+    },
+    {
+      "path": "en-zh-Hans\\lex.50.50.enzh.s2t.bin",
+      "bytes": 6506248,
+      "sha256": "4a5e5827788060f1d718a8132b69440929387514a045796e9b77f935db68c055"
+    },
+    {
+      "path": "en-zh-Hans\\model.enzh.intgemm.alphas.bin",
+      "bytes": 43849787,
+      "sha256": "4e5accc141373565ddc8fa1565bceaa8d0c3482a82cab8131c719ebcc6c2157c"
+    },
+    {
+      "path": "en-zh-Hans\\srcvocab.enzh.spm",
+      "bytes": 806952,
+      "sha256": "bd9b65504acc6d9726dd281f7defc2adb7c2c22d0688fe2f84697de25197c8c5"
+    },
+    {
+      "path": "en-zh-Hans\\trgvocab.enzh.spm",
+      "bytes": 772004,
+      "sha256": "aded6993c36e440284d11cec3f6b8aef9c0e43188a772d80be342a713adf223d"
+    }
+  ],
+  "limits": "No terminology/context prompt support. Not an integrated application or laptop test."
+}

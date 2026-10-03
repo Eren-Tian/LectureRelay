@@ -63,4 +63,5 @@ Thumbs.db
 Desktop.ini
 # Generated runtime staging and web copy; source branding and licenses stay tracked.
 apps/desktop/src-tauri/resources/local-asr/
+apps/desktop/src-tauri/resources/local-text/
 apps/desktop/public/app-icon.svg

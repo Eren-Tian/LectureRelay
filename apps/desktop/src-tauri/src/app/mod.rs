@@ -77,14 +77,31 @@ pub fn run() {
             }))
             .inner_size(1180.0, 780.0)
             .min_inner_size(880.0, 620.0)
+            .visible(false)
             .data_directory(paths.data.join("state").join("webview2"))
             .build()?;
             #[cfg(debug_assertions)]
             if std::env::var_os("LECTURERELAY_TEST_ROOT").is_some() {
                 window.set_title("LectureRelay — Isolated Test")?;
+                // Keep automated test windows on the user's portrait display before showing.
+                if let Some(monitor) = window
+                    .available_monitors()?
+                    .into_iter()
+                    .find(|m| m.size().height > m.size().width)
+                {
+                    window.set_position(tauri::PhysicalPosition::new(
+                        monitor.position().x + 20,
+                        monitor.position().y + 20,
+                    ))?;
+                    window.set_size(tauri::PhysicalSize::new(
+                        monitor.size().width.saturating_sub(50),
+                        monitor.size().height.saturating_sub(100),
+                    ))?;
+                }
             }
             // Show explicitly before focusing, including launches inherited from a hidden shell.
             window.show()?;
+            window.unminimize()?;
             let _ = window.set_focus();
             Ok(())
         })
@@ -151,6 +168,10 @@ pub fn run() {
             commands::transcribe_lecture,
             commands::translate_lecture,
             commands::generate_notes,
+            commands::generate_review,
+            commands::local_text_models,
+            commands::download_text_model,
+            commands::remove_text_model,
             commands::ask_lecture,
             commands::job_status,
             commands::cancel_job,

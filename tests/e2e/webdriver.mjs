@@ -3,13 +3,17 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const sessionFile = path.join(root, 'target/webdriver-session.json');
+const port = process.env.LECTURERELAY_WEBDRIVER_PORT || '4444';
+const sessionFile = path.join(
+  root,
+  `target/webdriver-session${port === '4444' ? '' : '-' + port}.json`,
+);
 export class WebDriver {
   constructor(session) {
     this.session = session;
   }
   async request(method, endpoint, body) {
-    const response = await fetch(`http://127.0.0.1:4444${endpoint}`, {
+    const response = await fetch(`http://127.0.0.1:${port}${endpoint}`, {
       method,
       headers: { 'content-type': 'application/json' },
       ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -37,6 +41,8 @@ export class WebDriver {
         'lecture_detail',
         'course_detail',
         'local_model_status',
+        'local_text_models',
+        'job_status',
         'provider_status',
       ].includes(command)
     ) {

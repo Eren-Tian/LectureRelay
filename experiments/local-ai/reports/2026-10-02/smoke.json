@@ -1,0 +1,46 @@
+{
+  "review": "# BIO101 课程笔记：遗传学与细胞生物学（综合复习）\n\n## 1. 核心概念与定义\n\n*   **竞态条件 (Race Condition)**\n    *   **定义**：当结果依赖于线程调度（thread scheduling）时发生的情况。\n    *   **示例**：使用互斥锁（mutex）保护共享计数器。\n    *   **数据点**：初始计数值为 **42**（注意：并非 24）。\n    *   **来源时间**：[00:00]\n\n*   **相关性不等于因果性 (Correlation does not imply causation)**\n    *   **定义**：两个变量相关并不意味着一个导致另一个。\n    *   **样本量影响**：增加样本量可以减少抽样误差（sampling error），但**不能消除混杂因素（confounding）**。\n    *   **来源时间**：[45:00]\n\n*   **随机分配 (Random Assignment)**\n    *   **作用**：在实验结束时使用此方法可以减少混杂因素（confounding）。\n    *   **来源时间**：[88:20]\n\n## 2. 最终复习示例\n\n*   **案例**：线粒体在细胞呼吸过程中产生 ATP。\n    *   **来源时间**：[88:20]\n\n## 3. 练习问题\n\n1.  根据 [00:00] 的证据，如果线程调度导致结果不确定，这属于什么现象？在此场景下，互斥锁（mutex）通常用于保护什么？\n2.  根据 [45:00] 的证据，仅通过增加样本量能否完全消除研究中的混杂因素（confounding）？为什么？\n3.  根据 [88:20] 的证据，请描述最终复习中提到的生物学过程及其产物。",
+  "reviewMs": 46022,
+  "segments": [
+    {
+      "endSeconds": 10.0,
+      "id": "41ebef38-4f95-4742-90a7-0112ca56cdf3",
+      "lectureId": "b13d6a5e-b418-43b3-813b-608722439473",
+      "origin": "manual",
+      "provider": "legacy",
+      "revision": 0,
+      "sourceText": "A race condition happens when a result depends on thread scheduling. A mutex protects a shared counter. The initial count is 42, not 24.",
+      "startSeconds": 0.0,
+      "status": "final",
+      "transcriptVersion": "original",
+      "translatedText": "竞态条件发生在结果依赖于线程调度时。互斥锁保护着一个共享计数器。初始计数为 42，而不是 24。"
+    },
+    {
+      "endSeconds": 2710.0,
+      "id": "bb112a47-a712-42b4-90d8-5a5dc6d0be12",
+      "lectureId": "b13d6a5e-b418-43b3-813b-608722439473",
+      "origin": "manual",
+      "provider": "legacy",
+      "revision": 0,
+      "sourceText": "Correlation does not imply causation. Increasing sample size reduces sampling error but does not remove confounding.",
+      "startSeconds": 2700.0,
+      "status": "final",
+      "transcriptVersion": "original",
+      "translatedText": "相关性并不等于因果关系。增加样本量可以减少抽样误差，但无法消除混杂因素。"
+    },
+    {
+      "endSeconds": 5310.0,
+      "id": "4cf8615d-7a98-4187-ae1d-5582e0113dbe",
+      "lectureId": "b13d6a5e-b418-43b3-813b-608722439473",
+      "origin": "manual",
+      "provider": "legacy",
+      "revision": 0,
+      "sourceText": "At the end of class: use random assignment to reduce confounding. The final review example is mitochondria producing ATP during cellular respiration.",
+      "startSeconds": 5300.0,
+      "status": "final",
+      "transcriptVersion": "original",
+      "translatedText": "课程结束时：通过随机分配实验来减少干扰因素。最后的复习案例是线粒体在细胞呼吸过程中产生 ATP。"
+    }
+  ],
+  "translationMs": 5638
+}

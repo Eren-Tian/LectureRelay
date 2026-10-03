@@ -8,6 +8,7 @@ import type { TranscriptSegment, Answer } from '../../types/domain';
 export function QuestionsPanel({
   answers,
   cloud,
+  local = false,
   blocked,
   question,
   segments,
@@ -17,6 +18,7 @@ export function QuestionsPanel({
 }: {
   answers: Answer[];
   cloud: string;
+  local?: boolean;
   blocked: boolean;
   question: string;
   segments: TranscriptSegment[];
@@ -89,9 +91,15 @@ export function QuestionsPanel({
           </button>
         </div>
         <p>
-          {ui.s168}
-          {cloud}
-          {ui.s169}
+          {local ? (
+            'Runs on this computer. Answers use selected lecture excerpts; verify the linked sources. Use whole-class review for comprehensive revision.'
+          ) : (
+            <>
+              {ui.s168}
+              {cloud}
+              {ui.s169}
+            </>
+          )}
         </p>
       </form>
     </section>

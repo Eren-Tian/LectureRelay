@@ -40,8 +40,9 @@ export function LivePage({ id }: { id: string }) {
       </div>
     );
   const translation = live?.translation ?? {
-    enabled: settings.liveTranslation,
+    enabled: settings.liveTranslation && settings.translationMode !== 'none',
     configured:
+      settings.translationMode === 'cloud' &&
       settings.provider !== 'none' &&
       workspace.data.providers.some(
         (p) => p.provider === settings.provider && p.hasKey,
@@ -140,11 +141,20 @@ export function LivePage({ id }: { id: string }) {
             {settings.showTranslation &&
               (!translation.enabled || !translation.configured) && (
                 <div className="translation-setup">
-                  <Icon name="cloud" size={17} />
+                  <Icon
+                    name={
+                      settings.translationMode === 'local'
+                        ? 'download'
+                        : 'cloud'
+                    }
+                    size={17}
+                  />
                   <p>
                     {!translation.enabled
                       ? 'Live translation is off.'
-                      : `Connect a text provider for live ${target} translation.`}{' '}
+                      : settings.translationMode === 'local'
+                        ? `Download your selected local model for live ${target} translation.`
+                        : `Connect a text provider for live ${target} translation.`}{' '}
                     English and audio stay saved.
                   </p>
                   <button

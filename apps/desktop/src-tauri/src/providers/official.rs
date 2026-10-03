@@ -32,7 +32,7 @@ impl OfficialProvider {
             .redirect(reqwest::redirect::Policy::none())
             .connect_timeout(std::time::Duration::from_secs(15))
             .timeout(std::time::Duration::from_secs(120))
-            .user_agent("LectureRelay/0.2.0")
+            .user_agent(concat!("LectureRelay/", env!("CARGO_PKG_VERSION")))
             .build()
             .user_error("Cannot initialize a secure connection.")?;
         Ok(Self {

@@ -1,3 +1,4 @@
+use super::catalog;
 use crate::{
     AppState,
     domain::now,
@@ -44,40 +45,55 @@ pub fn path(state: &AppState) -> PathBuf {
     state.paths.data.join("models").join(MODEL_FILE)
 }
 pub fn status(state: &AppState) -> AppResult<ModelStatus> {
+    status_for(state, MODEL_ID)
+}
+pub fn downloading(state: &AppState) -> AppResult<bool> {
+    Ok(state
+        .models
+        .active
+        .lock()
+        .user_error("Model manager unavailable.")?
+        .as_ref()
+        .is_some_and(|m| m.downloading))
+}
+pub fn path_for(state: &AppState, id: &str) -> AppResult<PathBuf> {
+    Ok(state.paths.data.join("models").join(catalog::get(id)?.file))
+}
+pub fn status_for(state: &AppState, id: &str) -> AppResult<ModelStatus> {
+    let model = catalog::get(id)?;
     if let Some(value) = state
         .models
         .active
         .lock()
         .user_error("Model manager unavailable.")?
         .clone()
+        .filter(|m| m.id == id)
     {
         return Ok(value);
     }
-    let installed = path(state).metadata().is_ok_and(|m| m.len() == SIZE)
-        && state
-            .paths
-            .data
-            .join("models/nemotron-streaming.json")
-            .is_file()
-        && std::fs::read(state.paths.data.join("models/nemotron-streaming.json"))
+    let installed = path_for(state, id)?
+        .metadata()
+        .is_ok_and(|m| m.len() == model.size)
+        && state.paths.data.join(format!("models/{id}.json")).is_file()
+        && std::fs::read(state.paths.data.join(format!("models/{id}.json")))
             .ok()
             .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
             .is_some_and(|m| {
-                m["id"] == MODEL_ID
-                    && m["revision"] == REVISION
-                    && m["sha256"] == HASH
-                    && m["runtimeVersion"] == "NeMo-Speech.cpp 0.1.0"
+                m["id"] == id
+                    && m["revision"] == model.revision
+                    && m["sha256"] == model.sha256
+                    && m["runtimeVersion"] == model.runtime
             });
     Ok(ModelStatus {
-        id: MODEL_ID.into(),
-        name: "Recommended · Nemotron Streaming".into(),
-        size_bytes: SIZE,
+        id: id.into(),
+        name: model.name.into(),
+        size_bytes: model.size,
         installed,
-        downloaded_bytes: if installed { SIZE } else { 0 },
+        downloaded_bytes: if installed { model.size } else { 0 },
         downloading: false,
-        revision: REVISION.into(),
-        runtime_version: "NeMo-Speech.cpp 0.1.0 · CPU".into(),
-        license: "NVIDIA Open Model License".into(),
+        revision: model.revision.into(),
+        runtime_version: format!("{} · CPU", model.runtime),
+        license: model.license.into(),
         error: None,
     })
 }
@@ -95,6 +111,14 @@ pub(crate) async fn download_with(
     state: &AppState,
     on_status: impl Fn(&ModelStatus),
 ) -> AppResult<()> {
+    download_model_with(state, MODEL_ID, on_status).await
+}
+pub(crate) async fn download_model_with(
+    state: &AppState,
+    id: &str,
+    on_status: impl Fn(&ModelStatus),
+) -> AppResult<()> {
+    let model = catalog::get(id)?;
     let mut value = {
         let _gate = state.gate.lock().user_error("The app is busy.")?;
         if state.recorder.status()?.is_some()
@@ -103,12 +127,12 @@ pub(crate) async fn download_with(
         {
             return Err("Download models after the lecture and current task finish.".into());
         }
-        let value = status(state)?;
+        let value = status_for(state, id)?;
         if value.installed {
             return Ok(());
         }
-        if value.downloading {
-            return Err("This model is already downloading.".into());
+        if downloading(state)? {
+            return Err("Another model is downloading. Wait or cancel it.".into());
         }
         state.models.cancel.store(false, Ordering::Relaxed);
         let mut value = value;
@@ -120,7 +144,7 @@ pub(crate) async fn download_with(
             .user_error("Model manager unavailable.")? = Some(value.clone());
         value
     };
-    let part = path(state).with_extension("part");
+    let part = path_for(state, id)?.with_extension("part");
     let _ = rustls::crypto::ring::default_provider().install_default();
     let result = async {
         let client = reqwest::Client::builder()
@@ -129,7 +153,8 @@ pub(crate) async fn download_with(
             .timeout(std::time::Duration::from_secs(1800))
             .build()
             .user_error("Cannot initialize model download.")?;
-        let url = format!("https://huggingface.co/nvidia/nemotron-speech-streaming-en-0.6b/resolve/{REVISION}/{MODEL_FILE}");
+        std::fs::create_dir_all(state.paths.data.join("models")).user_error("Cannot create model folder.")?;
+        let url = format!("https://huggingface.co/{}/resolve/{}/{}", model.repo, model.revision, model.file);
         let mut response = cancellable(&state.models.cancel, client.get(url).send(),
             "Cannot download model. Check your connection.").await?
             .error_for_status().user_error("Model download unavailable.")?;
@@ -140,7 +165,7 @@ pub(crate) async fn download_with(
         while let Some(chunk) = cancellable(&state.models.cancel, response.chunk(),
             "Model download interrupted. Try again.").await? {
             value.downloaded_bytes += chunk.len() as u64;
-            if value.downloaded_bytes > SIZE {
+            if value.downloaded_bytes > model.size {
                 return Err("Model exceeds the expected size.".into());
             }
             file.write_all(&chunk).user_error("Cannot write model. Check disk space.")?;
@@ -154,13 +179,14 @@ pub(crate) async fn download_with(
         if state.models.cancel.load(Ordering::Relaxed) {
             return Err("Model download cancelled.".into());
         }
-        if value.downloaded_bytes != SIZE || format!("{:x}", hash.finalize()) != HASH {
+        if value.downloaded_bytes != model.size || format!("{:x}", hash.finalize()) != model.sha256 {
             return Err("Model integrity check failed. Download again.".into());
         }
         file.sync_all().user_error("Cannot save model.")?;
         drop(file);
-        std::fs::rename(&part, path(state)).user_error("Cannot install model.")?;
-        let manifest = serde_json::json!({"id":MODEL_ID,"revision":REVISION,"sha256":HASH,"size":SIZE,"runtimeVersion":"NeMo-Speech.cpp 0.1.0","installedAt":now()});
+        std::fs::rename(&part, path_for(state, id)?).user_error("Cannot install model.")?;
+        let manifest = serde_json::json!({"id":id,"revision":model.revision,"sha256":model.sha256,"size":model.size,"runtimeVersion":model.runtime,"installedAt":now()});
+        if id == MODEL_ID {
         for (source, target) in [
             ("licenses/NVIDIA-Open-Model-License.pdf", "NVIDIA-Open-Model-License.pdf"),
             ("licenses/NVIDIA-Model-NOTICE.txt", "NOTICE.txt"),
@@ -168,9 +194,13 @@ pub(crate) async fn download_with(
             std::fs::copy(state.runtime.join(source), state.paths.data.join("models").join(target))
                 .user_error("Cannot save model license. Reinstall LectureRelay.")?;
         }
-        state.storage.install_model(MODEL_ID, REVISION, HASH, SIZE)?;
+        } else {
+            let license = if id == catalog::TRANSLATION { "LICENSE-Hy-MT2.txt" } else { "LICENSE-Qwen3.5.txt" };
+            std::fs::copy(state.runtime.with_file_name("local-text").join(license), state.paths.data.join("models").join(license)).user_error("Cannot save model license. Reinstall LectureRelay.")?;
+        }
+        state.storage.install_model(id, model.revision, model.sha256, model.size)?;
         // The manifest marks a complete installation, including its required license.
-        crate::storage::write_atomic(&state.paths.data.join("models/nemotron-streaming.json"), manifest.to_string().as_bytes())?;
+        crate::storage::write_atomic(&state.paths.data.join(format!("models/{id}.json")), manifest.to_string().as_bytes())?;
         Ok(())
     }.await;
     if result.is_err() {
@@ -181,29 +211,33 @@ pub(crate) async fn download_with(
         .active
         .lock()
         .user_error("Model manager unavailable.")? = None;
-    let mut final_status = status(state)?;
+    let mut final_status = status_for(state, id)?;
     final_status.error = result.as_ref().err().cloned();
     on_status(&final_status);
     result
 }
 pub fn remove(state: &AppState) -> AppResult<()> {
+    remove_model(state, MODEL_ID)
+}
+pub fn remove_model(state: &AppState, id: &str) -> AppResult<()> {
+    catalog::get(id)?;
     let _gate = state.gate.lock().user_error("The app is busy.")?;
     if state.recorder.status()?.is_some()
         || state.live.active()
         || state.jobs.status()?.is_some()
-        || status(state)?.downloading
+        || downloading(state)?
     {
         return Err("Remove models after active work finishes.".into());
     }
     for p in [
-        path(state),
-        state.paths.data.join("models/nemotron-streaming.json"),
+        path_for(state, id)?,
+        state.paths.data.join(format!("models/{id}.json")),
     ] {
         if p.exists() {
             std::fs::remove_file(p).user_error("Cannot remove model.")?;
         }
     }
-    state.storage.remove_model(MODEL_ID)
+    state.storage.remove_model(id)
 }
 
 async fn cancellable<T, E>(

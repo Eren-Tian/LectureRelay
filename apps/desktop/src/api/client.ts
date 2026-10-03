@@ -71,6 +71,9 @@ export const api = {
     call<InputDevice[]>('audio_devices', { source }),
   live: () => call<LiveStatus>('live_status'),
   localModel: () => call<ModelStatus>('local_model_status'),
+  textModels: () => call<ModelStatus[]>('local_text_models'),
+  downloadTextModel: (id: string) => call<void>('download_text_model', { id }),
+  removeTextModel: (id: string) => call<void>('remove_text_model', { id }),
   downloadModel: () => call<void>('download_local_model'),
   removeModel: () => call<void>('remove_local_model'),
   cancelModel: () => call<void>('cancel_model_download'),
@@ -108,6 +111,8 @@ export const api = {
     call<void>('transcribe_lecture', { id, translate }),
   translate: (id: string) => call<void>('translate_lecture', { id }),
   generateNotes: (id: string) => call<void>('generate_notes', { id }),
+  generateReview: (id: string, request: string) =>
+    call<void>('generate_review', { id, request }),
   ask: (id: string, question: string) =>
     call<Answer>('ask_lecture', { id, question }),
   job: () => call<JobStatus | null>('job_status'),

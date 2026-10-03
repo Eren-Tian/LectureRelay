@@ -1,6 +1,6 @@
 # Native runtime and binary provenance
 
-No executable, DLL, model or installer is a source-controlled input. All were generated/downloaded into ignored build/cache/staging directories. The repository currently has no commits; this audit concerns versionable working-tree inputs, not an unavailable historical commit inventory.
+No executable, DLL, model or installer is a source-controlled input. All are generated/downloaded into ignored build/cache/staging directories. Historical audit statements below refer to the ASR runtime; the separate text runtime added in 0.3 is described at the end.
 
 | Binary input retained in source | Origin/purpose                                                                   | License/provenance                                                                        |
 | ------------------------------- | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
@@ -17,4 +17,13 @@ NeMo source/runtime is Apache-2.0; the complete upstream LICENSE/NOTICE/THIRD_PA
 
 Nemotron weights are downloaded only by the application model manager: official pinned revision/size/hash, separate NVIDIA Open Model License conditions and required NOTICE. They are not bundled. Experiments with Moonshine, Parakeet, Whisper, Qwen/Fun remain development-only; preserve their documented provenance/licensing limits before considering distribution.
 
-No dependency versions were upgraded. Node/Cargo application dependencies all have source/build references; only an unused workspace alias and an empty package reservation were removed. A project-wide source license remains an owner decision before public release.
+The 0.3 work does not upgrade Node/Cargo application dependencies. A project-wide source license remains an owner decision before public release.
+
+## Text runtime and weights (0.3)
+
+`scripts/build/prepare-text-runtime.mjs` obtains the official [llama.cpp b11366 Windows CPU x64 archive](https://github.com/ggml-org/llama.cpp/releases/tag/b11366), SHA-256 `33dbed3c969e394e2977105e89f5c4b5dbbb5233d038d14b6954b3d32bbde9ec`. Only the server, required CPU/common/model libraries and licenses are staged in `local-text`, separately from the ASR DLLs. The generated file manifest is checked before process launch and by installer verification. llama.cpp is MIT; LLVM OpenMP includes its upstream license. Model licenses travel with the installer and are copied next to downloaded weights.
+
+- [Hy-MT2-1.8B](https://huggingface.co/tencent/Hy-MT2-1.8B-GGUF): Tencent's Q4_K_M GGUF, Apache 2.0. Revision `a0c709d9fac510f2c807aa3af52872340dc37a4a`, 1,133,080,448 bytes, SHA-256 `dc5f44fcf1fa496ee7ad725982c0c8c553a4de00259b53af84c4b89fb0c06699`.
+- [Qwen3.5-4B](https://huggingface.co/Qwen/Qwen3.5-4B): Apache 2.0 model. We use the explicitly attributed [Unsloth GGUF conversion](https://huggingface.co/unsloth/Qwen3.5-4B-GGUF), not an official Qwen GGUF release. Revision `e87f176479d0855a907a41277aca2f8ee7a09523`, 2,740,937,888 bytes, SHA-256 `00fe7986ff5f6b463e62455821146049db6f9313603938a70800d1fb69ef11a4`. The official model license is pinned to revision `851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a`.
+
+No vision projector is downloaded. These features generate text, not images. Weights are separate optional downloads; no per-call hosted inference is used. The independently installed fxtranslate package and Mozilla models under `target/local-ai-evaluation` are development-only comparison inputs, not product dependencies.

@@ -39,6 +39,7 @@ export function SettingsPage() {
   );
   const [category, setCategory] = useState<Category>('General');
   const [model, setModel] = useState<ModelStatus>();
+  const [textModels, setTextModels] = useState<ModelStatus[]>([]);
   const [trash, setTrash] = useState<Course[]>([]);
   const [loadError, setLoadError] = useState('');
   const { busy, run } = useAction();
@@ -65,18 +66,25 @@ export function SettingsPage() {
   }, [saved]);
   useEffect(() => {
     let disposed = false;
-    void Promise.all([api.localModel(), api.trash()])
-      .then(([model, trash]) => {
+    void Promise.all([api.localModel(), api.trash(), api.textModels()])
+      .then(([model, trash, textModels]) => {
         if (!disposed) {
           setModel(model);
           setTrash(trash);
+          setTextModels(textModels);
         }
       })
       .catch((error) => {
         if (!disposed) setLoadError(errorText(error));
       });
     const subscription = listen<ModelStatus>('model-status', (e) => {
-      if (!disposed) setModel(e.payload);
+      if (!disposed) {
+        if (e.payload.id === 'nemotron-streaming') setModel(e.payload);
+        else
+          setTextModels((models) =>
+            models.map((m) => (m.id === e.payload.id ? e.payload : m)),
+          );
+      }
     });
     return () => {
       disposed = true;
@@ -88,7 +96,8 @@ export function SettingsPage() {
     !!workspace.recording ||
     !!workspace.job ||
     !!workspace.live?.active ||
-    !!model?.downloading;
+    !!model?.downloading ||
+    textModels.some((m) => m.downloading);
   const dirty = JSON.stringify(settings) !== saved;
   const select = (next: Category) => {
     keyForm.setKey('');
@@ -154,22 +163,36 @@ export function SettingsPage() {
               <section className="settings-card">
                 <h3>Setup</h3>
                 <p>
-                  Download the English speech model once, then select{' '}
-                  <strong>Local English</strong> in AI Providers. It loads
-                  automatically when you start a class.
+                  Download each model once. Choose Local English for speech and
+                  Local for translation and study tools in AI Providers.
                 </p>
                 <p className="field-hint">
-                  One supported model in this release. Translation, notes and
-                  Q&A use your selected cloud provider.
+                  During class: speech and translation. After class: release
+                  live models before loading Qwen. Local mode never falls back
+                  to a cloud service. Allow about 4.3 GiB for all three
+                  downloads and additional working memory.
                 </p>
                 <button
                   className="button secondary"
                   onClick={() => select('AI Providers')}
                 >
-                  Choose speech recognition
+                  Choose AI models
                   <Icon name="arrow" size={16} />
                 </button>
               </section>
+              {textModels.map((m) => (
+                <ModelManagerCard
+                  key={m.id}
+                  model={m}
+                  blocked={blocked}
+                  run={run}
+                  setModel={(next) =>
+                    setTextModels((models) =>
+                      models.map((item) => (item.id === next.id ? next : item)),
+                    )
+                  }
+                />
+              ))}
             </>
           )}
           {category === 'Data' && (
@@ -257,9 +280,10 @@ export function SettingsPage() {
                   <div>
                     <strong>Only when you choose a cloud feature</strong>
                     <p>
-                      Cloud speech sends audio. Translation, notes and Q&A send
+                      Cloud speech sends audio. Text features set to Cloud send
                       relevant text and course context to the selected provider.
-                      Provider charges may apply.
+                      Local translation and study tools process text on this
+                      device. Provider charges may apply.
                     </p>
                   </div>
                 </div>
@@ -295,7 +319,7 @@ export function SettingsPage() {
                 </div>
                 <div>
                   <dt>Source repository</dt>
-                  <dd>Not yet published</dd>
+                  <dd>github.com/Ellen-Tian/LectureRelay</dd>
                 </div>
               </dl>
             </section>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { api, errorText } from '../../api/client';
+import { api, errorText, pruneDeletedDrafts } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { Icon } from '../../components/Icon';
 import { useAction } from '../../hooks/useAction';
@@ -41,6 +41,7 @@ export function SettingsPage() {
   const [model, setModel] = useState<ModelStatus>();
   const [textModels, setTextModels] = useState<ModelStatus[]>([]);
   const [trash, setTrash] = useState<Course[]>([]);
+  const [storageRevision, setStorageRevision] = useState(0);
   const [loadError, setLoadError] = useState('');
   const { busy, run } = useAction();
   const keyForm = useProviderKeyForm(run);
@@ -199,7 +200,7 @@ export function SettingsPage() {
             <>
               <section className="settings-card">
                 <h3>Class library</h3>
-                <StorageUsage />
+                <StorageUsage key={storageRevision} />
                 <p>
                   Recordings, transcripts and course context stay on this
                   computer.
@@ -252,7 +253,55 @@ export function SettingsPage() {
                 blocked={blocked}
                 run={run}
                 setTrash={setTrash}
+                onDeleted={async () => setStorageRevision((n) => n + 1)}
               />
+              <section className="settings-card">
+                <h2>Free all storage</h2>
+                <p>
+                  Permanently delete all courses, including Trash, recordings,
+                  transcripts, notes, reviews, PDFs, in-app exports, downloaded
+                  models and processing caches. Models must be downloaded again
+                  before local AI can run.
+                </p>
+                <p className="field-hint">
+                  The application, preferences and Windows Credential Manager
+                  keys remain. Small database and browser settings files remain.
+                  Copies outside LectureRelay are not deleted.
+                </p>
+                <button
+                  className="button danger"
+                  disabled={blocked}
+                  onClick={() =>
+                    void run(async () => {
+                      if (
+                        !(await workspace.confirm({
+                          title: 'Delete all class data and models?',
+                          body: 'All courses (including Trash), recordings, transcripts, notes, saved reviews, PDFs, in-app exports, local models and processing caches will be permanently removed. This cannot be undone. Export anything you need first. Application preferences and provider keys will be kept.',
+                          action: 'Delete all data and models',
+                          danger: true,
+                          confirmationText: 'DELETE ALL',
+                        }))
+                      )
+                        return;
+                      try {
+                        await api.freeAllStorage('DELETE ALL');
+                      } finally {
+                        await pruneDeletedDrafts();
+                        setTrash(await api.trash());
+                        setModel(await api.localModel());
+                        setTextModels(await api.textModels());
+                        setStorageRevision((n) => n + 1);
+                        await workspace.refresh();
+                      }
+                      workspace.notify(
+                        'Class data and models deleted. Storage freed.',
+                      );
+                    })
+                  }
+                >
+                  Free all storage…
+                </button>
+              </section>
             </>
           )}
           {category === 'Security & Privacy' && (

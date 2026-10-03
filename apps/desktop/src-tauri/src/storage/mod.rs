@@ -1,3 +1,4 @@
+pub(crate) mod cleanup;
 mod recovery;
 mod snapshots;
 pub(crate) mod usage;

@@ -242,6 +242,13 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                     break;
                 }
                 let at = Instant::now();
+                crate::diagnostics::caption_stage(
+                    &state.paths,
+                    &id,
+                    "translation_start",
+                    &batch,
+                    0.0,
+                );
                 let result = tauri::async_runtime::block_on(async {
                     tokio::time::timeout(
                         Duration::from_secs(if settings.translation_mode == "local" {
@@ -254,6 +261,13 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                     .await
                     .map_err(|_| "Live translation timed out. English is preserved.".to_string())?
                 });
+                crate::diagnostics::caption_stage(
+                    &state.paths,
+                    &id,
+                    "translation_done",
+                    &batch,
+                    0.0,
+                );
                 match result {
                     Ok(result) => {
                         if state.live.cancel.load(Ordering::Relaxed) {
@@ -280,6 +294,13 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                             }
                             s.translation_queue = queue.load(Ordering::Relaxed);
                             let _ = app.emit("live-status", &*s);
+                            crate::diagnostics::caption_stage(
+                                &state.paths,
+                                &id,
+                                "translation_published",
+                                &batch,
+                                0.0,
+                            );
                         }
                     }
                     Err(error) => {
@@ -419,6 +440,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                 },
             )?;
             let at = Instant::now();
+            crate::diagnostics::caption_stage(&state.paths, id, "speech_start", &[], end);
             // Never infer on near-silence: this reduces fan load and silence hallucinations.
             let quiet = samples.iter().all(|s| s.unsigned_abs() < 120);
             let mut partial = None;
@@ -522,7 +544,12 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                     end_seconds: base + finish,
                     source_text: s.text.trim().into(),
                     translated_text: String::new(),
-                    origin: "cloud".into(),
+                    origin: if settings.speech_provider == "local" {
+                        "local"
+                    } else {
+                        "cloud"
+                    }
+                    .into(),
                     provider: settings.speech_provider.clone(),
                     status: "final".into(),
                     transcript_version: "live".into(),
@@ -530,6 +557,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                 });
             }
             state.storage.append_cloud_chunk(id, &segments, end)?;
+            crate::diagnostics::caption_stage(&state.paths, id, "speech_final", &segments, end);
             cursor = end;
             utterance_start = end;
             if !segments.is_empty() && translation_thread.is_some() {
@@ -579,6 +607,15 @@ fn enqueue_translation(
     queue: &AtomicUsize,
     segments: Vec<TranscriptSegment>,
 ) {
+    if let Some(segment) = segments.first() {
+        crate::diagnostics::caption_stage(
+            &state.paths,
+            &segment.lecture_id,
+            "translation_queued",
+            &segments,
+            0.0,
+        );
+    }
     if let Ok(mut status) = state.live.status.lock() {
         for segment in &segments {
             status.translation.pending(&segment.id);
@@ -620,7 +657,7 @@ fn local_segment(id: &str, start: f64, end: f64, text: String) -> TranscriptSegm
         end_seconds: end,
         source_text: text,
         translated_text: String::new(),
-        origin: "cloud".into(),
+        origin: "local".into(),
         provider: "local".into(),
         status: "final".into(),
         transcript_version: "live".into(),

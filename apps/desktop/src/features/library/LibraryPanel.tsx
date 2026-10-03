@@ -160,7 +160,11 @@ export function LibraryPanel() {
                   <span>{dateText(lecture.startedAt)}</span>
                 </span>
                 {lecture.status === 'failed' && (
-                  <span className="danger-text">Needs attention</span>
+                  <span className="danger-text">
+                    {lecture.audioSource === 'import'
+                      ? 'Import failed'
+                      : 'Recording did not start'}
+                  </span>
                 )}
               </button>
               <button

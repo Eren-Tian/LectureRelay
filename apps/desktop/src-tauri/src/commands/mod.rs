@@ -69,6 +69,10 @@ pub fn course_detail(state: App<'_>, id: String) -> AppResult<CourseDetail> {
 
 #[tauri::command]
 pub fn save_course(state: App<'_>, id: Option<String>, input: CourseInput) -> AppResult<Course> {
+    let _gate = state
+        .gate
+        .lock()
+        .user_error("The app is busy. Try again.")?;
     state.storage.save_course(id, input)
 }
 
@@ -102,6 +106,10 @@ pub fn save_term(
     source: String,
     translation: String,
 ) -> AppResult<()> {
+    let _gate = state
+        .gate
+        .lock()
+        .user_error("The app is busy. Try again.")?;
     state
         .storage
         .save_term(&course_id, id, &source, &translation)
@@ -109,6 +117,10 @@ pub fn save_term(
 
 #[tauri::command]
 pub fn delete_term(state: App<'_>, course_id: String, id: String) -> AppResult<()> {
+    let _gate = state
+        .gate
+        .lock()
+        .user_error("The app is busy. Try again.")?;
     state.storage.delete_term(&course_id, &id)
 }
 
@@ -485,6 +497,14 @@ pub async fn generate_review(state: App<'_>, id: String, request: String) -> App
 }
 
 #[tauri::command]
+pub async fn resume_review(state: App<'_>, id: String, review_id: String) -> AppResult<()> {
+    let job = begin_job(&state, &id, "review")?;
+    let result = crate::app::review::run(&state, &id, "", Some(&review_id)).await;
+    job.finish(&result)?;
+    result
+}
+
+#[tauri::command]
 pub fn local_text_models(state: App<'_>) -> AppResult<Vec<crate::models::manager::ModelStatus>> {
     [
         crate::models::catalog::TRANSLATION,
@@ -532,6 +552,10 @@ pub fn cancel_job(state: App<'_>) {
 
 #[tauri::command]
 pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<String> {
+    let _gate = state
+        .gate
+        .lock()
+        .user_error("The app is busy. Try again.")?;
     let detail = state.storage.detail(&id)?;
     let (extension, content) = match kind.as_str() {
         "srt-source" | "srt-translation" | "srt-bilingual" | "vtt-source" | "vtt-translation"
@@ -649,5 +673,85 @@ pub fn trash_courses(state: App<'_>) -> AppResult<Vec<Course>> {
 }
 #[tauri::command]
 pub fn restore_course(state: App<'_>, id: String) -> AppResult<()> {
+    let _gate = state
+        .gate
+        .lock()
+        .user_error("The app is busy. Try again.")?;
     state.storage.restore_course(&id)
+}
+
+fn ensure_cleanup_idle(state: &AppState) -> AppResult<()> {
+    if state.recorder.status()?.is_some()
+        || state.jobs.status()?.is_some()
+        || state.live.active()
+        || state
+            .audio_preview
+            .load(std::sync::atomic::Ordering::Relaxed)
+        || crate::models::manager::downloading(state)?
+    {
+        return Err(
+            "Finish recording, processing, audio testing and downloads before deleting data."
+                .into(),
+        );
+    }
+    Ok(())
+}
+
+#[tauri::command]
+pub fn existing_lecture_ids(state: App<'_>, ids: Vec<String>) -> AppResult<Vec<String>> {
+    state.storage.existing_lecture_ids(&ids)
+}
+#[tauri::command]
+pub async fn permanently_delete_course(
+    state: App<'_>,
+    id: String,
+    confirmation: String,
+) -> AppResult<Vec<String>> {
+    if confirmation != "DELETE" {
+        return Err("Type DELETE to confirm permanent deletion.".into());
+    }
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _gate = state
+            .gate
+            .lock()
+            .user_error("The app is busy. Try again.")?;
+        ensure_cleanup_idle(&state)?;
+        let result = crate::storage::cleanup::run(&state.paths, &state.storage, Some(&id));
+        if let Ok(mut status) = state.live.status.lock()
+            && !status.lecture_id.is_empty()
+            && state.storage.lecture(&status.lecture_id).is_err()
+        {
+            *status = Default::default();
+        }
+        result
+    })
+    .await
+    .user_error("Permanent deletion was interrupted. Restart to recover cleanup.")?
+}
+#[tauri::command]
+pub async fn free_all_storage(state: App<'_>, confirmation: String) -> AppResult<Vec<String>> {
+    if confirmation != "DELETE ALL" {
+        return Err("Type DELETE ALL to confirm freeing all class storage.".into());
+    }
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _gate = state
+            .gate
+            .lock()
+            .user_error("The app is busy. Try again.")?;
+        ensure_cleanup_idle(&state)?;
+        let result = crate::storage::cleanup::run(&state.paths, &state.storage, None);
+        *state
+            .models
+            .active
+            .lock()
+            .user_error("Model status unavailable.")? = None;
+        if let Ok(mut status) = state.live.status.lock() {
+            *status = Default::default();
+        }
+        result
+    })
+    .await
+    .user_error("Storage cleanup was interrupted. Restart to recover cleanup.")?
 }

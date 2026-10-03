@@ -124,6 +124,7 @@ pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> App
             return Err("Finish active work before importing media.".into());
         }
         let lecture = state.storage.create_lecture(&state.paths, course, title)?;
+        state.storage.set_audio_source(&lecture.id, "import")?;
         let job = state.jobs.begin(&lecture.id, "import")?;
         (lecture, job)
     };

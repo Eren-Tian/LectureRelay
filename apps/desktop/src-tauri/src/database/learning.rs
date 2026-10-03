@@ -63,7 +63,7 @@ impl Storage {
             || !input.end_seconds.is_finite()
             || input.start_seconds < 0.0
             || input.end_seconds < input.start_seconds
-            || input.end_seconds > lecture.duration_seconds + 1.0
+            || input.end_seconds > lecture.duration_seconds
             || input.source_text.trim().is_empty()
             || input.source_text.len() > 10000
             || input.translated_text.len() > 20000

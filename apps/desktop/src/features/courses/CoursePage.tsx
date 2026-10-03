@@ -132,7 +132,9 @@ export function CoursePage({ id }: { id: string }) {
                       : lecture.status === 'interrupted'
                         ? ui.s061
                         : lecture.status === 'failed'
-                          ? ui.s062
+                          ? lecture.audioSource === 'import'
+                            ? 'Import failed'
+                            : ui.s062
                           : ui.s063}
                   </span>
                   <Icon name="arrow" size={18} />

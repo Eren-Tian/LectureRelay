@@ -28,7 +28,15 @@ function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
 }
 
 export const api = {
+  existingLectureIds: (ids: string[]) =>
+    call<string[]>('existing_lecture_ids', { ids }),
   study: (id: string) => call<StudyState>('study_state', { id }),
+  resumeReview: (id: string, reviewId: string) =>
+    call<void>('resume_review', { id, reviewId }),
+  permanentlyDeleteCourse: (id: string, confirmation: string) =>
+    call<string[]>('permanently_delete_course', { id, confirmation }),
+  freeAllStorage: (confirmation: string) =>
+    call<string[]>('free_all_storage', { confirmation }),
   saveDraft: (id: string, body: string) =>
     call<void>('save_note_draft', { id, body }),
   clearDraft: (id: string) => call<void>('clear_note_draft', { id }),
@@ -126,6 +134,20 @@ export const api = {
     call<void>('open_data_folder', { kind }),
   quit: () => call<void>('quit_app'),
 };
+
+/** Clear browser fallback drafts only after the database confirms their lecture was deleted. */
+export async function pruneDeletedDrafts() {
+  const prefix = 'lecturerelay-note-draft:';
+  const ids = Object.keys(localStorage)
+    .filter((key) => key.startsWith(prefix))
+    .map((key) => key.slice(prefix.length));
+  for (let offset = 0; offset < ids.length; offset += 250) {
+    const batch = ids.slice(offset, offset + 250);
+    const existing = new Set(await api.existingLectureIds(batch));
+    for (const id of batch)
+      if (!existing.has(id)) localStorage.removeItem(prefix + id);
+  }
+}
 
 export const recordingUrl = (path: string) => convertFileSrc(path);
 export const errorText = (error: unknown) =>

@@ -10,7 +10,7 @@ use rusqlite::{OptionalExtension, params};
 impl Storage {
     pub(crate) fn unfinished_recordings(&self) -> AppResult<Vec<Lecture>> {
         let db = self.lock()?;
-        let mut query = db.prepare("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until FROM lectures WHERE status='recording'").user_error("Cannot read recovery record.")?;
+        let mut query = db.prepare("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until,audio_source FROM lectures WHERE status='recording'").user_error("Cannot read recovery record.")?;
         query
             .query_map([], lecture_from_row)
             .user_error("Cannot read recovery record.")?
@@ -49,7 +49,7 @@ impl Storage {
 
     pub fn lectures(&self, course_id: &str) -> AppResult<Vec<Lecture>> {
         let db = self.lock()?;
-        let mut query = db.prepare("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until FROM lectures WHERE course_id=?1 ORDER BY started_at DESC").user_error("Cannot read lecture.")?;
+        let mut query = db.prepare("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until,audio_source FROM lectures WHERE course_id=?1 ORDER BY started_at DESC").user_error("Cannot read lecture.")?;
         query
             .query_map([course_id], lecture_from_row)
             .user_error("Cannot read lecture.")?
@@ -58,7 +58,7 @@ impl Storage {
     }
 
     pub fn lecture(&self, id: &str) -> AppResult<Lecture> {
-        self.lock()?.query_row("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until FROM lectures WHERE id=?1", [id], lecture_from_row).optional().user_error("Cannot read lecture.")?.ok_or("The lecture does not exist.".into())
+        self.lock()?.query_row("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until,audio_source FROM lectures WHERE id=?1", [id], lecture_from_row).optional().user_error("Cannot read lecture.")?.ok_or("The lecture does not exist.".into())
     }
 
     pub fn finish_lecture(&self, id: &str, duration: f64, status: &str) -> AppResult<()> {

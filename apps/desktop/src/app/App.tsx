@@ -2,7 +2,7 @@ import { ui } from '../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { api, errorText } from '../api/client';
+import { api, errorText, pruneDeletedDrafts } from '../api/client';
 import {
   type Bootstrap,
   type JobStatus,
@@ -94,7 +94,10 @@ export function App() {
     }
   }, [data?.settings.theme]);
   useEffect(() => {
-    if (isTauri()) void refresh().catch((error) => setError(errorText(error)));
+    if (isTauri())
+      void refresh()
+        .then(() => pruneDeletedDrafts().catch(() => {}))
+        .catch((error) => setError(errorText(error)));
   }, [refresh]);
   useEffect(() => {
     if (!isTauri()) return;

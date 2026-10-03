@@ -44,15 +44,20 @@ export class WebDriver {
         'local_text_models',
         'job_status',
         'provider_status',
+        'trash_courses',
+        'existing_lecture_ids',
       ].includes(command)
     ) {
       throw new Error(
         `Only read-only native inspection is allowed: ${command}`,
       );
     }
-    return this.command('POST', '/execute/async', {
+    // W3C execute/sync waits for a returned Promise. Avoid execute/async here:
+    // EdgeDriver 154's callback wrapper retained each result in a long timer
+    // during installed acceptance, contaminating the WebView memory baseline.
+    return this.command('POST', '/execute/sync', {
       script:
-        'const done=arguments[arguments.length-1]; window.__TAURI_INTERNALS__.invoke(arguments[0],arguments[1]).then(v=>done({ok:true,value:v}),()=>done({ok:false}));',
+        'return window.__TAURI_INTERNALS__.invoke(arguments[0],arguments[1]).then(v=>({ok:true,value:v}),()=>({ok:false}));',
       args: [command, args],
     }).then((r) => {
       if (!r.ok) throw new Error(`Native read failed: ${command}`);

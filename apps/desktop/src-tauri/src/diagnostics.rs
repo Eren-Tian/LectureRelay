@@ -1,5 +1,38 @@
 use serde::Serialize;
 use std::time::Instant;
+
+// Opt-in short acceptance traces. No audio, transcript, prompt or credentials are logged.
+// Normal sessions (including the independent memory soak) do not create these files.
+pub fn caption_stage(
+    paths: &crate::storage::AppPaths,
+    lecture: &str,
+    stage: &str,
+    segments: &[crate::domain::TranscriptSegment],
+    audio_end: f64,
+) {
+    if std::env::var("LECTURERELAY_TRACE_CAPTIONS").as_deref() != Ok("1") {
+        return;
+    }
+    use std::io::Write;
+    let Ok(now) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) else {
+        return;
+    };
+    let value = serde_json::json!({
+        "utcMs": now.as_secs_f64() * 1000.0,
+        "stage": stage, "audioEndSeconds": audio_end,
+        "segments": segments.iter().map(|s| serde_json::json!({
+            "id": s.id, "start": s.start_seconds, "end": s.end_seconds
+        })).collect::<Vec<_>>()
+    });
+    if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(
+        paths
+            .data
+            .join("logs")
+            .join(format!("{lecture}-caption-stages.jsonl")),
+    ) {
+        let _ = writeln!(file, "{value}");
+    }
+}
 use windows::Win32::{
     Foundation::{CloseHandle, FILETIME},
     System::{

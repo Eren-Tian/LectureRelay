@@ -26,6 +26,7 @@ export interface Lecture {
   status: 'recording' | 'completed' | 'interrupted' | 'failed';
   recordingPath: string;
   transcribedUntil: number;
+  audioSource: string;
 }
 export interface TranscriptSegment {
   id: string;
@@ -34,7 +35,7 @@ export interface TranscriptSegment {
   endSeconds: number;
   sourceText: string;
   translatedText: string;
-  origin: 'manual' | 'cloud';
+  origin: 'manual' | 'cloud' | 'local';
   provider: string;
   status: 'partial' | 'final';
   transcriptVersion: string;
@@ -52,7 +53,7 @@ export interface GlossaryTerm {
 export interface Note {
   body: string;
   updatedAt: number;
-  origin: 'manual' | 'cloud';
+  origin: 'manual' | 'cloud' | 'local';
 }
 export interface Answer {
   id: string;
@@ -211,12 +212,24 @@ export interface CourseDocument {
   path: string;
 }
 export interface StudyState {
+  reviews: ReviewCheckpoint[];
   tasks: ProcessingTask[];
   marks: StudyMark[];
   versions: NoteVersion[];
   draft: string | null;
   sourceVersion: string;
   documents: CourseDocument[];
+}
+
+export interface ReviewCheckpoint {
+  id: string;
+  request: string;
+  state: string;
+  message: string;
+  parts: { source: string; body: string | null; depth: number }[];
+  levels: string[][];
+  recoveries: number;
+  publishedVersion: string | null;
 }
 export interface LibraryEntry {
   lecture: Lecture;

@@ -2,6 +2,7 @@ pub(crate) mod assistance;
 pub(crate) mod exports;
 pub(crate) mod jobs;
 pub(crate) mod media;
+pub(crate) mod review;
 
 use crate::{
     audio, commands, database, models::manager as model_manager, speech::streaming as live, storage,
@@ -30,6 +31,7 @@ pub fn run() {
             let paths = storage::AppPaths::production()?;
             let instance_lock = paths.acquire_instance_lock()?;
             let storage = Arc::new(database::Storage::open(&paths.data.join("app.db"))?);
+            storage::cleanup::recover(&paths, &storage)?;
             let recovered_count = storage.recover(&paths)?;
             let preferences = storage.settings()?;
             #[cfg(debug_assertions)]
@@ -148,6 +150,9 @@ pub fn run() {
             commands::course_detail,
             commands::save_course,
             commands::delete_course,
+            commands::permanently_delete_course,
+            commands::free_all_storage,
+            commands::existing_lecture_ids,
             commands::save_term,
             commands::delete_term,
             commands::input_devices,
@@ -169,6 +174,7 @@ pub fn run() {
             commands::translate_lecture,
             commands::generate_notes,
             commands::generate_review,
+            commands::resume_review,
             commands::local_text_models,
             commands::download_text_model,
             commands::remove_text_model,

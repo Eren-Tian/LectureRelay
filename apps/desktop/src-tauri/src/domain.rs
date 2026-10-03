@@ -35,6 +35,7 @@ pub struct Lecture {
     pub status: String,
     pub recording_path: String,
     pub transcribed_until: f64,
+    pub audio_source: String,
 }
 
 #[derive(Clone, Serialize, Deserialize)]

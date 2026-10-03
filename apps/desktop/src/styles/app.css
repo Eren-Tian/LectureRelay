@@ -1385,8 +1385,9 @@ summary {
 }
 .toast {
   position: fixed;
-  bottom: 25px;
+  top: 20px;
   right: 30px;
+  pointer-events: none;
   z-index: 50;
   max-width: min(500px, calc(100vw - 50px));
   display: flex;
@@ -1399,6 +1400,12 @@ summary {
   border-radius: 14px;
   box-shadow: 0 8px 30px #26391e12;
   font-size: 12px;
+}
+.toast button {
+  pointer-events: auto;
+}
+.toast button {
+  pointer-events: auto;
 }
 .toast.error {
   color: var(--danger-text);

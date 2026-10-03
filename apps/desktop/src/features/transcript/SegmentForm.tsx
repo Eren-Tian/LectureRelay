@@ -54,7 +54,7 @@ export function SegmentForm({
               required
               min={0}
               max={duration}
-              step="0.1"
+              step="any"
               value={input.startSeconds}
               onChange={(event) =>
                 setInput((current) => ({
@@ -71,7 +71,7 @@ export function SegmentForm({
               required
               min={input.startSeconds}
               max={duration}
-              step="0.1"
+              step="any"
               value={input.endSeconds}
               onChange={(event) =>
                 setInput((current) => ({

@@ -170,7 +170,6 @@ export function LecturePage({ id }: { id: string }) {
     void run(async () => {
       await api.export(id, kind);
       workspace.notify(ui.s105);
-      await api.openFolder('exports');
     });
   const saveNote = () =>
     void run(async () => {
@@ -221,7 +220,9 @@ export function LecturePage({ id }: { id: string }) {
           {lecture.status === 'interrupted'
             ? ui.s109
             : lecture.status === 'failed'
-              ? ui.s110
+              ? lecture.audioSource === 'import'
+                ? 'Import failed'
+                : ui.s110
               : ui.s111}
         </span>
       </header>

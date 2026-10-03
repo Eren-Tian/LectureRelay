@@ -74,6 +74,11 @@ pub async fn attach_document(
             return Ok(None);
         };
         use std::io::Read;
+        let _gate = state
+            .gate
+            .lock()
+            .user_error("The app is busy. Try again.")?;
+        state.storage.course(&course_id)?;
         let mut file = std::fs::File::open(&source).user_error("Cannot open PDF.")?;
         let mut bytes = Vec::new();
         file.by_ref()

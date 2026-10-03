@@ -98,7 +98,12 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
                     end_seconds: start_offset + end,
                     source_text: segment.text.trim().into(),
                     translated_text: String::new(),
-                    origin: "cloud".into(),
+                    origin: if settings.speech_provider == "local" {
+                        "local"
+                    } else {
+                        "cloud"
+                    }
+                    .into(),
                     provider: speech_provider.clone(),
                     status: "final".into(),
                     transcript_version: "postclass".into(),
@@ -215,111 +220,7 @@ pub async fn notes(state: &AppState, id: &str) -> AppResult<()> {
 }
 
 pub async fn review(state: &AppState, id: &str, request: &str) -> AppResult<()> {
-    if request.chars().count() > 2000 {
-        return Err("Keep review instructions under 2,000 characters.".into());
-    }
-    let detail = state.storage.detail(id)?;
-    if detail.segments.is_empty() {
-        return Err("Transcribe audio or add transcript segments before generating notes.".into());
-    }
-    let source_version = state.storage.source_version(id)?;
-    let provider = configured_text(state, Role::Study, false)?;
-    let context = format!(
-        "Requested focus: {}\n{}",
-        if request.trim().is_empty() {
-            "Summarize the full class: concepts, definitions, examples and main takeaways."
-        } else {
-            request.trim()
-        },
-        course_context(state, &detail.course)?
-    );
-    let mut chunks = Vec::new();
-    let mut chunk = String::new();
-    for segment in &detail.segments {
-        let line = format!(
-            "[{}] {}\n",
-            timestamp(segment.start_seconds),
-            segment.source_text
-        );
-        for piece in crate::providers::local::chunks(&line, 6000) {
-            if !chunk.is_empty() && chunk.len() + piece.len() > 6000 {
-                chunks.push(std::mem::take(&mut chunk));
-            }
-            chunk.push_str(&piece);
-        }
-    }
-    if !chunk.is_empty() {
-        chunks.push(chunk);
-    }
-    let total = chunks.len() as u32 + u32::from(chunks.len() > 1);
-    state.jobs.progress(0, total);
-    let mut partials = Vec::new();
-    for (index, chunk) in chunks.iter().enumerate() {
-        state.jobs.checkpoint()?;
-        partials.push(
-            provider
-                .notes(&context, chunk, &detail.course.assistance_language)
-                .await?,
-        );
-        state.jobs.progress(index as u32 + 1, total);
-    }
-    state.jobs.checkpoint()?;
-    let body = if partials.len() == 1 {
-        partials.remove(0)
-    } else {
-        let combined = partials.join("\n\n---\n\n");
-        // Reduce bounded groups, but retain every section draft in the saved guide.
-        // This prevents the final model context from silently omitting late-class evidence.
-        let mut level = partials.clone();
-        let mut rounds = 0;
-        while level.join("\n\n").len() > 7500 && rounds < 4 {
-            let groups = crate::providers::local::chunks(&level.join("\n\n"), 7000);
-            let mut next = Vec::new();
-            for group in groups {
-                state.jobs.checkpoint()?;
-                next.push(
-                    provider
-                        .combine_notes(&context, &group, &detail.course.assistance_language)
-                        .await?,
-                );
-            }
-            if next.join("\n").len() >= level.join("\n").len() {
-                break;
-            }
-            level = next;
-            rounds += 1;
-        }
-        let overview = if level.join("\n\n").len() <= 7500 {
-            provider
-                .combine_notes(
-                    &context,
-                    &level.join("\n\n"),
-                    &detail.course.assistance_language,
-                )
-                .await?
-        } else {
-            "Overview exceeded the model context; all section notes are preserved below.".into()
-        };
-        format!(
-            "# {}\n\n{}\n\n---\n\n## Section notes\n\n{}",
-            detail.lecture.title, overview, combined
-        )
-    };
-    state.jobs.checkpoint()?;
-    state.storage.add_note_version(
-        id,
-        &body,
-        if state.storage.settings()?.study_mode == "local" {
-            "local"
-        } else {
-            "cloud"
-        },
-        &detail.course.assistance_language,
-        &source_version,
-    )?;
-    state.storage.snapshot(&state.paths, id)?;
-    state.jobs.progress(total, total);
-    Ok(())
+    super::review::run(state, id, request, None).await
 }
 
 pub async fn answer(state: &AppState, id: &str, question: &str) -> AppResult<Answer> {

@@ -50,10 +50,10 @@ export function StudyTools({
     detail.course.assistanceLanguage,
   ]);
   useEffect(() => {
-    if (!live?.active) return;
+    if (!live?.active && job?.lectureId !== id) return;
     const timer = setInterval(() => void reload(), 5000);
     return () => clearInterval(timer);
-  }, [live?.active, reload]);
+  }, [live?.active, job?.lectureId, id, reload]);
   const refresh = async () => {
     await reload();
     await onReload();
@@ -108,6 +108,7 @@ export function StudyTools({
               {onAI && (
                 <DeepReview
                   id={id}
+                  reviews={data.reviews}
                   blocked={
                     busy ||
                     !!job ||

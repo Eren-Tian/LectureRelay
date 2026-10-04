@@ -4,11 +4,11 @@ LectureRelay is a **Windows desktop app** for recording classes, reading English
 
 ## Download and install
 
-**[Download LectureRelay 0.3.0 for Windows x64 (.exe)](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.3.0/LectureRelay_0.3.0_x64-setup.exe)**
+**[Download LectureRelay 0.3.2 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.2/LectureRelay_0.3.2_x64-setup.exe)**
 
-[Release notes and all downloads](https://github.com/Ellen-Tian/LectureRelay/releases/tag/v0.3.0) · [SHA-256 checksum](https://github.com/Ellen-Tian/LectureRelay/releases/download/v0.3.0/LectureRelay_0.3.0_x64-setup.exe.sha256)
+[Release notes and all downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.2) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.2/LectureRelay_0.3.2_x64-setup.exe.sha256)
 
-1. Download **`LectureRelay_0.3.0_x64-setup.exe`** from the release's **Assets** section. The automatically generated **Source code** archives are for developers.
+1. Download **`LectureRelay_0.3.2_x64-setup.exe`** from the release's **Assets** section. The automatically generated **Source code** archives are for developers.
 2. Run the installer and follow the setup wizard. It installs for your Windows user and downloads Microsoft WebView2 if it is missing; that step needs an internet connection.
 3. Open **LectureRelay** from the Start menu or desktop shortcut. No LectureRelay account is required.
 4. For local English captions, open **Settings → Local AI**, download the speech model once (about 667 MiB), then select **Local English** in **AI Providers**.
@@ -29,8 +29,9 @@ This is an **unsigned development preview**; Windows may display an unknown-publ
 - Review note versions and unfinished processing tasks, and export transcripts, subtitles and notes.
 - Choose Light or Dark appearance and a global Quiet Mode for all local AI.
 - Restore courses from Trash and keep your library between app sessions.
+- Permanently delete trashed courses or free class/model storage with explicit typed confirmation.
 
-See the [getting-started guide](docs/user-guide/getting-started.md), [local AI guide](docs/user-guide/local-ai.md) and [0.3.0 changes](docs/releases/v0.3.0.md).
+See the [getting-started guide](docs/user-guide/getting-started.md), [local AI guide](docs/user-guide/local-ai.md) and [0.3.2 changes](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.2).
 
 ## Local and optional cloud AI
 
@@ -48,13 +49,17 @@ OpenAI/Groq remain optional, with your own API key and provider charges. Local m
 
 ## Preview status
 
-Version 0.3.0 adds offline text AI, separate translation/study choices and user-directed whole-class review. The GitHub installer is rebuilt from the published source; its release page records the packaging checks and checksum.
+The downloadable preview is **0.3.2**. It improves recording/data integrity, note saving and Light/Dark contrast, and includes resumable review and confirmed permanent deletion/storage cleanup. See the [release notes](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.2), [engineering review](https://github.com/Eren-Tian/LectureRelay/blob/v0.3.2/docs/testing/engineering-audit-v0.3.2.md) and separate [0.3.1 installed 90-minute results](https://github.com/Eren-Tian/LectureRelay/blob/v0.3.2/docs/testing/installed-acceptance-v0.3.1.md).
 
-Authenticated cloud workflows and ordinary-laptop power/noise behavior remain unverified. A previous 90-minute installed-app run found WebView2 memory growth; this release does not claim that issue is resolved. Earlier reports describe the specific builds and scenarios tested, rather than certifying every feature in the current installer: [installed acceptance](docs/testing/installed-acceptance-v0.2.md), [preferences](docs/releases/v0.2.0-preferences.md), [product iteration](docs/releases/v0.2.0-product-iteration.md).
+The installed 0.3.2 short workflow, replay/restart, original-data preservation, component regressions and selected theme-contrast checks passed. Its release page records the source revision, validation scope and installer checksum.
+
+Authenticated cloud workflows and ordinary-laptop power/noise behavior remain unverified. Device discontinuities and AI meaning/factual errors still need investigation. The 90-minute result is from 0.3.1, not a new 0.3.2 soak. Reports apply to their stated builds and scenarios rather than certifying every feature.
 
 ## For developers
 
 The instructions below are only for contributing or building from source. **They are not part of installing or using LectureRelay.**
+
+To build the downloadable version, check out tag **`v0.3.2`** first; the default development branch can differ from a release.
 
 The app uses Tauri 2, React, TypeScript, Rust, SQLite and a native Nemotron speech worker. Development requires Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2.
 
@@ -76,7 +81,7 @@ The first build downloads hash-pinned CPU speech and text runtimes; model weight
 | `pnpm build:debug`                            | Native debug executable                            |
 | `pnpm release`                                | Release EXE + current-user English NSIS + checksum |
 
-Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.0_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
+Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.2_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
 
 ## Repository
 

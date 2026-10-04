@@ -1,0 +1,52 @@
+name: Checks
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    name: Windows checks
+    runs-on: windows-2025
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup
+      - name: Install locked frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: TypeScript and JavaScript formatting
+        run: pnpm format:check
+      - name: Repository links, structure and imports
+        run: pnpm verify:repo
+      - name: Frontend type checking
+        run: pnpm check:web
+      - name: Frontend build and pinned native runtime staging
+        run: pnpm build:web
+      - name: Real React component regressions
+        run: pnpm test:components
+      - name: Rust formatting
+        run: pnpm format:rust:check
+      - name: Ordinary Rust tests
+        run: pnpm test:rust
+      - name: Clippy with warnings denied
+        run: pnpm lint:rust
+      - name: Report test tiers
+        run: |
+          @'
+          ## Windows checks
+          Executed: typecheck, production frontend build, real React save/caption/contrast fixtures,
+          ordinary Rust tests, Clippy, formatters and repository checks.
+
+          Explicit exclusions: opt-in hardware capture, model download/inference, Windows credential
+          tests, installed GUI and 90-minute continuity experiments. No model weights are downloaded.
+          '@ >> $env:GITHUB_STEP_SUMMARY

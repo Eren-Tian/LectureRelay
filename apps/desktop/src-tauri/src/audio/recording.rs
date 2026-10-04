@@ -72,6 +72,7 @@ struct Session {
     paused: Arc<AtomicBool>,
     status: Arc<Mutex<RecordingStatus>>,
     thread: JoinHandle<AppResult<AudioSummary>>,
+    health: Arc<CaptureHealth>,
 }
 
 #[derive(Default)]
@@ -114,6 +115,8 @@ impl Recorder {
         let (ready_tx, ready_rx) = mpsc::channel();
         let shared_pause = paused.clone();
         let shared_status = status.clone();
+        let health = Arc::new(CaptureHealth::default());
+        let shared_health = health.clone();
         let thread = thread::Builder::new()
             .name("lecture-recording".into())
             .spawn(move || {
@@ -127,6 +130,7 @@ impl Recorder {
                         paused: shared_pause,
                         status: shared_status,
                         controls: commands,
+                        health: shared_health,
                     },
                     &ready_tx,
                 );
@@ -144,6 +148,7 @@ impl Recorder {
                     paused,
                     status,
                     thread,
+                    health,
                 });
                 Ok(())
             }
@@ -165,6 +170,16 @@ impl Recorder {
             .filter(|session| session.id == id)
             .ok_or("This lecture is not recording.")?;
         session.paused.store(paused, Ordering::Relaxed);
+        session.health.trace.event(
+            if paused {
+                "pause_requested"
+            } else {
+                "resume_requested"
+            },
+            paused,
+            None,
+            None,
+        );
         session
             .control
             .send(Control::Pause(paused))
@@ -178,6 +193,12 @@ impl Recorder {
             return Err("This lecture is not recording.".into());
         }
         let session = sessions.take().ok_or("Recording already stopped.")?;
+        session.health.trace.event(
+            "stop_requested",
+            session.paused.load(Ordering::Relaxed),
+            None,
+            None,
+        );
         let _ = session.control.send(Control::Stop);
         // Keep start/stop serialized until the old stream is closed.
         session
@@ -196,6 +217,7 @@ struct RecordingContext<R: tauri::Runtime> {
     paused: Arc<AtomicBool>,
     status: Arc<Mutex<RecordingStatus>>,
     controls: mpsc::Receiver<Control>,
+    health: Arc<CaptureHealth>,
 }
 
 fn record<R: tauri::Runtime>(
@@ -211,6 +233,7 @@ fn record<R: tauri::Runtime>(
         paused,
         status,
         controls,
+        health,
     } = context;
     let host = cpal::default_host();
     let device = if device_id.is_empty() {
@@ -260,7 +283,6 @@ fn record<R: tauri::Runtime>(
         .user_error("Cannot initialize WAV recording.")?;
     writer.flush().user_error("Cannot save the WAV header.")?;
     let (samples_tx, samples_rx) = mpsc::sync_channel::<Vec<i16>>(64);
-    let health = Arc::new(CaptureHealth::default());
     let failed = Arc::new(AtomicBool::new(false));
     let stream = match config.sample_format() {
         SampleFormat::F32 => build_stream::<f32>(
@@ -305,6 +327,7 @@ fn record<R: tauri::Runtime>(
         ),
         _ => return Err("This audio sample format is unsupported. Choose another device.".into()),
     }?;
+    health.trace.event("start_requested", false, None, None);
     stream
         .play()
         .user_error("Cannot start audio capture. Close apps holding the device.")?;
@@ -315,6 +338,7 @@ fn record<R: tauri::Runtime>(
     let mut peak = 0_f32;
     let mut event_at = Instant::now();
     let mut checkpoint_at = Instant::now();
+    let mut trace_at = Instant::now();
     let mut voice_at = Instant::now();
     let mut error = None;
     loop {
@@ -325,6 +349,7 @@ fn record<R: tauri::Runtime>(
                 // paused audio from being stored or contributing to elapsed time.
                 if value {
                     let _ = stream.pause();
+                    health.trace.event("pause_command_queued", true, None, None);
                 } else {
                     if stream.play().is_err() {
                         error = Some(
@@ -333,6 +358,9 @@ fn record<R: tauri::Runtime>(
                         break;
                     }
                     voice_at = Instant::now();
+                    health
+                        .trace
+                        .event("resume_command_queued", false, None, None);
                 }
             }
             Err(mpsc::TryRecvError::Empty) => {}
@@ -352,6 +380,7 @@ fn record<R: tauri::Runtime>(
                 }
                 count += 1;
             }
+            health.trace.written.store(count, Ordering::Relaxed);
             if error.is_some() {
                 break;
             }
@@ -395,8 +424,16 @@ fn record<R: tauri::Runtime>(
             peak = 0.0;
             event_at = Instant::now();
         }
+        if trace_at.elapsed() >= Duration::from_secs(30) {
+            // Bounded diagnostics are best-effort and outside the capture callback.
+            health.trace.save(&path, rate, channels, false);
+            trace_at = Instant::now();
+        }
     }
     drop(stream);
+    health
+        .trace
+        .event("stream_closed", paused.load(Ordering::Relaxed), None, None);
     // Drain audio captured before Stop so the last syllable is not discarded.
     for samples in samples_rx.try_iter() {
         for sample in samples {
@@ -412,6 +449,11 @@ fn record<R: tauri::Runtime>(
             "Recording could not finish normally. Saved audio will be recovered on restart.".into(),
         );
     }
+    health.trace.written.store(count, Ordering::Relaxed);
+    health
+        .trace
+        .event("wav_finalized", paused.load(Ordering::Relaxed), None, None);
+    health.trace.save(&path, rate, channels, true);
     if let Ok(mut shared) = status.lock() {
         shared.duration_seconds = count as f64 / rate as f64;
         shared.failed = error.is_some();

@@ -15,10 +15,13 @@ import psutil
 parser = argparse.ArgumentParser()
 parser.add_argument('--title', required=True)
 parser.add_argument('--seconds', type=int, default=5400)
+parser.add_argument('--root', type=Path, default=Path('target/acceptance-v0.3.1'))
+parser.add_argument('--audio', type=Path, default=Path('target/installed-acceptance/soak.wav'))
+parser.add_argument('--course', default='[ACCEPTANCE 2026-10-03] Local AI classroom')
 args = parser.parse_args()
-assert args.title.startswith('[ACCEPTANCE] v0.3.1')
+assert args.title.startswith('[ACCEPTANCE] v0.3.') and args.course.startswith('[ACCEPTANCE ')
 assert args.seconds >= 5400, 'This acceptance is a real 90-minute run'
-root = Path('target/acceptance-v0.3.1')
+root = args.root
 exe = (Path(os.environ['LOCALAPPDATA'])/'Programs/LectureRelay/lecturerelay-desktop.exe').resolve()
 apps = [p for p in psutil.process_iter(['exe']) if p.info['exe'] and Path(p.info['exe']).resolve() == exe]
 assert len(apps) == 1
@@ -29,7 +32,7 @@ db = sqlite3.connect(db_path.resolve().as_uri()+'?mode=ro', uri=True)
 db.execute('PRAGMA query_only=ON')
 deadline = time.monotonic()+600
 while True:
-    rows = db.execute("SELECT l.id,l.recording_path FROM lectures l JOIN courses c ON c.id=l.course_id WHERE l.title=? AND c.name=? AND l.status='recording'", (args.title, '[ACCEPTANCE 2026-10-03] Local AI classroom')).fetchall()
+    rows = db.execute("SELECT l.id,l.recording_path FROM lectures l JOIN courses c ON c.id=l.course_id WHERE l.title=? AND c.name=? AND l.status='recording'", (args.title, args.course)).fetchall()
     assert len(rows) <= 1
     if rows:
         lecture_id, recording_path = rows[0]
@@ -48,7 +51,7 @@ previous_time = start
 previous = {}
 samples = []
 logical = psutil.cpu_count()
-source = Path('target/installed-acceptance/soak.wav').resolve()
+source = args.audio.resolve()
 def snapshot():
     now = time.monotonic()
     processes, cpu_seconds = [], 0
@@ -74,7 +77,18 @@ with (root/'independent-processes.jsonl').open('x', encoding='utf-8', buffering=
             samples.append(sample)
             previous_time = time.monotonic()
             if len(samples) % 15 == 0:
+                # Read bounded persisted diagnostics, never inject app IPC/JavaScript.
+                trace_path = Path(recording_path).with_name('recording-events.json')
+                if trace_path.exists() and trace_path.stat().st_size < 4 * 1024 * 1024:
+                    trace = json.loads(trace_path.read_text(encoding='utf-8'))
+                    sample['captureTrace'] = {key: trace.get(key) for key in ['elapsedUs','receivedFrames','queuedSamples','writtenSamples','discardedQueueFullSamples','discardedWhilePausedSamples','omittedEvents']}
+                    sample['deviceEventTimesUs'] = [e['monotonicUs'] for e in trace['events'] if e['kind']=='device_discontinuity']
+                perf = db_path.parent/'logs'/f'{lecture_id}-performance.json'
+                if perf.exists() and perf.stat().st_size < 65536:
+                    sample['performance'] = json.loads(perf.read_text(encoding='utf-8'))
                 (root/'independent-progress.json').write_text(json.dumps(sample,indent=2),encoding='utf-8')
+                with (root/'independent-diagnostics.jsonl').open('a',encoding='utf-8') as diagnostics:
+                    diagnostics.write(json.dumps(sample)+'\n')
             assert db.execute('SELECT status FROM lectures WHERE id=?',(lecture_id,)).fetchone()[0]=='recording', 'Recording ended early'
             time.sleep(2)
     finally:

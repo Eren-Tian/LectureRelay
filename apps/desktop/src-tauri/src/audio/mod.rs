@@ -1,6 +1,7 @@
 mod capture;
 pub(crate) mod preview;
 mod recording;
+mod trace;
 pub(crate) mod wav;
 
 pub(crate) use capture::{InputDevice, devices, input_devices};

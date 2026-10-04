@@ -8,8 +8,9 @@ import sqlite3
 
 parser = argparse.ArgumentParser()
 parser.add_argument('phase', choices=['before', 'after'])
+parser.add_argument('--root', type=Path, default=Path('target/engineering-audit'))
 args = parser.parse_args()
-root = Path('target/engineering-audit')
+root = args.root
 original = json.loads((root / 'installed-original.json').read_text(encoding='utf-8'))
 db = Path(original['storage']['database'])
 current = sqlite3.connect(db.resolve().as_uri() + '?mode=ro', uri=True)
@@ -21,7 +22,7 @@ if args.phase == 'before':
     with sqlite3.connect(backup) as destination:
         current.backup(destination)
     files = []
-    for folder in [Path(original['storage']['library']) / 'Courses', Path(original['storage']['state']) / 'models']:
+    for folder in [Path(original['storage']['library']) / 'Courses', db.parent / 'models']:
         for file in folder.rglob('*'):
             if file.is_file() and file.suffix.lower() in ['.wav', '.gguf', '.bin']:
                 with file.open('rb') as stream:

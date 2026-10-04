@@ -66,7 +66,7 @@ fn real_record_only_continuity_lifecycle() {
             &project,
             &root,
             "source.wav",
-            &format!("native-{scenario}-playback.jsonl"),
+            &format!("native-{scenario}{suffix}-playback.jsonl"),
         );
         if scenario == "pause-idle" {
             sleep(Duration::from_secs(10));
@@ -82,7 +82,7 @@ fn real_record_only_continuity_lifecycle() {
                     &project,
                     &root,
                     "tail.wav",
-                    "native-pause-idle-playback.jsonl"
+                    &format!("native-{scenario}{suffix}-playback.jsonl")
                 )
                 .wait()
                 .unwrap()

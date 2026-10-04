@@ -72,13 +72,15 @@ def match(source, recording, at, expected, radius, length=.1):
             'correlation': round(confidence, 5), 'matched': confidence >= .75}
 
 
-def analyse(source_path, recording_path, output):
+def analyse(source_path, recording_path, output, start=0., end=None):
     source, recording = Audio(source_path), Audio(recording_path)
     event_path = recording_path.with_name('recording-events.json')
     trace = json.loads(event_path.read_text(encoding='utf-8')) if event_path.exists() else None
     results = []
     lag = 0.
-    for at in np.arange(.1, source.seconds - .1, .25):
+    end = source.seconds if end is None else min(source.seconds, end)
+    assert 0 <= start < end <= source.seconds
+    for at in np.arange(start + .1, end - .1, .25):
         at = float(at)
         result = match(source, recording, at, at + lag, 15 if not results else .3)
         if not result['matched']:
@@ -89,7 +91,7 @@ def analyse(source_path, recording_path, output):
     matched = [row for row in results if row['matched']]
     edges = []
     if matched:
-        for at, lag in [(0., matched[0]['offsetSeconds']), (source.seconds - .025, matched[-1]['offsetSeconds'])]:
+        for at, lag in [(start, matched[0]['offsetSeconds']), (end - .025, matched[-1]['offsetSeconds'])]:
             edges.append(match(source, recording, at, at + lag, .3, length=.025))
     jumps = []
     for before, after in zip(matched, matched[1:]):
@@ -106,6 +108,8 @@ def analyse(source_path, recording_path, output):
             position = event['queuedSamples'] / trace['sampleRate']
             nearest = min(matched, key=lambda row: abs(row['recordingSeconds'] - position))
             estimate = position - nearest['offsetSeconds']
+            if not start - 1 <= estimate <= end + 1:
+                continue
             dense = [match(source, recording, float(at), float(at) + nearest['offsetSeconds'], .3)
                      for at in np.arange(max(.025, estimate - 1), min(source.seconds - .125, estimate + 1), .025)]
             neighborhoods.append({'event': event, 'recordingPositionSeconds': position,
@@ -125,6 +129,7 @@ def analyse(source_path, recording_path, output):
               'matchThreshold': .75, 'searchRecoverySeconds': 15,
               'limits': '150 ms between ordinary probe windows; cancelling defects there can escape detection. Low-confidence windows remain unresolved. Intended pauses/playback gaps require external lifecycle interpretation. Microphone acoustic filtering may prevent pilot matching.',
               'sourceSeconds': source.seconds, 'recordingSeconds': recording.seconds,
+              'analysisStartSeconds': start, 'analysisEndSeconds': end,
               'sampleRate': recording.rate, 'framesRead': read_frames, 'zeroSamples': zero_frames,
               'matchedProbes': len(matched), 'unmatchedProbes': len(results) - len(matched),
               'firstMatch': matched[0] if matched else None, 'lastMatch': matched[-1] if matched else None,
@@ -139,5 +144,7 @@ if __name__ == '__main__':
     parser.add_argument('--source', type=Path, required=True)
     parser.add_argument('--recording', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--start', type=float, default=0.)
+    parser.add_argument('--end', type=float)
     args = parser.parse_args()
-    analyse(args.source, args.recording, args.output)
+    analyse(args.source, args.recording, args.output, args.start, args.end)

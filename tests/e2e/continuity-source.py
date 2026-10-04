@@ -49,5 +49,14 @@ if __name__ == '__main__':
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--seconds', type=float, required=True)
     parser.add_argument('--fixtures', type=Path, default=Path('target/asr-evaluation/benchmark-data'))
+    parser.add_argument('--short-suite', action='store_true', help='Also split a 40-second reference into source.wav (0..30 s) and tail.wav (30..40 s)')
     args = parser.parse_args()
+    if args.short_suite:
+        assert args.seconds == 40 and args.output.name not in ['source.wav', 'tail.wav']
     generate(args.output, args.seconds, args.fixtures)
+    if args.short_suite:
+        with wave.open(str(args.output), 'rb') as reference:
+            for name, seconds in [('source.wav', 30), ('tail.wav', 10)]:
+                with wave.open(str(args.output.parent / name), 'wb') as part:
+                    part.setparams(reference.getparams())
+                    part.writeframes(reference.readframes(seconds * reference.getframerate()))

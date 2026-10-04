@@ -16,7 +16,14 @@ pub(super) struct CaptureHealth {
     dropped_samples: AtomicU64,
     discontinuities: AtomicU32,
     pending_discontinuities: AtomicU32,
+    buffered_samples: AtomicU64,
     pub trace: CaptureTrace,
+}
+
+pub(super) fn sample_queue() -> (mpsc::SyncSender<Vec<i16>>, mpsc::Receiver<Vec<i16>>) {
+    // A separate sample budget bounds PCM memory by time, even when device
+    // packet sizes vary. This packet limit also bounds channel/Vec overhead.
+    mpsc::sync_channel(8192)
 }
 
 #[derive(Clone, Default, serde::Serialize)]
@@ -28,6 +35,19 @@ pub struct CaptureQuality {
 }
 
 impl CaptureHealth {
+    pub fn consumed(&self, samples: usize) {
+        self.buffered_samples
+            .fetch_sub(samples as u64, Ordering::Relaxed);
+    }
+    fn queue_drop(&self, count: u64) {
+        self.trace
+            .queue_discarded
+            .fetch_add(count, Ordering::Relaxed);
+        self.dropped_buffers.fetch_add(1, Ordering::Relaxed);
+        self.dropped_samples.fetch_add(count, Ordering::Relaxed);
+        self.trace
+            .event("application_queue_drop", false, Some(count), None);
+    }
     pub fn snapshot(&self) -> CaptureQuality {
         CaptureQuality {
             dropped_buffers: self.dropped_buffers.load(Ordering::Relaxed),
@@ -55,24 +75,36 @@ impl CaptureQuality {
     }
 }
 
-fn send_samples(sender: &mpsc::SyncSender<Vec<i16>>, samples: Vec<i16>, health: &CaptureHealth) {
+fn send_samples(
+    sender: &mpsc::SyncSender<Vec<i16>>,
+    samples: Vec<i16>,
+    health: &CaptureHealth,
+    rate: u32,
+) {
     let count = samples.len() as u64;
+    // Reserve before enqueue: the consumer may run immediately after try_send.
+    if health
+        .buffered_samples
+        .fetch_update(Ordering::Relaxed, Ordering::Relaxed, |pending| {
+            pending
+                .checked_add(count)
+                .filter(|next| *next <= u64::from(rate) * 5)
+        })
+        .is_err()
+    {
+        health.queue_drop(count);
+        return;
+    }
     match sender.try_send(samples) {
         Ok(()) => {
             health.trace.queued.fetch_add(count, Ordering::Relaxed);
         }
         Err(mpsc::TrySendError::Full(_)) => {
-            health
-                .trace
-                .queue_discarded
-                .fetch_add(count, Ordering::Relaxed);
-            health.dropped_buffers.fetch_add(1, Ordering::Relaxed);
-            health.dropped_samples.fetch_add(count, Ordering::Relaxed);
-            health
-                .trace
-                .event("application_queue_drop", false, Some(count), None);
+            health.consumed(count as usize);
+            health.queue_drop(count);
         }
         Err(mpsc::TrySendError::Disconnected(_)) => {
+            health.consumed(count as usize);
             health
                 .trace
                 .receiver_discarded
@@ -250,7 +282,7 @@ where
                     .trace
                     .invalid_replaced
                     .fetch_add(invalid, Ordering::Relaxed);
-                send_samples(&sender, mono, &health);
+                send_samples(&sender, mono, &health, config.sample_rate);
             },
             move |error| {
                 // WASAPI reports recoverable discontinuities at stream start/resume.
@@ -280,6 +312,35 @@ fn float_to_pcm(value: f32) -> i16 {
 mod tests {
     use super::*;
     #[test]
+    fn capture_preserves_two_seconds_while_writer_is_temporarily_busy() {
+        let health = CaptureHealth::default();
+        let (sender, receiver) = sample_queue();
+        // A known real 48 kHz device supplies 480 frames every 10 ms. Withhold
+        // consumer progress to reproduce a two-second filesystem/scheduling stall.
+        for packet in 0..200_i16 {
+            send_samples(&sender, vec![packet; 480], &health, 48000);
+        }
+        assert_eq!(health.snapshot().dropped_samples, 0);
+        for packet in 0..200_i16 {
+            assert_eq!(receiver.try_recv().unwrap(), vec![packet; 480]);
+            health.consumed(480);
+        }
+        assert_eq!(health.buffered_samples.load(Ordering::Relaxed), 0);
+    }
+    #[test]
+    fn capture_queue_budget_is_in_samples_and_releases_consumed_capacity() {
+        let health = CaptureHealth::default();
+        let (sender, receiver) = sample_queue();
+        send_samples(&sender, vec![1; 240000], &health, 48000);
+        send_samples(&sender, vec![2; 480], &health, 48000);
+        assert_eq!(health.snapshot().dropped_samples, 480);
+        let consumed = receiver.try_recv().unwrap();
+        health.consumed(consumed.len());
+        send_samples(&sender, vec![3; 480], &health, 48000);
+        assert_eq!(receiver.try_recv().unwrap(), vec![3; 480]);
+        assert_eq!(health.snapshot().dropped_samples, 480);
+    }
+    #[test]
     fn device_discontinuities_are_not_reported_as_lost_samples() {
         let health = CaptureHealth::default();
         let failed = AtomicBool::new(false);
@@ -295,15 +356,15 @@ mod tests {
     fn a_full_capture_queue_counts_only_the_samples_it_actually_dropped() {
         let health = CaptureHealth::default();
         let (sender, receiver) = mpsc::sync_channel(1);
-        send_samples(&sender, vec![1; 48], &health);
-        send_samples(&sender, vec![2; 96], &health);
+        send_samples(&sender, vec![1; 48], &health, 48000);
+        send_samples(&sender, vec![2; 96], &health, 48000);
         assert_eq!(receiver.recv().unwrap(), vec![1; 48]);
         let q = health.snapshot();
         assert_eq!(q.dropped_buffers, 1);
         assert_eq!(q.dropped_samples, 96);
         assert_eq!(q.device_discontinuities, 0);
         drop(receiver);
-        send_samples(&sender, vec![3; 48], &health);
+        send_samples(&sender, vec![3; 48], &health, 48000);
         assert_eq!(health.snapshot().dropped_samples, 96);
     }
     #[test]

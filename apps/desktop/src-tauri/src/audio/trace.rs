@@ -7,7 +7,7 @@ use std::{
         Mutex,
         atomic::{AtomicU64, Ordering},
     },
-    time::{Instant, SystemTime, UNIX_EPOCH},
+    time::{Duration, Instant, SystemTime, UNIX_EPOCH},
 };
 
 const MAX_EVENTS: usize = 8192;
@@ -36,6 +36,8 @@ struct Event {
     // CPAL does not expose WASAPI device position/flag validity. Never infer loss from Xrun.
     missing_samples: Option<u64>,
     packet: Option<PacketTiming>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    duration_us: Option<u64>,
 }
 
 pub(super) struct CaptureTrace {
@@ -87,6 +89,27 @@ impl CaptureTrace {
         samples: Option<u64>,
         packet: Option<PacketTiming>,
     ) {
+        self.record_event(kind, paused, samples, packet, None);
+    }
+
+    pub fn measure<T>(&self, kind: &'static str, paused: bool, operation: impl FnOnce() -> T) -> T {
+        let started = Instant::now();
+        let result = operation();
+        let elapsed = started.elapsed();
+        if elapsed >= Duration::from_millis(50) {
+            self.record_event(kind, paused, None, None, Some(elapsed.as_micros() as u64));
+        }
+        result
+    }
+
+    fn record_event(
+        &self,
+        kind: &'static str,
+        paused: bool,
+        samples: Option<u64>,
+        packet: Option<PacketTiming>,
+        duration_us: Option<u64>,
+    ) {
         let event = Event {
             kind,
             monotonic_us: self.elapsed_us(),
@@ -97,6 +120,7 @@ impl CaptureTrace {
             samples,
             missing_samples: None,
             packet,
+            duration_us,
         };
         if let Ok(mut events) = self.events.try_lock() {
             if events.len() == MAX_EVENTS {
@@ -128,6 +152,7 @@ impl CaptureTrace {
             "elapsedUs": self.elapsed_us(), "timebase": "Rust Instant since capture setup; wall clock is correlation metadata only",
             "sampleRate": rate, "inputChannels": channels, "outputChannels": 1,
             "positionUnits": "receivedFrames: input frames; queued/written/discarded samples: mono output samples",
+            "queueBudgetSeconds": 5, "queuePacketLimit": 8192,
             "cpalVersion": "0.18.2", "deviceFramePositionAvailable": false, "timestampFlagValidityAvailable": false,
             "receivedFrames": self.received.load(Ordering::Relaxed), "queuedSamples": queued, "writtenSamples": written,
             "discardedWhilePausedSamples": self.paused_discarded.load(Ordering::Relaxed),

@@ -1,0 +1,246 @@
+{
+  "passed": true,
+  "scope": "Production CSS rendered in headless Edge; selected text, border, switch and disabled-control pairs only",
+  "results": [
+    {
+      "theme": "light",
+      "checks": [
+        {
+          "name": "ink on paper",
+          "ratio": 14.2,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on canvas",
+          "ratio": 12.95,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on sidebar",
+          "ratio": 12.03,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on soft",
+          "ratio": 12.47,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on hover",
+          "ratio": 11.25,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on paper",
+          "ratio": 8.21,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on canvas",
+          "ratio": 7.48,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on sidebar",
+          "ratio": 6.95,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on soft",
+          "ratio": 7.21,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on hover",
+          "ratio": 6.5,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on paper",
+          "ratio": 6.84,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on canvas",
+          "ratio": 6.24,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on sidebar",
+          "ratio": 5.8,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on soft",
+          "ratio": 6.01,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on hover",
+          "ratio": 5.42,
+          "minimum": 4.5
+        },
+        {
+          "name": "accent button",
+          "ratio": 6.7,
+          "minimum": 4.5
+        },
+        {
+          "name": "input border",
+          "ratio": 3.85,
+          "minimum": 3
+        },
+        {
+          "name": "switch thumb",
+          "ratio": 3.81,
+          "minimum": 3
+        },
+        {
+          "name": "Start lecture",
+          "ratio": 6.7,
+          "minimum": 4.5
+        },
+        {
+          "name": "Save changes",
+          "ratio": 8.21,
+          "minimum": 4.5
+        },
+        {
+          "name": "Saving notes…",
+          "ratio": 6.01,
+          "minimum": 4.5
+        },
+        {
+          "name": "Permanently delete",
+          "ratio": 5.9,
+          "minimum": 4.5
+        },
+        {
+          "name": "✎",
+          "ratio": 6.24,
+          "minimum": 4.5
+        }
+      ]
+    },
+    {
+      "theme": "dark",
+      "checks": [
+        {
+          "name": "ink on paper",
+          "ratio": 13.71,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on canvas",
+          "ratio": 15.65,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on sidebar",
+          "ratio": 14.72,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on soft",
+          "ratio": 11.62,
+          "minimum": 4.5
+        },
+        {
+          "name": "ink on hover",
+          "ratio": 8.92,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on paper",
+          "ratio": 10.96,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on canvas",
+          "ratio": 12.51,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on sidebar",
+          "ratio": 11.77,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on soft",
+          "ratio": 9.29,
+          "minimum": 4.5
+        },
+        {
+          "name": "secondary on hover",
+          "ratio": 7.13,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on paper",
+          "ratio": 8.48,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on canvas",
+          "ratio": 9.68,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on sidebar",
+          "ratio": 9.11,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on soft",
+          "ratio": 7.19,
+          "minimum": 4.5
+        },
+        {
+          "name": "muted on hover",
+          "ratio": 5.51,
+          "minimum": 4.5
+        },
+        {
+          "name": "accent button",
+          "ratio": 9.13,
+          "minimum": 4.5
+        },
+        {
+          "name": "input border",
+          "ratio": 4.85,
+          "minimum": 3
+        },
+        {
+          "name": "switch thumb",
+          "ratio": 4.64,
+          "minimum": 3
+        },
+        {
+          "name": "Start lecture",
+          "ratio": 9.13,
+          "minimum": 4.5
+        },
+        {
+          "name": "Save changes",
+          "ratio": 10.96,
+          "minimum": 4.5
+        },
+        {
+          "name": "Saving notes…",
+          "ratio": 7.19,
+          "minimum": 4.5
+        },
+        {
+          "name": "Permanently delete",
+          "ratio": 5.96,
+          "minimum": 4.5
+        },
+        {
+          "name": "✎",
+          "ratio": 9.68,
+          "minimum": 4.5
+        }
+      ]
+    }
+  ]
+}

@@ -213,6 +213,11 @@ export function LecturePage({ id }: { id: string }) {
               : 'Audio saved'}
         </span>
       </header>
+      {data.recordingWarning && (
+        <p role="status" className="notice warning">
+          {data.recordingWarning}
+        </p>
+      )}
       {error && (
         <p role="alert" className="notice warning">
           {error}

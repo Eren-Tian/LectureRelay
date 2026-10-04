@@ -107,6 +107,7 @@ pub struct Answer {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LectureDetail {
+    pub recording_warning: Option<String>,
     pub lecture: Lecture,
     pub course: Course,
     pub segments: Vec<TranscriptSegment>,

@@ -24,7 +24,10 @@ const OUTPUT_LIMIT: &str = "Local AI reached its output limit. Completed review 
 const CONTEXT_LIMIT: &str =
     "This text exceeds the local model context. Shorten the requested focus or course background.";
 pub(crate) fn is_generation_limit(error: &str) -> bool {
-    matches!(error, OUTPUT_LIMIT | CONTEXT_LIMIT)
+    matches!(
+        error,
+        OUTPUT_LIMIT | CONTEXT_LIMIT | super::official::OUTPUT_LIMIT
+    )
 }
 
 #[derive(Clone, Copy)]

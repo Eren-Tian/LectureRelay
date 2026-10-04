@@ -106,6 +106,9 @@ impl Live {
                     },
                 );
             }
+            // Keep the live slot occupied through the final sidecar write. Once
+            // running becomes false a new session may start; never reset it again.
+            let _ = state.storage.snapshot(&state.paths, &id);
             if let Ok(mut status) = state.live.status.lock() {
                 status.active = false;
                 status.state = if result.is_err() {
@@ -120,9 +123,9 @@ impl Live {
                 status.message = result.err();
                 state.live.running.store(false, Ordering::Relaxed);
                 let _ = app.emit("live-status", &*status);
+            } else {
+                state.live.running.store(false, Ordering::Relaxed);
             }
-            let _ = state.storage.snapshot(&state.paths, &id);
-            state.live.running.store(false, Ordering::Relaxed);
         });
     }
 }
@@ -353,11 +356,12 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
             if last_sample.elapsed() >= Duration::from_secs(5) {
                 if let Ok(mut m) = monitor.lock() {
                     m.sample(pid);
-                    m.data.dropped_chunks = state
-                        .recorder
-                        .status()?
-                        .map(|s| s.dropped_chunks)
-                        .unwrap_or(m.data.dropped_chunks);
+                    if let Some(recording) = state.recorder.status()? {
+                        m.data.dropped_chunks = recording.dropped_chunks;
+                        m.data.dropped_buffers = recording.quality.dropped_buffers;
+                        m.data.dropped_samples = recording.quality.dropped_samples;
+                        m.data.device_discontinuities = recording.quality.device_discontinuities;
+                    }
                 }
                 last_sample = Instant::now();
             }

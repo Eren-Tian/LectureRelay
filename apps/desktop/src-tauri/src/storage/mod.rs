@@ -120,14 +120,35 @@ impl AppPaths {
 
 pub fn write_atomic(path: &Path, bytes: &[u8]) -> AppResult<()> {
     use std::io::Write;
-    let temporary = path.with_extension("pending");
-    let mut file = std::fs::File::create(&temporary)
+    // A fixed .pending name lets concurrent snapshots/exports overwrite each
+    // other's bytes, including different destinations with the same stem.
+    let name = path.file_name().ok_or("Invalid local file path.")?;
+    let temporary = path.with_file_name(format!(
+        ".{}.{}.pending",
+        name.to_string_lossy(),
+        uuid::Uuid::new_v4()
+    ));
+    let mut file = std::fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&temporary)
         .user_error("Cannot write a local file. Check disk space.")?;
-    file.write_all(bytes)
-        .user_error("Cannot write the file. Check available disk space.")?;
-    file.sync_all().user_error("Cannot save file.")?;
-    drop(file);
+    struct Temporary(PathBuf);
+    impl Drop for Temporary {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_file(&self.0);
+        }
+    }
+    let cleanup = Temporary(temporary);
+    let result: AppResult<()> = (|| {
+        file.write_all(bytes)
+            .user_error("Cannot write the file. Check available disk space.")?;
+        file.sync_all().user_error("Cannot save file.")?;
+        Ok(())
+    })();
+    drop(file); // Close before cleanup on Windows, including a failed write/sync.
+    result?;
     // Windows rename replaces an existing file through MoveFileEx semantics.
-    std::fs::rename(&temporary, path)
+    std::fs::rename(&cleanup.0, path)
         .user_error("Cannot update the file. Check whether another app is using it.")
 }

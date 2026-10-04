@@ -222,13 +222,20 @@ pub async fn start_lecture(
         if state.jobs.status()?.is_some() || state.live.active() {
             return Err("Cancel or finish the AI task before starting a lecture.".into());
         }
-        let lecture = state
+        let mut lecture = state
             .storage
             .create_lecture(&state.paths, &course_id, &title)?;
-        if let Err(error) = state.storage.snapshot(&state.paths, &lecture.id) {
+        // Persist all startup metadata before owning a live device. A database
+        // error must not leave a recording running behind a failed Start request.
+        if let Err(error) = state
+            .storage
+            .set_audio_source(&lecture.id, &source)
+            .and_then(|()| state.storage.snapshot(&state.paths, &lecture.id))
+        {
             state.storage.finish_lecture(&lecture.id, 0.0, "failed")?;
             return Err(error);
         }
+        lecture.audio_source = source.clone();
         let recording = state.paths.recording(&course_id, &lecture.id)?;
         let recovery = state
             .paths
@@ -247,7 +254,6 @@ pub async fn start_lecture(
             state.storage.snapshot(&state.paths, &lecture.id)?;
             return Err(error);
         }
-        state.storage.set_audio_source(&lecture.id, &source)?;
         if settings.speech_provider != "none" {
             crate::speech::streaming::Live::start(state.clone(), app, lecture.id.clone());
         }
@@ -270,12 +276,22 @@ pub async fn stop_lecture(state: App<'_>, id: String) -> AppResult<Lecture> {
         .user_error("Cannot save the lecture. Written audio is preserved.")?
 }
 
-fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
+pub(crate) fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
     let _gate = state
         .gate
         .lock()
         .user_error("The app is busy. Try again.")?;
     let lecture = state.storage.lecture(id)?;
+    match state.recorder.status()? {
+        Some(recording) if recording.lecture_id == id => {}
+        Some(_) => {
+            return Err("Another lecture is recording. Open that lecture to stop it.".into());
+        }
+        None if lecture.status != "recording" => return Ok(lecture),
+        None => {
+            return Err("This recording is not active. Restart to recover its saved audio.".into());
+        }
+    }
     let summary = state.recorder.stop(id);
     let (duration, status) = match summary {
         Ok(summary) => (
@@ -307,7 +323,10 @@ pub fn recording_status(state: App<'_>) -> AppResult<Option<RecordingStatus>> {
 
 #[tauri::command]
 pub fn lecture_detail(state: App<'_>, id: String) -> AppResult<LectureDetail> {
-    state.storage.detail(&id)
+    let mut detail = state.storage.detail(&id)?;
+    detail.recording_warning =
+        crate::audio::saved_warning(&state.paths.recording(&detail.lecture.course_id, &id)?);
+    Ok(detail)
 }
 
 #[tauri::command]

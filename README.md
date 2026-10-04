@@ -48,6 +48,8 @@ OpenAI/Groq remain optional, with your own API key and provider charges. Local m
 
 ## Preview status
 
+The current source and locally tested installer are **0.3.2**; the published download above remains **0.3.0**. Version 0.3.2 improves recording/data integrity, note saving and Light/Dark contrast. It also includes 0.3.1's resumable review and confirmed permanent deletion/storage cleanup. See the [0.3.2 release notes](docs/releases/v0.3.2.md), [engineering review](docs/testing/engineering-audit-v0.3.2.md) and separate [0.3.1 installed 90-minute results](docs/testing/installed-acceptance-v0.3.1.md).
+
 Version 0.3.0 adds offline text AI, separate translation/study choices and user-directed whole-class review. The GitHub installer is rebuilt from the published source; its release page records the packaging checks and checksum.
 
 Authenticated cloud workflows and ordinary-laptop power/noise behavior remain unverified. A previous 90-minute installed-app run found WebView2 memory growth; this release does not claim that issue is resolved. Earlier reports describe the specific builds and scenarios tested, rather than certifying every feature in the current installer: [installed acceptance](docs/testing/installed-acceptance-v0.2.md), [preferences](docs/releases/v0.2.0-preferences.md), [product iteration](docs/releases/v0.2.0-product-iteration.md).
@@ -76,7 +78,7 @@ The first build downloads hash-pinned CPU speech and text runtimes; model weight
 | `pnpm build:debug`                            | Native debug executable                            |
 | `pnpm release`                                | Release EXE + current-user English NSIS + checksum |
 
-Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.0_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
+Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.2_x64-setup.exe`. Publish the installer and checksum as GitHub Release assets; build output is excluded from Git.
 
 ## Repository
 

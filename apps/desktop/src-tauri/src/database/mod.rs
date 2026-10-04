@@ -11,7 +11,10 @@ use crate::error::{AppResult, UserFacing};
 use rusqlite::Connection;
 use std::sync::{Mutex, MutexGuard};
 
-pub struct Storage(Mutex<Connection>);
+pub struct Storage {
+    connection: Mutex<Connection>,
+    pub(crate) snapshots: Mutex<()>,
+}
 
 impl Storage {
     pub fn open(path: &std::path::Path) -> AppResult<Self> {
@@ -95,11 +98,14 @@ impl Storage {
         // when an older decoder failed before saving audio_source. Ambiguous rows stay unchanged.
         connection.execute("UPDATE lectures SET audio_source='import' WHERE audio_source!='import' AND EXISTS(SELECT 1 FROM processing_tasks t WHERE t.lecture_id=lectures.id AND t.kind='import')", []).user_error("Cannot repair import metadata.")?;
         connection.execute("UPDATE processing_tasks SET state='interrupted',message='App closed before processing finished. Saved results are preserved.' WHERE state='running'",[]).user_error("Cannot recover processing tasks.")?;
-        Ok(Self(Mutex::new(connection)))
+        Ok(Self {
+            connection: Mutex::new(connection),
+            snapshots: Mutex::new(()),
+        })
     }
 
     fn lock(&self) -> AppResult<MutexGuard<'_, Connection>> {
-        self.0
+        self.connection
             .lock()
             .map_err(|_| "Database unavailable. Restart the app.".into())
     }

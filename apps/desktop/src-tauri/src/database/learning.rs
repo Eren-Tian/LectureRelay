@@ -167,6 +167,7 @@ impl Storage {
     pub fn detail(&self, id: &str) -> AppResult<LectureDetail> {
         let lecture = self.lecture(id)?;
         Ok(LectureDetail {
+            recording_warning: None,
             course: self.course(&lecture.course_id)?,
             segments: self.segments(id)?,
             note: self.note(id)?,

@@ -7,18 +7,19 @@
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --sage: #526b51;
+  --sage: #3f643f;
   --sage-soft: #e9efe4;
-  --gold: #94783f;
-  --line: #e2e6db;
-  --muted: #6d776d;
+  --gold: #806327;
+  --line: #b4bfb0;
+  --control-line: #788674;
+  --muted: #505e54;
 }
 :root {
-  --ink: #303c34;
-  --secondary: #516649;
-  --canvas: #f8f8f3;
-  --paper: #fffefa;
-  --sidebar: #f0f2e9;
+  --ink: #202e25;
+  --secondary: #3b5540;
+  --canvas: #f4f5ef;
+  --paper: #ffffff;
+  --sidebar: #e9eee2;
   --soft: #edf2e6;
   --hover: #dfe8d5;
   --warning-bg: #f8f1df;
@@ -27,13 +28,13 @@
   --danger-text: #915348;
   --on-accent: #fffefa;
   --accent-hover: #435c42;
-  --switch-track: #c6cebe;
+  --switch-track: #788674;
   --switch-thumb: #fffefa;
   color-scheme: light;
 }
 :root[data-theme='dark'] {
-  --ink: #e4ebe3;
-  --secondary: #bbd0b4;
+  --ink: #f1f5ee;
+  --secondary: #d1e0c9;
   --canvas: #171c19;
   --paper: #202822;
   --sidebar: #1b221d;
@@ -42,15 +43,16 @@
   --sage: #afc89d;
   --sage-soft: #29352b;
   --gold: #d7bd80;
-  --line: #435145;
-  --muted: #adb9a9;
+  --line: #566653;
+  --control-line: #859780;
+  --muted: #b8c6b4;
   --warning-bg: #393222;
   --warning: #e1c793;
   --danger: #9c4c40;
   --danger-text: #f1afa0;
   --on-accent: #182115;
   --accent-hover: #c2d9b3;
-  --switch-track: #53604f;
+  --switch-track: #63725e;
   --switch-thumb: #f1f5ed;
   color-scheme: dark;
 }
@@ -73,7 +75,7 @@ button {
 }
 button:disabled {
   cursor: not-allowed;
-  opacity: 0.5;
+  opacity: 1;
 }
 button,
 input,
@@ -123,7 +125,8 @@ p {
   margin-bottom: 12px;
 }
 ::selection {
-  background: var(--soft);
+  background: var(--sage);
+  color: var(--on-accent);
 }
 .app-shell {
   display: flex;
@@ -177,9 +180,10 @@ p {
   background: var(--soft);
 }
 .sidebar nav .selected {
-  background: var(--soft);
+  background: var(--hover);
   color: var(--ink);
   font-weight: 600;
+  box-shadow: inset 3px 0 var(--sage);
 }
 .sidebar-bottom {
   margin-top: auto;
@@ -278,7 +282,7 @@ p {
 .button.secondary {
   color: var(--secondary);
   background: var(--paper);
-  border-color: var(--line);
+  border-color: var(--control-line);
 }
 .button.secondary:hover:not(:disabled) {
   background: var(--soft);
@@ -292,6 +296,12 @@ p {
 .button.danger {
   background: var(--danger);
   color: white;
+}
+.button:disabled {
+  color: var(--muted);
+  background: var(--soft);
+  border-color: var(--line);
+  box-shadow: none;
 }
 .button.large {
   min-width: 165px;
@@ -324,7 +334,7 @@ p {
 .icon-button.bordered {
   width: 39px;
   height: 39px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   background: var(--paper);
 }
 .text-button,
@@ -639,7 +649,7 @@ label {
 input,
 select,
 textarea {
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   background: var(--paper);
   color: var(--ink);
   border-radius: 10px;
@@ -652,6 +662,15 @@ input::placeholder,
 textarea::placeholder {
   color: var(--muted);
   font-size: 12px;
+  opacity: 1;
+}
+input:disabled,
+select:disabled,
+textarea:disabled {
+  color: var(--muted);
+  background: var(--soft);
+  opacity: 1;
+  cursor: not-allowed;
 }
 input:focus,
 textarea:focus,
@@ -1109,10 +1128,6 @@ mark {
 }
 .segment-edit {
   align-self: start;
-  opacity: 0.45;
-}
-.transcript-segment:hover .segment-edit {
-  opacity: 1;
 }
 .review-footer {
   border-top: 1px solid var(--line);
@@ -2232,7 +2247,7 @@ progress {
 .theme-option {
   width: 150px;
   padding: 12px;
-  border: 2px solid var(--line);
+  border: 2px solid var(--control-line);
   border-radius: 12px;
   background: var(--paper);
   text-align: left;

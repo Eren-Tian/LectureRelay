@@ -9,6 +9,24 @@ use symphonia::core::{
     io::MediaSourceStream, meta::MetadataOptions, probe::Hint,
 };
 
+pub(crate) fn read_pdf(path: &Path) -> AppResult<Vec<u8>> {
+    use std::io::Read;
+    const LIMIT: u64 = 50 * 1024 * 1024;
+    let file = File::open(path).user_error("The local PDF is missing or unreadable.")?;
+    if file.metadata().user_error("Cannot inspect PDF.")?.len() > LIMIT {
+        return Err("Choose a valid PDF smaller than 50 MiB.".into());
+    }
+    // Bound the read as well: an external editor may grow the file after metadata().
+    let mut bytes = Vec::new();
+    file.take(LIMIT + 1)
+        .read_to_end(&mut bytes)
+        .user_error("Cannot read PDF.")?;
+    if bytes.len() as u64 > LIMIT || !bytes.starts_with(b"%PDF-") {
+        return Err("Choose a valid PDF smaller than 50 MiB.".into());
+    }
+    Ok(bytes)
+}
+
 /// Decode packet-by-packet into our own mono PCM file. Source media is read-only.
 pub fn decode(
     source: &Path,
@@ -131,6 +149,7 @@ pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> App
     let target = state.paths.recording(course, &lecture.id)?;
     let pending = target.with_extension("importing");
     let mut last = 0;
+    let mut audio_committed = false;
     let result = (|| {
         let duration = decode(source, &pending, |done, total| {
             state.jobs.checkpoint()?;
@@ -142,6 +161,7 @@ pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> App
         })?;
         state.jobs.checkpoint()?;
         std::fs::rename(&pending, &target).user_error("Cannot save imported audio.")?;
+        audio_committed = true;
         state.storage.set_audio_source(&lecture.id, "import")?;
         state
             .storage
@@ -151,7 +171,9 @@ pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> App
     })();
     if result.is_err() {
         let _ = std::fs::remove_file(&pending);
-        let _ = state.storage.finish_lecture(&lecture.id, 0.0, "failed");
+        if !audio_committed {
+            let _ = state.storage.finish_lecture(&lecture.id, 0.0, "failed");
+        }
     }
     job.finish(&result)?;
     result

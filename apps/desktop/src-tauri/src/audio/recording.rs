@@ -1,4 +1,4 @@
-use super::capture::build_stream;
+use super::capture::{CaptureHealth, CaptureQuality, build_stream};
 use crate::{
     error::{AppResult, UserFacing},
     storage::write_atomic,
@@ -12,7 +12,7 @@ use std::{
     path::PathBuf,
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, AtomicU32, Ordering},
+        atomic::{AtomicBool, Ordering},
         mpsc,
     },
     thread::{self, JoinHandle},
@@ -29,7 +29,10 @@ pub struct RecordingStatus {
     pub level: f32,
     pub warning: Option<String>,
     pub failed: bool,
-    pub dropped_chunks: u32,
+    pub dropped_chunks: u32, // Legacy aggregate; use the separate quality fields for attribution.
+    pub sample_rate: u32,
+    #[serde(flatten)]
+    pub quality: CaptureQuality,
     pub source: String,
     pub device_name: String,
 }
@@ -37,6 +40,25 @@ pub struct RecordingStatus {
 pub struct AudioSummary {
     pub duration_seconds: f64,
     pub error: Option<String>,
+}
+
+pub(crate) fn saved_warning(recording: &std::path::Path) -> Option<String> {
+    use std::io::Read;
+    let path = recording.parent()?.join("recording-quality.json");
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .ok()?
+        .take(16385)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    if bytes.len() > 16384 {
+        return None;
+    }
+    let value: serde_json::Value = serde_json::from_slice(&bytes).ok()?;
+    value["warning"]
+        .as_str()
+        .filter(|s| !s.is_empty() && s.len() <= 1000)
+        .map(str::to_owned)
 }
 
 enum Control {
@@ -238,7 +260,7 @@ fn record<R: tauri::Runtime>(
         .user_error("Cannot initialize WAV recording.")?;
     writer.flush().user_error("Cannot save the WAV header.")?;
     let (samples_tx, samples_rx) = mpsc::sync_channel::<Vec<i16>>(64);
-    let overflow = Arc::new(AtomicU32::new(0));
+    let health = Arc::new(CaptureHealth::default());
     let failed = Arc::new(AtomicBool::new(false));
     let stream = match config.sample_format() {
         SampleFormat::F32 => build_stream::<f32>(
@@ -246,7 +268,7 @@ fn record<R: tauri::Runtime>(
             stream_config,
             samples_tx,
             paused.clone(),
-            overflow.clone(),
+            health.clone(),
             failed.clone(),
         ),
         SampleFormat::I16 => build_stream::<i16>(
@@ -254,7 +276,7 @@ fn record<R: tauri::Runtime>(
             stream_config,
             samples_tx,
             paused.clone(),
-            overflow.clone(),
+            health.clone(),
             failed.clone(),
         ),
         SampleFormat::U16 => build_stream::<u16>(
@@ -262,7 +284,7 @@ fn record<R: tauri::Runtime>(
             stream_config,
             samples_tx,
             paused.clone(),
-            overflow.clone(),
+            health.clone(),
             failed.clone(),
         ),
         SampleFormat::I32 => build_stream::<i32>(
@@ -270,7 +292,7 @@ fn record<R: tauri::Runtime>(
             stream_config,
             samples_tx,
             paused.clone(),
-            overflow.clone(),
+            health.clone(),
             failed.clone(),
         ),
         SampleFormat::F64 => build_stream::<f64>(
@@ -278,7 +300,7 @@ fn record<R: tauri::Runtime>(
             stream_config,
             samples_tx,
             paused.clone(),
-            overflow.clone(),
+            health.clone(),
             failed.clone(),
         ),
         _ => return Err("This audio sample format is unsupported. Choose another device.".into()),
@@ -355,20 +377,16 @@ fn record<R: tauri::Runtime>(
             checkpoint_at = Instant::now();
         }
         if event_at.elapsed() >= Duration::from_millis(200) {
-            let warning = if overflow.load(Ordering::Relaxed) > 0 {
-                Some(
-                    "Audio buffers were dropped or discontinuous. Check the saved recording."
-                        .into(),
-                )
-            } else if !paused.load(Ordering::Relaxed) && voice_at.elapsed() > Duration::from_secs(8)
-            {
-                Some("No sound detected. Check the audio source and volume.".into())
-            } else {
-                None
-            };
+            let quality = health.snapshot();
+            let warning = quality.warning().or_else(|| {
+                (!paused.load(Ordering::Relaxed) && voice_at.elapsed() > Duration::from_secs(8))
+                    .then(|| "No sound detected. Check the audio source and volume.".into())
+            });
             if let Ok(mut shared) = status.lock() {
                 shared.paused = paused.load(Ordering::Relaxed);
-                shared.dropped_chunks = overflow.load(Ordering::Relaxed);
+                shared.dropped_chunks = quality.total_events();
+                shared.sample_rate = rate;
+                shared.quality = quality;
                 shared.duration_seconds = count as f64 / rate as f64;
                 shared.level = if shared.paused { 0.0 } else { peak };
                 shared.warning = warning;
@@ -397,8 +415,16 @@ fn record<R: tauri::Runtime>(
     if let Ok(mut shared) = status.lock() {
         shared.duration_seconds = count as f64 / rate as f64;
         shared.failed = error.is_some();
-        shared.warning = error.clone();
+        shared.quality = health.snapshot();
+        shared.dropped_chunks = shared.quality.total_events();
+        shared.sample_rate = rate;
+        shared.warning = error.clone().or_else(|| shared.quality.warning());
         shared.level = 0.0;
+        // Best-effort diagnostics must never make a successfully saved WAV fail.
+        // Written after stream shutdown, including the last queued buffer/events.
+        if let (Some(dir), Ok(bytes)) = (path.parent(), serde_json::to_vec_pretty(&*shared)) {
+            let _ = write_atomic(&dir.join("recording-quality.json"), &bytes);
+        }
         let _ = app.emit("recording-status", shared.clone());
     }
     Ok(AudioSummary {

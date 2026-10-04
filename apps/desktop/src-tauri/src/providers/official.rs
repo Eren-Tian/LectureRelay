@@ -6,6 +6,32 @@ use crate::{
 };
 use async_trait::async_trait;
 
+pub(crate) const OUTPUT_LIMIT: &str = "Cloud AI reached its output limit. Completed review sections are saved; retry the remaining work.";
+
+fn chat_text(value: &serde_json::Value) -> AppResult<String> {
+    match value
+        .pointer("/choices/0/finish_reason")
+        .and_then(|v| v.as_str())
+    {
+        Some("stop") => {}
+        Some("length") => return Err(OUTPUT_LIMIT.into()),
+        _ => {
+            return Err(
+                "The provider did not complete its response. Saved results are preserved.".into(),
+            );
+        }
+    }
+    let content = value
+        .pointer("/choices/0/message/content")
+        .and_then(|v| v.as_str())
+        .filter(|v| !v.trim().is_empty())
+        .ok_or("The provider returned no valid text. Check the model configuration.")?;
+    if content.len() > 100000 {
+        return Err("Provider text exceeds the size limit.".into());
+    }
+    Ok(content.to_owned())
+}
+
 pub struct OfficialProvider {
     client: reqwest::Client,
     base: &'static str,
@@ -78,15 +104,7 @@ impl OfficialProvider {
             .await
             .user_error("AI request failed or timed out. Check your network and try again.")?;
         let value = read_response(response).await?;
-        let content = value
-            .pointer("/choices/0/message/content")
-            .and_then(|content| content.as_str())
-            .filter(|content| !content.trim().is_empty())
-            .ok_or("The provider returned no valid text. Check the model configuration.")?;
-        if content.len() > 100000 {
-            return Err("Provider text exceeds the size limit.".into());
-        }
-        Ok(content.to_owned())
+        chat_text(&value)
     }
 }
 
@@ -227,4 +245,29 @@ pub fn parse_translations(text: &str) -> AppResult<Vec<Translation>> {
     };
     serde_json::from_str(&text)
         .user_error("Invalid translation response. English is preserved; try translation again.")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn truncated_or_filtered_cloud_text_is_never_published_as_complete() {
+        for reason in ["length", "content_filter", "tool_calls", "unknown"] {
+            let value = serde_json::json!({"choices":[{"finish_reason":reason,"message":{"content":"unfinished-canary"}}]});
+            let error = chat_text(&value).unwrap_err();
+            assert!(!error.contains("canary"));
+            assert_eq!(
+                super::super::local::is_generation_limit(&error),
+                reason == "length"
+            );
+        }
+        assert!(chat_text(&serde_json::json!({"choices":[]})).is_err());
+        assert!(
+            chat_text(
+                &serde_json::json!({"choices":[{"finish_reason":"stop","message":{"content":" "}}]})
+            )
+            .is_err()
+        );
+        assert_eq!(chat_text(&serde_json::json!({"choices":[{"finish_reason":"stop","message":{"content":"Complete response"}}]})).unwrap(), "Complete response");
+    }
 }

@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "version": "0.3.2",
+  "scope": "Installed EXE with real WebView2, system audio, Nemotron and Hy-MT2; short portrait-monitor run",
+  "id": "396270dc-a5b3-41dc-9064-eec4f75a2bd6",
+  "seconds": 66.58,
+  "segments": 7,
+  "stopMs": 49,
+  "stopTimingScope": "Single click-to-recorder-idle observation; excludes translation drain",
+  "pauseResume": true,
+  "timestampPlayback": true,
+  "themes": ["light", "dark"],
+  "restartPassed": true,
+  "quality": {
+    "lectureId": "396270dc-a5b3-41dc-9064-eec4f75a2bd6",
+    "paused": false,
+    "durationSeconds": 66.58,
+    "level": 0,
+    "warning": "The audio device reported a discontinuity. Check the recording; the device did not report how much audio was affected.",
+    "failed": false,
+    "droppedChunks": 2,
+    "sampleRate": 48000,
+    "droppedBuffers": 0,
+    "droppedSamples": 0,
+    "deviceDiscontinuities": 2,
+    "source": "system"
+  },
+  "recordingWarning": "The audio device reported a discontinuity. Check the recording; the device did not report how much audio was affected."
+}

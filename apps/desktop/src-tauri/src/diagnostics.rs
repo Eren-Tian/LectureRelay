@@ -56,6 +56,9 @@ pub struct Measurements {
     pub translation_average_ms: f64,
     pub translation_peak_ms: f64,
     pub dropped_chunks: u32,
+    pub dropped_buffers: u32,
+    pub dropped_samples: u64,
+    pub device_discontinuities: u32,
     pub speech_backlog_seconds: f64,
     pub translation_queue: usize,
 }

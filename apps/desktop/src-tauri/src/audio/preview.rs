@@ -1,4 +1,4 @@
-use super::capture::build_stream;
+use super::capture::{CaptureHealth, build_stream};
 use crate::error::{AppResult, UserFacing};
 use cpal::{
     SampleFormat,
@@ -7,7 +7,7 @@ use cpal::{
 use std::{
     sync::{
         Arc,
-        atomic::{AtomicBool, AtomicU32, Ordering},
+        atomic::{AtomicBool, Ordering},
         mpsc,
     },
     time::{Duration, Instant},
@@ -51,7 +51,7 @@ pub fn test(
     .user_error("Cannot open this audio input. Check Windows audio permissions.")?;
     let (sender, receiver) = mpsc::sync_channel(64);
     let paused = Arc::new(AtomicBool::new(false));
-    let overflow = Arc::new(AtomicU32::new(0));
+    let health = Arc::new(CaptureHealth::default());
     let failed = Arc::new(AtomicBool::new(false));
     let stream = match config.sample_format() {
         SampleFormat::F32 => build_stream::<f32>(
@@ -59,7 +59,7 @@ pub fn test(
             config.into(),
             sender,
             paused,
-            overflow,
+            health,
             failed.clone(),
         ),
         SampleFormat::I16 => build_stream::<i16>(
@@ -67,7 +67,7 @@ pub fn test(
             config.into(),
             sender,
             paused,
-            overflow,
+            health,
             failed.clone(),
         ),
         SampleFormat::U16 => build_stream::<u16>(
@@ -75,7 +75,7 @@ pub fn test(
             config.into(),
             sender,
             paused,
-            overflow,
+            health,
             failed.clone(),
         ),
         SampleFormat::I32 => build_stream::<i32>(
@@ -83,7 +83,7 @@ pub fn test(
             config.into(),
             sender,
             paused,
-            overflow,
+            health,
             failed.clone(),
         ),
         SampleFormat::F64 => build_stream::<f64>(
@@ -91,7 +91,7 @@ pub fn test(
             config.into(),
             sender,
             paused,
-            overflow,
+            health,
             failed.clone(),
         ),
         _ => return Err("This audio format is unsupported. Choose another device.".into()),

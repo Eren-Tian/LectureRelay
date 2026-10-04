@@ -68,6 +68,7 @@ export interface CourseDetail {
   glossary: GlossaryTerm[];
 }
 export interface LectureDetail {
+  recordingWarning: string | null;
   lecture: Lecture;
   course: Course;
   segments: TranscriptSegment[];
@@ -109,6 +110,10 @@ export interface RecordingStatus {
   level: number;
   warning: string | null;
   failed: boolean;
+  sampleRate: number;
+  droppedBuffers: number;
+  droppedSamples: number;
+  deviceDiscontinuities: number;
 }
 export interface JobStatus {
   lectureId: string;

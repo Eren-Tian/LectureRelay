@@ -1,4 +1,5 @@
 mod acceptance;
+mod audit;
 mod local_ai;
 mod reliability;
 mod study_workspace;

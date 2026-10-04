@@ -3,10 +3,12 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 const output = new URL('../../target/product-iteration/', import.meta.url);
+const port = process.env.LECTURERELAY_COMPONENT_DRIVER_PORT || '4446';
+const base = process.env.LECTURERELAY_COMPONENT_URL || 'http://127.0.0.1:5173';
 await fs.mkdir(output, { recursive: true });
 let session;
 async function request(method, path, body) {
-  const response = await fetch(`http://127.0.0.1:4446${path}`, {
+  const response = await fetch(`http://127.0.0.1:${port}${path}`, {
     method,
     headers: { 'content-type': 'application/json' },
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
@@ -59,7 +61,7 @@ try {
     },
   }));
   await command('POST', '/url', {
-    url: 'http://127.0.0.1:5173/tests/fixtures/captions.html',
+    url: base + '/tests/fixtures/captions.html',
   });
   await new Promise((r) => setTimeout(r, 1200));
   for (const lang of ['zh', 'ja', 'ko']) {

@@ -8,7 +8,7 @@ foreach ($manifest in @('package.json', 'apps/desktop/package.json')) {
 if ($releaseVersion -notmatch '^\d+\.\d+\.\d+$') { throw 'Expected a stable numeric release version' }
 Push-Location $projectRoot
 try {
-  & pnpm.cmd build
+  & pnpm.cmd build -- --locked
   if ($LASTEXITCODE -ne 0) { throw 'Release build failed' }
   & (Join-Path $projectRoot 'scripts/verification/runtime-resources.ps1')
   $installer = Join-Path $projectRoot "target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_${releaseVersion}_x64-setup.exe"

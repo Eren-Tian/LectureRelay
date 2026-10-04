@@ -21,7 +21,6 @@ jobs:
     timeout-minutes: 60
     env:
       EXPECTED_SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
-      CARGO_HOME: ${{ runner.temp }}/lecturerelay-cargo
     defaults:
       run:
         shell: pwsh
@@ -33,6 +32,8 @@ jobs:
       - name: Assert explicit source and empty build directories
         id: source
         run: |
+          $env:CARGO_HOME = Join-Path $env:RUNNER_TEMP 'lecturerelay-cargo'
+          "CARGO_HOME=$env:CARGO_HOME" >> $env:GITHUB_ENV
           if ($env:EXPECTED_SOURCE_SHA -notmatch '^[0-9a-f]{40}$') { throw 'A full source SHA is required' }
           $source = git rev-parse HEAD
           if ($source -ne $env:EXPECTED_SOURCE_SHA) { throw 'Checkout differs from requested source' }

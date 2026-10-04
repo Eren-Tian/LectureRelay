@@ -6,7 +6,17 @@ import { spawn } from 'node:child_process';
 import { WebDriver } from './webdriver.mjs';
 
 const d = await WebDriver.current();
-const root = 'target/ci-audio';
+const root = process.env.LECTURERELAY_CONTINUITY_ROOT || 'target/ci-audio';
+const sourceRoot = 'target/ci-audio';
+await fs.mkdir(root, { recursive: true });
+assert.equal(
+  await fs.access(`${root}/installed-course.json`).then(
+    () => true,
+    () => false,
+  ),
+  false,
+  'Preserve previous evidence: select a fresh LECTURERELAY_CONTINUITY_ROOT',
+);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const wait = async (read, accept = Boolean, seconds = 120) => {
   const end = Date.now() + seconds * 1000;
@@ -18,6 +28,13 @@ const wait = async (read, accept = Boolean, seconds = 120) => {
   throw Error('Installed continuity condition timed out');
 };
 const b = await d.native('bootstrap');
+const original = JSON.parse(
+  await fs.readFile(`${sourceRoot}/installed-original.json`, 'utf8'),
+);
+await fs.access(`${sourceRoot}/installed-before.db`);
+await fs.access(`${sourceRoot}/installed-files.json`);
+assert.equal(b.storage.database, original.storage.database);
+assert.equal(b.storage.library, original.storage.library);
 assert.equal(b.storage.version, '0.3.3');
 assert.equal(b.settings.provider, 'none');
 assert.equal(b.settings.speechProvider, 'local');
@@ -54,7 +71,7 @@ function play(source, scenario) {
     [
       'tests/e2e/continuity-play.py',
       '--audio',
-      `${root}/${source}.wav`,
+      `${sourceRoot}/${source}.wav`,
       '--log',
       `${root}/installed-${scenario}-playback.jsonl`,
     ],
@@ -102,7 +119,7 @@ for (const scenario of ['continuous', 'pause-idle']) {
       ),
     (rows) => rows.filter((r) => r.en && r.translation).length >= 2,
   );
-  await d.screenshot(`v033-${scenario}-bilingual`);
+  await d.screenshot(`v033-${path.basename(root)}-${scenario}-bilingual`);
   const stopAt = performance.now();
   await d.clickText('Stop & save');
   await wait(

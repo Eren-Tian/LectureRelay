@@ -1,7 +1,9 @@
+mod cleanup;
 mod courses;
 mod learning;
 mod lectures;
 mod preferences;
+pub(crate) mod review;
 mod rows;
 pub(crate) mod study;
 
@@ -9,7 +11,10 @@ use crate::error::{AppResult, UserFacing};
 use rusqlite::Connection;
 use std::sync::{Mutex, MutexGuard};
 
-pub struct Storage(Mutex<Connection>);
+pub struct Storage {
+    connection: Mutex<Connection>,
+    pub(crate) snapshots: Mutex<()>,
+}
 
 impl Storage {
     pub fn open(path: &std::path::Path) -> AppResult<Self> {
@@ -26,7 +31,7 @@ impl Storage {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .user_error("Cannot read database version.")?;
-        if version > 3 {
+        if version > 4 {
             return Err(
                 "This database requires a newer LectureRelay version. Upgrade the app.".into(),
             );
@@ -64,12 +69,43 @@ impl Storage {
             tx.commit()
                 .user_error("Cannot commit study workspace migration.")?;
         }
+        if version < 4 {
+            connection
+                .execute_batch("PRAGMA foreign_keys=OFF;")
+                .user_error("Cannot prepare reliability migration.")?;
+            let tx = connection
+                .transaction()
+                .user_error("Cannot start reliability migration.")?;
+            tx.execute_batch(include_str!("migrations/004_reliability.sql"))
+                .user_error("Reliability migration failed.")?;
+            let errors: i64 = tx
+                .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |r| {
+                    r.get(0)
+                })
+                .user_error("Cannot verify migration.")?;
+            if errors != 0 {
+                return Err("Reliability migration failed its integrity check. Existing database was preserved.".into());
+            }
+            tx.execute_batch("PRAGMA user_version=4;")
+                .user_error("Cannot save database version.")?;
+            tx.commit()
+                .user_error("Cannot commit reliability migration.")?;
+            connection
+                .execute_batch("PRAGMA foreign_keys=ON;")
+                .user_error("Cannot enable database integrity checks.")?;
+        }
+        // Explicit, idempotent metadata repair: the import task proves the source even
+        // when an older decoder failed before saving audio_source. Ambiguous rows stay unchanged.
+        connection.execute("UPDATE lectures SET audio_source='import' WHERE audio_source!='import' AND EXISTS(SELECT 1 FROM processing_tasks t WHERE t.lecture_id=lectures.id AND t.kind='import')", []).user_error("Cannot repair import metadata.")?;
         connection.execute("UPDATE processing_tasks SET state='interrupted',message='App closed before processing finished. Saved results are preserved.' WHERE state='running'",[]).user_error("Cannot recover processing tasks.")?;
-        Ok(Self(Mutex::new(connection)))
+        Ok(Self {
+            connection: Mutex::new(connection),
+            snapshots: Mutex::new(()),
+        })
     }
 
     fn lock(&self) -> AppResult<MutexGuard<'_, Connection>> {
-        self.0
+        self.connection
             .lock()
             .map_err(|_| "Database unavailable. Restart the app.".into())
     }

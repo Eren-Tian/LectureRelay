@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "controls": {
+    "height": 780,
+    "stopClickable": true,
+    "stopVisible": true,
+    "toasts": 1,
+    "width": 1180
+  },
+  "defaultDuration": 4.54,
+  "preciseTimes": [0.001234, 4.539877],
+  "exportedSegments": 17,
+  "exportName": "4f2dc1ba-6030-45e4-ae4c-d63ad0510da4-transcript-json-1791058830.json",
+  "createdAndDeletedCourse": "09073b3d-8e78-4122-93b3-06345e58209c",
+  "restorePreservedEdits": true,
+  "wrongConfirmationAndCancelPreservedData": true,
+  "freeAllConfirmedButtonThenCancelled": true,
+  "productionModelsRetained": true,
+  "finalExportFileVerified": true
+}

@@ -170,7 +170,6 @@ export function LecturePage({ id }: { id: string }) {
     void run(async () => {
       await api.export(id, format);
       workspace.notify('Export saved.');
-      await api.openFolder('exports');
     });
   const print = () =>
     void run(async () => {
@@ -206,12 +205,19 @@ export function LecturePage({ id }: { id: string }) {
           className={'pill ' + (lecture.status === 'interrupted' ? 'gold' : '')}
         >
           {lecture.status === 'failed'
-            ? 'Needs attention'
+            ? lecture.audioSource === 'import'
+              ? 'Import failed'
+              : 'Recording did not start'
             : lecture.status === 'interrupted'
               ? 'Recovered audio'
               : 'Audio saved'}
         </span>
       </header>
+      {data.recordingWarning && (
+        <p role="status" className="notice warning">
+          {data.recordingWarning}
+        </p>
+      )}
       {error && (
         <p role="alert" className="notice warning">
           {error}

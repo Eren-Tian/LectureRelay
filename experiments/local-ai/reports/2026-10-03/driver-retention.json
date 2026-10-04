@@ -1,0 +1,55 @@
+{
+  "domTimerCount": 2220,
+  "driverNativeReadTimerCount": 2218,
+  "commands": {
+    "job_status": 41,
+    "live_status": 1085,
+    "recording_status": 1081,
+    "bootstrap": 5,
+    "lecture_detail": 3,
+    "study_state": 2,
+    "local_text_models": 1
+  },
+  "resultRoots": 2218,
+  "plainResultGraphNodes": 1930372,
+  "plainResultGraphSelfMiB": 83.42200088500977,
+  "examples": [
+    {
+      "command": "job_status",
+      "chain": [
+        "DOMTimer",
+        "ScheduledAction",
+        "V8Function",
+        "closure",
+        "context",
+        "promise"
+      ],
+      "promiseEdges": ["reactions_or_result", "__proto__", "map"]
+    },
+    {
+      "command": "live_status",
+      "chain": [
+        "DOMTimer",
+        "ScheduledAction",
+        "V8Function",
+        "closure",
+        "context",
+        "promise"
+      ],
+      "promiseEdges": ["reactions_or_result", "__proto__", "map"]
+    },
+    {
+      "command": "recording_status",
+      "chain": [
+        "DOMTimer",
+        "ScheduledAction",
+        "V8Function",
+        "closure",
+        "context",
+        "promise"
+      ],
+      "promiseEdges": ["reactions_or_result", "__proto__", "map"]
+    }
+  ],
+  "scope": "Direct heap edges from driver wrapper timers to resolved native read results. Self-size of this plain-result subgraph is not a formal dominator retained-size calculation."
+}

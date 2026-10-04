@@ -1,5 +1,9 @@
 # Local AI preview evaluation — 2026-10-02
 
+Later acceptance: the [2026-10-03 installed-release report](installed-acceptance-v0.3.md) now covers a real 90-minute speech-plus-translation run. Capture/replay and controlled recovery passed, but full-length review failed twice at its output limit. The evidence below remains the original October 2 preview; its three-excerpt review must not be treated as whole-lecture acceptance.
+
+The [v0.3.1 reliability follow-up](installed-acceptance-v0.3.1.md) subsequently completed that exact long review with checkpoints/recovery and a new independent 90-minute resource run. Content-quality errors remain; workflow completion is not a best-model or accuracy certification.
+
 ## Scope
 
 LectureRelay 0.3.0 separates local English speech, translation, and study tasks. Nemotron remains the speech model; Hy-MT2-1.8B Q4_K_M is the initial translation candidate; Qwen3.5-4B Q4_K_M (Unsloth conversion) supplies summaries, user-directed whole-class review and Q&A, and is an alternative translator. All model revisions, sizes and SHA-256 values are fixed in the catalog. Neither text model is certified as a best default.

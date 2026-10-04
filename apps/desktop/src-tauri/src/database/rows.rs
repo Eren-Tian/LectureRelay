@@ -11,5 +11,6 @@ pub(super) fn lecture_from_row(r: &rusqlite::Row<'_>) -> rusqlite::Result<Lectur
         status: r.get(6)?,
         recording_path: r.get(7)?,
         transcribed_until: r.get(8)?,
+        audio_source: r.get(9)?,
     })
 }

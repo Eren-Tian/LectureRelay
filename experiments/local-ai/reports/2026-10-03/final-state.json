@@ -1,0 +1,28 @@
+{
+  "passed": true,
+  "allOriginalPreferenceValuesRestored": true,
+  "activeRecordingRows": 0,
+  "settings": {
+    "theme": "light",
+    "quietMode": true,
+    "assistanceLanguage": "zh",
+    "provider": "none",
+    "chatModel": "gpt-4o-mini",
+    "translationMode": "local",
+    "translationModel": "hy-mt2-1.8b",
+    "studyMode": "local",
+    "speechProvider": "local",
+    "localModel": "nemotron-streaming",
+    "audioSource": "microphone",
+    "microphoneDeviceId": "",
+    "systemDeviceId": "",
+    "liveTranslation": false,
+    "englishFontSize": 18,
+    "translationFontSize": 16,
+    "showEnglish": true,
+    "showTranslation": true,
+    "autoScroll": true
+  },
+  "newModelsRetained": true,
+  "labelledTestDataRetained": true
+}

@@ -1,6 +1,6 @@
 // Test-only entry, excluded from the production Vite entry graph.
 // Exercises the real reader with deterministic delayed provider responses.
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { LiveCaptions } from '../../src/features/live-lecture/LiveCaptions';
 import '../../src/styles/app.css';
@@ -14,6 +14,9 @@ const settings: AppSettings = {
   assistanceLanguage: 'zh',
   provider: 'none',
   chatModel: 'fixture',
+  translationMode: 'local',
+  translationModel: 'hy-mt2-1.8b',
+  studyMode: 'local',
   speechProvider: 'local',
   localModel: '',
   audioSource: 'system',

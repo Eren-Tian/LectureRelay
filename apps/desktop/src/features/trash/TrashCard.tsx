@@ -1,6 +1,6 @@
 import { ui } from '../../i18n';
 import type { Course } from '../../types/domain';
-import { api } from '../../api/client';
+import { api, pruneDeletedDrafts } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import type { ActionRunner } from '../../hooks/useAction';
 
@@ -9,11 +9,13 @@ export function TrashCard({
   blocked,
   run,
   setTrash,
+  onDeleted,
 }: {
   trash: Course[];
   blocked: boolean | undefined;
   run: ActionRunner;
   setTrash: (courses: Course[]) => void;
+  onDeleted: () => Promise<void>;
 }) {
   const workspace = useWorkspace();
   return (
@@ -40,6 +42,35 @@ export function TrashCard({
               }
             >
               {ui.restore}
+            </button>
+            <button
+              className="button danger"
+              disabled={blocked}
+              onClick={() =>
+                void run(async () => {
+                  if (
+                    !(await workspace.confirm({
+                      title: 'Permanently delete this course?',
+                      body: `Delete “${course.name}” and its ${course.lectureCount} classes, recordings, transcripts, notes, review drafts, PDFs and in-app exports. This cannot be undone. Copies exported elsewhere remain.`,
+                      action: 'Delete permanently',
+                      danger: true,
+                      confirmationText: 'DELETE',
+                    }))
+                  )
+                    return;
+                  try {
+                    await api.permanentlyDeleteCourse(course.id, 'DELETE');
+                  } finally {
+                    await pruneDeletedDrafts();
+                    setTrash(await api.trash());
+                    await workspace.refresh();
+                    await onDeleted();
+                  }
+                  workspace.notify('Course permanently deleted.');
+                })
+              }
+            >
+              Delete permanently
             </button>
           </div>
         ))

@@ -7,13 +7,15 @@ fn wasapi_loopback_checkpoint_pause_resume_and_microphone() {
         .join("target/audio-smoke-v020")
         .join(uuid::Uuid::new_v4().to_string());
     std::fs::create_dir_all(&root).unwrap();
+    std::fs::create_dir(root.join("system")).unwrap();
+    std::fs::create_dir(root.join("microphone")).unwrap();
     let app = tauri::Builder::default()
         .any_thread()
         .build(tauri::generate_context!())
         .unwrap();
     let recorder = lecturerelay_desktop_lib::Recorder::default();
     let id = uuid::Uuid::new_v4().to_string();
-    let path = root.join("system.wav");
+    let path = root.join("system/recording.wav");
     recorder
         .start(
             app.handle().clone(),
@@ -35,6 +37,8 @@ fn wasapi_loopback_checkpoint_pause_resume_and_microphone() {
     std::thread::sleep(Duration::from_secs(3));
     let before = recorder.status().unwrap().unwrap();
     assert!(!before.failed);
+    assert!(recorder.stop("stale-lecture-id").is_err());
+    assert_eq!(recorder.status().unwrap().unwrap().lecture_id, id);
     assert!(hound::WavReader::open(&path).unwrap().duration() > 0);
     recorder.pause(&id, true).unwrap();
     std::thread::sleep(Duration::from_secs(1));
@@ -54,13 +58,24 @@ fn wasapi_loopback_checkpoint_pause_resume_and_microphone() {
         .unwrap();
     assert!(samples.iter().any(|s| s.unsigned_abs() > 500));
     assert!((samples.len() as f64 / rate as f64 - summary.duration_seconds).abs() < 0.02);
+    let quality: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(root.join("system/recording-quality.json")).unwrap())
+            .unwrap();
+    assert_eq!(quality["sampleRate"], rate);
+    assert_eq!(quality["failed"], false);
+    assert_eq!(
+        quality["droppedChunks"].as_u64().unwrap(),
+        quality["droppedBuffers"].as_u64().unwrap()
+            + quality["deviceDiscontinuities"].as_u64().unwrap()
+    );
+    println!("System capture quality: {quality}");
     playback.wait().unwrap();
     let mic = uuid::Uuid::new_v4().to_string();
     recorder
         .start(
             app.handle().clone(),
             mic.clone(),
-            root.join("microphone.wav"),
+            root.join("microphone/recording.wav"),
             root.join("mic-recovery.json"),
             String::new(),
             "microphone".into(),

@@ -2,16 +2,20 @@ param([string]$InstallerPath)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 . (Join-Path $PSScriptRoot 'file-hash.ps1')
-if (!$InstallerPath) { $InstallerPath=Join-Path $projectRoot 'target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.0_x64-setup.exe' }
-$testRoot=Join-Path $projectRoot ('target/installer-cleanup-'+[Guid]::NewGuid().ToString())
+$expectedVersion=(Get-Content -LiteralPath (Join-Path $projectRoot 'apps/desktop/src-tauri/tauri.conf.json') -Raw | ConvertFrom-Json).version
+if (!$InstallerPath) { $InstallerPath=Join-Path $projectRoot "target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_${expectedVersion}_x64-setup.exe" }
+# NSIS changes per-user registration and shortcuts even with /D. Keep them on
+# the stable installation, never on a disposable verification directory.
+$testRoot=Join-Path $env:LOCALAPPDATA 'Programs/LectureRelay'
+if (Get-Process lecturerelay-desktop -ErrorAction SilentlyContinue) { throw 'Close LectureRelay before verifying its installer.' }
 $data=Join-Path $env:LOCALAPPDATA 'LectureRelay/app.db'
 $before=if (Test-Path -LiteralPath $data) { Get-SourceSha256 $data } else { $null }
-# NSIS /D must be last and unquoted. Install only to a fresh isolated target directory.
+# NSIS /D must be last and unquoted.
 $installed=Start-Process -FilePath $InstallerPath -ArgumentList "/S /D=$testRoot" -WindowStyle Hidden -PassThru -Wait
 if ($installed.ExitCode -ne 0) { throw "Installer failed: $($installed.ExitCode)" }
 $exe=Join-Path $testRoot 'lecturerelay-desktop.exe'
 $version=[Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
-if ($version.ProductVersion -notmatch '^0\.3\.0') { throw 'Installed application version differs' }
+if ($version.ProductVersion -notmatch ('^'+[regex]::Escape($expectedVersion)+'(?:\.0)?$')) { throw 'Installed application version differs' }
 & (Join-Path $PSScriptRoot 'runtime-resources.ps1') -RuntimePath (Join-Path $testRoot 'local-asr')
 $icon=Join-Path $projectRoot 'apps/desktop/src-tauri/icons/icon.ico'
 $release=Join-Path $projectRoot 'target/x86_64-pc-windows-msvc/release/lecturerelay-desktop.exe'
@@ -30,5 +34,6 @@ $report=[pscustomobject]@{
   RuntimeFiles=(Get-ChildItem -LiteralPath (Join-Path $testRoot 'local-asr') -Recurse -File | Measure-Object).Count
   RuntimeHashesMatch=$true; PhoenixVerified=$true; ReleaseExeVerified=$true; UserDatabaseUnchanged=$true
 }
+New-Item -ItemType Directory -Force -Path (Join-Path $projectRoot 'target/repository-cleanup') | Out-Null
 $report | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $projectRoot 'target/repository-cleanup/installer-result.json') -Encoding UTF8
 $report | ConvertTo-Json

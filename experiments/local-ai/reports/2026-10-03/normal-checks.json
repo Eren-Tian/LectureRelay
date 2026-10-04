@@ -1,0 +1,53 @@
+[
+  {
+    "check": "check:web",
+    "exitCode": 0,
+    "seconds": 1.0299408,
+    "log": "check-check-web.log"
+  },
+  {
+    "check": "build:web",
+    "exitCode": 0,
+    "seconds": 7.6230176,
+    "log": "check-build-web.log"
+  },
+  {
+    "check": "test:rust",
+    "exitCode": 0,
+    "seconds": 18.4781407,
+    "log": "check-test-rust.log"
+  },
+  {
+    "check": "lint:rust",
+    "exitCode": 0,
+    "seconds": 2.6174318,
+    "log": "check-lint-rust.log"
+  },
+  {
+    "check": "format:rust:check",
+    "exitCode": 0,
+    "seconds": 0.8122341,
+    "log": "check-format-rust-check.log"
+  },
+  {
+    "check": "verify:repo",
+    "exitCode": 0,
+    "seconds": 0.6016478,
+    "log": "check-verify-repo.log"
+  },
+  {
+    "check": "format:check",
+    "exitCode": 0,
+    "log": "check-format.log"
+  },
+  {
+    "check": "credential_roundtrip_replace_and_remove (explicit ignored test invocation)",
+    "exitCode": 0,
+    "passedTests": 1,
+    "log": "credential-roundtrip.log"
+  },
+  {
+    "check": "new/modified JavaScript and Python syntax",
+    "exitCode": 0
+  }
+]

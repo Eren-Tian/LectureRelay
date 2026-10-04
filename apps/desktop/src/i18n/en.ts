@@ -50,7 +50,7 @@ export const en = {
   trash: 'Trash',
   restore: 'Restore',
   trashHint:
-    'Courses in Trash keep their recordings, transcripts and notes. Restore them here. Permanent deletion is not available in this release.',
+    'Courses in Trash keep their recordings, transcripts and notes. Restore them or permanently delete them with confirmation.',
   trashEmpty: 'Trash is empty.',
   about: 'About',
   license:

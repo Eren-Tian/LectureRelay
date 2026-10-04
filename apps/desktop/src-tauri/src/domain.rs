@@ -35,6 +35,7 @@ pub struct Lecture {
     pub status: String,
     pub recording_path: String,
     pub transcribed_until: f64,
+    pub audio_source: String,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -106,6 +107,7 @@ pub struct Answer {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LectureDetail {
+    pub recording_warning: Option<String>,
     pub lecture: Lecture,
     pub course: Course,
     pub segments: Vec<TranscriptSegment>,

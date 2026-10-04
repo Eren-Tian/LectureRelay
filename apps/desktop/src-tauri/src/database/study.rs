@@ -48,6 +48,7 @@ pub struct CourseDocument {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StudyState {
+    pub reviews: Vec<super::review::ReviewCheckpoint>,
     pub tasks: Vec<ProcessingTask>,
     pub marks: Vec<StudyMark>,
     pub versions: Vec<NoteVersion>,
@@ -222,6 +223,7 @@ impl Storage {
         let tasks = self.tasks(id)?;
         let source_version = self.source_version(id)?;
         let documents = self.documents(&lecture.course_id)?;
+        let reviews = self.reviews(id)?;
         let db = self.lock()?;
         let mut q=db.prepare("SELECT id,seconds,label,kind FROM study_marks WHERE lecture_id=?1 ORDER BY seconds,id").user_error("Cannot read bookmarks.")?;
         let marks = q
@@ -260,6 +262,7 @@ impl Storage {
             .optional()
             .user_error("Cannot read draft.")?;
         Ok(StudyState {
+            reviews,
             tasks,
             marks,
             versions,
@@ -283,12 +286,12 @@ impl Storage {
     pub fn library(&self, query: &str) -> AppResult<Vec<LibraryEntry>> {
         let pattern = format!("%{}%", query.trim().chars().take(200).collect::<String>());
         let db = self.lock()?;
-        let mut q=db.prepare("SELECT l.id,l.course_id,l.title,l.started_at,l.ended_at,l.duration_seconds,l.status,l.recording_path,l.transcribed_until,c.name,p.lecture_id IS NOT NULL FROM lectures l JOIN courses c ON c.id=l.course_id LEFT JOIN lecture_pins p ON p.lecture_id=l.id WHERE c.deleted_at IS NULL AND (l.title LIKE ?1 OR c.name LIKE ?1 OR EXISTS(SELECT 1 FROM transcript_segments s WHERE s.lecture_id=l.id AND (s.source_text LIKE ?1 OR s.translated_text LIKE ?1))) ORDER BY p.lecture_id IS NOT NULL DESC,l.started_at DESC LIMIT 200").user_error("Cannot search library.")?;
+        let mut q=db.prepare("SELECT l.id,l.course_id,l.title,l.started_at,l.ended_at,l.duration_seconds,l.status,l.recording_path,l.transcribed_until,l.audio_source,c.name,p.lecture_id IS NOT NULL FROM lectures l JOIN courses c ON c.id=l.course_id LEFT JOIN lecture_pins p ON p.lecture_id=l.id WHERE c.deleted_at IS NULL AND (l.title LIKE ?1 OR c.name LIKE ?1 OR EXISTS(SELECT 1 FROM transcript_segments s WHERE s.lecture_id=l.id AND (s.source_text LIKE ?1 OR s.translated_text LIKE ?1))) ORDER BY p.lecture_id IS NOT NULL DESC,l.started_at DESC LIMIT 200").user_error("Cannot search library.")?;
         q.query_map([pattern], |r| {
             Ok(LibraryEntry {
                 lecture: super::rows::lecture_from_row(r)?,
-                course_name: r.get(9)?,
-                pinned: r.get(10)?,
+                course_name: r.get(10)?,
+                pinned: r.get(11)?,
             })
         })
         .user_error("Cannot search library.")?

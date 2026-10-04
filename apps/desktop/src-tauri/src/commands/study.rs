@@ -73,16 +73,12 @@ pub async fn attach_document(
         else {
             return Ok(None);
         };
-        use std::io::Read;
-        let mut file = std::fs::File::open(&source).user_error("Cannot open PDF.")?;
-        let mut bytes = Vec::new();
-        file.by_ref()
-            .take(50 * 1024 * 1024 + 1)
-            .read_to_end(&mut bytes)
-            .user_error("Cannot read PDF.")?;
-        if bytes.len() > 50 * 1024 * 1024 || !bytes.starts_with(b"%PDF-") {
-            return Err("Choose a valid PDF smaller than 50 MiB.".into());
-        }
+        let _gate = state
+            .gate
+            .lock()
+            .user_error("The app is busy. Try again.")?;
+        state.storage.course(&course_id)?;
+        let bytes = crate::app::media::read_pdf(&source)?;
         let id = new_id();
         let dir = state
             .paths
@@ -128,12 +124,12 @@ pub async fn read_document(
         .into_iter()
         .find(|d| d.id == id)
         .ok_or("Course document not found.")?;
-    let bytes =
-        std::fs::read(document.path).user_error("The local PDF is missing or unreadable.")?;
-    if bytes.len() > 50 * 1024 * 1024 {
-        return Err("PDF exceeds the supported size.".into());
-    }
-    Ok(tauri::ipc::Response::new(bytes))
+    tauri::async_runtime::spawn_blocking(move || {
+        crate::app::media::read_pdf(std::path::Path::new(&document.path))
+            .map(tauri::ipc::Response::new)
+    })
+    .await
+    .user_error("Cannot read course PDF.")?
 }
 
 #[tauri::command]

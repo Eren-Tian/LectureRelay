@@ -1,0 +1,1666 @@
+{
+  "recording": "C:\\Users\\tianc\\Documents\\LectureRelay\\Courses\\145fc0f2-1f98-429f-b94f-73d4d32859c9\\903a0347-947f-4bfa-9fb3-e7458cc52e80\\recording.wav",
+  "wave": {
+    "sampleRate": 48000,
+    "frames": 262908480,
+    "durationSeconds": 5477.26,
+    "allDeclaredFramesRead": true
+  },
+  "source": {
+    "sampleRate": 16000,
+    "frames": 86789983,
+    "durationSeconds": 5424.3739375,
+    "allDeclaredFramesRead": true
+  },
+  "knownPlayedSeconds": 5400.0,
+  "comparisonEndInRecordingSeconds": 5401.22,
+  "startupOffsetSeconds": 1.22,
+  "startupCorrelation": 0.9635500311851501,
+  "checkedClips": 234,
+  "minEnvelopeCorrelation": 0.9395332932472229,
+  "maxAbsoluteDriftSeconds": 0.16,
+  "lastTenSecondsCorrelation": 0.9398868083953857,
+  "tailAlignmentAdjustmentSeconds": 0.16,
+  "checks": [
+    {
+      "clip": 0,
+      "fixture": "lecture",
+      "sourceSeconds": 0.31,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9527815580368042
+    },
+    {
+      "clip": 1,
+      "fixture": "gis",
+      "sourceSeconds": 27.79,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9683146476745605
+    },
+    {
+      "clip": 2,
+      "fixture": "cs",
+      "sourceSeconds": 50.94,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.961873471736908
+    },
+    {
+      "clip": 3,
+      "fixture": "biology",
+      "sourceSeconds": 71.18,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9610976576805115
+    },
+    {
+      "clip": 4,
+      "fixture": "lecture",
+      "sourceSeconds": 92.61,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9500747919082642
+    },
+    {
+      "clip": 5,
+      "fixture": "gis",
+      "sourceSeconds": 120.09,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9649953842163086
+    },
+    {
+      "clip": 6,
+      "fixture": "cs",
+      "sourceSeconds": 143.24,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9642679691314697
+    },
+    {
+      "clip": 7,
+      "fixture": "biology",
+      "sourceSeconds": 163.48,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9597712159156799
+    },
+    {
+      "clip": 8,
+      "fixture": "lecture",
+      "sourceSeconds": 184.92,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9422281980514526
+    },
+    {
+      "clip": 9,
+      "fixture": "gis",
+      "sourceSeconds": 212.39,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9690054059028625
+    },
+    {
+      "clip": 10,
+      "fixture": "cs",
+      "sourceSeconds": 235.54,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9682290554046631
+    },
+    {
+      "clip": 11,
+      "fixture": "biology",
+      "sourceSeconds": 255.79,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9617363810539246
+    },
+    {
+      "clip": 12,
+      "fixture": "lecture",
+      "sourceSeconds": 277.22,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9427671432495117
+    },
+    {
+      "clip": 13,
+      "fixture": "gis",
+      "sourceSeconds": 304.7,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9669517278671265
+    },
+    {
+      "clip": 14,
+      "fixture": "cs",
+      "sourceSeconds": 327.84,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.967477023601532
+    },
+    {
+      "clip": 15,
+      "fixture": "biology",
+      "sourceSeconds": 348.09,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9607656002044678
+    },
+    {
+      "clip": 16,
+      "fixture": "lecture",
+      "sourceSeconds": 369.52,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9450320601463318
+    },
+    {
+      "clip": 17,
+      "fixture": "gis",
+      "sourceSeconds": 397.0,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9659426808357239
+    },
+    {
+      "clip": 18,
+      "fixture": "cs",
+      "sourceSeconds": 420.15,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9664924740791321
+    },
+    {
+      "clip": 19,
+      "fixture": "biology",
+      "sourceSeconds": 440.39,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9569877982139587
+    },
+    {
+      "clip": 20,
+      "fixture": "lecture",
+      "sourceSeconds": 461.82,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9459204077720642
+    },
+    {
+      "clip": 21,
+      "fixture": "gis",
+      "sourceSeconds": 489.3,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9662534594535828
+    },
+    {
+      "clip": 22,
+      "fixture": "cs",
+      "sourceSeconds": 512.45,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9634841084480286
+    },
+    {
+      "clip": 23,
+      "fixture": "biology",
+      "sourceSeconds": 532.69,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9616785645484924
+    },
+    {
+      "clip": 24,
+      "fixture": "lecture",
+      "sourceSeconds": 554.12,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9428145885467529
+    },
+    {
+      "clip": 25,
+      "fixture": "gis",
+      "sourceSeconds": 581.6,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9692813158035278
+    },
+    {
+      "clip": 26,
+      "fixture": "cs",
+      "sourceSeconds": 604.75,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9672535061836243
+    },
+    {
+      "clip": 27,
+      "fixture": "biology",
+      "sourceSeconds": 624.99,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9568973183631897
+    },
+    {
+      "clip": 28,
+      "fixture": "lecture",
+      "sourceSeconds": 646.43,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9426806569099426
+    },
+    {
+      "clip": 29,
+      "fixture": "gis",
+      "sourceSeconds": 673.9,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9701302647590637
+    },
+    {
+      "clip": 30,
+      "fixture": "cs",
+      "sourceSeconds": 697.05,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9659935832023621
+    },
+    {
+      "clip": 31,
+      "fixture": "biology",
+      "sourceSeconds": 717.3,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9611286520957947
+    },
+    {
+      "clip": 32,
+      "fixture": "lecture",
+      "sourceSeconds": 738.73,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9455819725990295
+    },
+    {
+      "clip": 33,
+      "fixture": "gis",
+      "sourceSeconds": 766.21,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9717142581939697
+    },
+    {
+      "clip": 34,
+      "fixture": "cs",
+      "sourceSeconds": 789.35,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9664422273635864
+    },
+    {
+      "clip": 35,
+      "fixture": "biology",
+      "sourceSeconds": 809.6,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9637888669967651
+    },
+    {
+      "clip": 36,
+      "fixture": "lecture",
+      "sourceSeconds": 831.03,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9437643885612488
+    },
+    {
+      "clip": 37,
+      "fixture": "gis",
+      "sourceSeconds": 858.51,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9673065543174744
+    },
+    {
+      "clip": 38,
+      "fixture": "cs",
+      "sourceSeconds": 881.66,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9662510752677917
+    },
+    {
+      "clip": 39,
+      "fixture": "biology",
+      "sourceSeconds": 901.9,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.955864667892456
+    },
+    {
+      "clip": 40,
+      "fixture": "lecture",
+      "sourceSeconds": 923.33,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9482035040855408
+    },
+    {
+      "clip": 41,
+      "fixture": "gis",
+      "sourceSeconds": 950.81,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9645316004753113
+    },
+    {
+      "clip": 42,
+      "fixture": "cs",
+      "sourceSeconds": 973.96,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9642584919929504
+    },
+    {
+      "clip": 43,
+      "fixture": "biology",
+      "sourceSeconds": 994.2,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9598566293716431
+    },
+    {
+      "clip": 44,
+      "fixture": "lecture",
+      "sourceSeconds": 1015.63,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9435412883758545
+    },
+    {
+      "clip": 45,
+      "fixture": "gis",
+      "sourceSeconds": 1043.11,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9652326107025146
+    },
+    {
+      "clip": 46,
+      "fixture": "cs",
+      "sourceSeconds": 1066.26,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9651281237602234
+    },
+    {
+      "clip": 47,
+      "fixture": "biology",
+      "sourceSeconds": 1086.5,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9595140218734741
+    },
+    {
+      "clip": 48,
+      "fixture": "lecture",
+      "sourceSeconds": 1107.94,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9484219551086426
+    },
+    {
+      "clip": 49,
+      "fixture": "gis",
+      "sourceSeconds": 1135.42,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9654780626296997
+    },
+    {
+      "clip": 50,
+      "fixture": "cs",
+      "sourceSeconds": 1158.56,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.962476909160614
+    },
+    {
+      "clip": 51,
+      "fixture": "biology",
+      "sourceSeconds": 1178.81,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9598632454872131
+    },
+    {
+      "clip": 52,
+      "fixture": "lecture",
+      "sourceSeconds": 1200.24,
+      "bestDriftSeconds": 0.0,
+      "envelopeCorrelation": 0.9527806043624878
+    },
+    {
+      "clip": 53,
+      "fixture": "gis",
+      "sourceSeconds": 1227.72,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9727038145065308
+    },
+    {
+      "clip": 54,
+      "fixture": "cs",
+      "sourceSeconds": 1250.87,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9622892141342163
+    },
+    {
+      "clip": 55,
+      "fixture": "biology",
+      "sourceSeconds": 1271.11,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9632810354232788
+    },
+    {
+      "clip": 56,
+      "fixture": "lecture",
+      "sourceSeconds": 1292.54,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9492818117141724
+    },
+    {
+      "clip": 57,
+      "fixture": "gis",
+      "sourceSeconds": 1320.02,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9724077582359314
+    },
+    {
+      "clip": 58,
+      "fixture": "cs",
+      "sourceSeconds": 1343.17,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9641069769859314
+    },
+    {
+      "clip": 59,
+      "fixture": "biology",
+      "sourceSeconds": 1363.41,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9581505060195923
+    },
+    {
+      "clip": 60,
+      "fixture": "lecture",
+      "sourceSeconds": 1384.84,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9475535750389099
+    },
+    {
+      "clip": 61,
+      "fixture": "gis",
+      "sourceSeconds": 1412.32,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9662179946899414
+    },
+    {
+      "clip": 62,
+      "fixture": "cs",
+      "sourceSeconds": 1435.47,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9630083441734314
+    },
+    {
+      "clip": 63,
+      "fixture": "biology",
+      "sourceSeconds": 1455.71,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.957683265209198
+    },
+    {
+      "clip": 64,
+      "fixture": "lecture",
+      "sourceSeconds": 1477.15,
+      "bestDriftSeconds": -0.06,
+      "envelopeCorrelation": 0.9444385766983032
+    },
+    {
+      "clip": 65,
+      "fixture": "gis",
+      "sourceSeconds": 1504.62,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9683461785316467
+    },
+    {
+      "clip": 66,
+      "fixture": "cs",
+      "sourceSeconds": 1527.77,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.967761218547821
+    },
+    {
+      "clip": 67,
+      "fixture": "biology",
+      "sourceSeconds": 1548.02,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9597045183181763
+    },
+    {
+      "clip": 68,
+      "fixture": "lecture",
+      "sourceSeconds": 1569.45,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9463024735450745
+    },
+    {
+      "clip": 69,
+      "fixture": "gis",
+      "sourceSeconds": 1596.93,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9673153758049011
+    },
+    {
+      "clip": 70,
+      "fixture": "cs",
+      "sourceSeconds": 1620.07,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9668076634407043
+    },
+    {
+      "clip": 71,
+      "fixture": "biology",
+      "sourceSeconds": 1640.32,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9620620012283325
+    },
+    {
+      "clip": 72,
+      "fixture": "lecture",
+      "sourceSeconds": 1661.75,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9493350982666016
+    },
+    {
+      "clip": 73,
+      "fixture": "gis",
+      "sourceSeconds": 1689.23,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9677785038948059
+    },
+    {
+      "clip": 74,
+      "fixture": "cs",
+      "sourceSeconds": 1712.38,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9633540511131287
+    },
+    {
+      "clip": 75,
+      "fixture": "biology",
+      "sourceSeconds": 1732.62,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9598541259765625
+    },
+    {
+      "clip": 76,
+      "fixture": "lecture",
+      "sourceSeconds": 1754.05,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9504910707473755
+    },
+    {
+      "clip": 77,
+      "fixture": "gis",
+      "sourceSeconds": 1781.53,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9644243717193604
+    },
+    {
+      "clip": 78,
+      "fixture": "cs",
+      "sourceSeconds": 1804.68,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9607951045036316
+    },
+    {
+      "clip": 79,
+      "fixture": "biology",
+      "sourceSeconds": 1824.92,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9639330506324768
+    },
+    {
+      "clip": 80,
+      "fixture": "lecture",
+      "sourceSeconds": 1846.35,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9467704892158508
+    },
+    {
+      "clip": 81,
+      "fixture": "gis",
+      "sourceSeconds": 1873.83,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9645732641220093
+    },
+    {
+      "clip": 82,
+      "fixture": "cs",
+      "sourceSeconds": 1896.98,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9667479991912842
+    },
+    {
+      "clip": 83,
+      "fixture": "biology",
+      "sourceSeconds": 1917.22,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9596447944641113
+    },
+    {
+      "clip": 84,
+      "fixture": "lecture",
+      "sourceSeconds": 1938.66,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9395332932472229
+    },
+    {
+      "clip": 85,
+      "fixture": "gis",
+      "sourceSeconds": 1966.13,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9700043201446533
+    },
+    {
+      "clip": 86,
+      "fixture": "cs",
+      "sourceSeconds": 1989.28,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9666619896888733
+    },
+    {
+      "clip": 87,
+      "fixture": "biology",
+      "sourceSeconds": 2009.53,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9616647362709045
+    },
+    {
+      "clip": 88,
+      "fixture": "lecture",
+      "sourceSeconds": 2030.96,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9422183632850647
+    },
+    {
+      "clip": 89,
+      "fixture": "gis",
+      "sourceSeconds": 2058.44,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9698449373245239
+    },
+    {
+      "clip": 90,
+      "fixture": "cs",
+      "sourceSeconds": 2081.58,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9670678973197937
+    },
+    {
+      "clip": 91,
+      "fixture": "biology",
+      "sourceSeconds": 2101.83,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9605615735054016
+    },
+    {
+      "clip": 92,
+      "fixture": "lecture",
+      "sourceSeconds": 2123.26,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9431113004684448
+    },
+    {
+      "clip": 93,
+      "fixture": "gis",
+      "sourceSeconds": 2150.74,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9652054905891418
+    },
+    {
+      "clip": 94,
+      "fixture": "cs",
+      "sourceSeconds": 2173.89,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.966503918170929
+    },
+    {
+      "clip": 95,
+      "fixture": "biology",
+      "sourceSeconds": 2194.13,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9556428790092468
+    },
+    {
+      "clip": 96,
+      "fixture": "lecture",
+      "sourceSeconds": 2215.56,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9475941061973572
+    },
+    {
+      "clip": 97,
+      "fixture": "gis",
+      "sourceSeconds": 2243.04,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9648544192314148
+    },
+    {
+      "clip": 98,
+      "fixture": "cs",
+      "sourceSeconds": 2266.19,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9643978476524353
+    },
+    {
+      "clip": 99,
+      "fixture": "biology",
+      "sourceSeconds": 2286.43,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9600314497947693
+    },
+    {
+      "clip": 100,
+      "fixture": "lecture",
+      "sourceSeconds": 2307.86,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9436758756637573
+    },
+    {
+      "clip": 101,
+      "fixture": "gis",
+      "sourceSeconds": 2335.34,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9681904911994934
+    },
+    {
+      "clip": 102,
+      "fixture": "cs",
+      "sourceSeconds": 2358.49,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9663588404655457
+    },
+    {
+      "clip": 103,
+      "fixture": "biology",
+      "sourceSeconds": 2378.73,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9591609239578247
+    },
+    {
+      "clip": 104,
+      "fixture": "lecture",
+      "sourceSeconds": 2400.17,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9469830393791199
+    },
+    {
+      "clip": 105,
+      "fixture": "gis",
+      "sourceSeconds": 2427.64,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9681896567344666
+    },
+    {
+      "clip": 106,
+      "fixture": "cs",
+      "sourceSeconds": 2450.79,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9637195467948914
+    },
+    {
+      "clip": 107,
+      "fixture": "biology",
+      "sourceSeconds": 2471.04,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.962224006652832
+    },
+    {
+      "clip": 108,
+      "fixture": "lecture",
+      "sourceSeconds": 2492.47,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9493421316146851
+    },
+    {
+      "clip": 109,
+      "fixture": "gis",
+      "sourceSeconds": 2519.95,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9745415449142456
+    },
+    {
+      "clip": 110,
+      "fixture": "cs",
+      "sourceSeconds": 2543.09,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9635604023933411
+    },
+    {
+      "clip": 111,
+      "fixture": "biology",
+      "sourceSeconds": 2563.34,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9679751396179199
+    },
+    {
+      "clip": 112,
+      "fixture": "lecture",
+      "sourceSeconds": 2584.77,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9461526274681091
+    },
+    {
+      "clip": 113,
+      "fixture": "gis",
+      "sourceSeconds": 2612.25,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9716441035270691
+    },
+    {
+      "clip": 114,
+      "fixture": "cs",
+      "sourceSeconds": 2635.4,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9635065197944641
+    },
+    {
+      "clip": 115,
+      "fixture": "biology",
+      "sourceSeconds": 2655.64,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9585568308830261
+    },
+    {
+      "clip": 116,
+      "fixture": "lecture",
+      "sourceSeconds": 2677.07,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9461889863014221
+    },
+    {
+      "clip": 117,
+      "fixture": "gis",
+      "sourceSeconds": 2704.55,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9657343029975891
+    },
+    {
+      "clip": 118,
+      "fixture": "cs",
+      "sourceSeconds": 2727.7,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9615471959114075
+    },
+    {
+      "clip": 119,
+      "fixture": "biology",
+      "sourceSeconds": 2747.94,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9595910310745239
+    },
+    {
+      "clip": 120,
+      "fixture": "lecture",
+      "sourceSeconds": 2769.38,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9465460181236267
+    },
+    {
+      "clip": 121,
+      "fixture": "gis",
+      "sourceSeconds": 2796.85,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9680832028388977
+    },
+    {
+      "clip": 122,
+      "fixture": "cs",
+      "sourceSeconds": 2820.0,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9661502838134766
+    },
+    {
+      "clip": 123,
+      "fixture": "biology",
+      "sourceSeconds": 2840.24,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9602653384208679
+    },
+    {
+      "clip": 124,
+      "fixture": "lecture",
+      "sourceSeconds": 2861.68,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9471868276596069
+    },
+    {
+      "clip": 125,
+      "fixture": "gis",
+      "sourceSeconds": 2889.16,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9663379788398743
+    },
+    {
+      "clip": 126,
+      "fixture": "cs",
+      "sourceSeconds": 2912.3,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9647362232208252
+    },
+    {
+      "clip": 127,
+      "fixture": "biology",
+      "sourceSeconds": 2932.55,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.959429144859314
+    },
+    {
+      "clip": 128,
+      "fixture": "lecture",
+      "sourceSeconds": 2953.98,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9518267512321472
+    },
+    {
+      "clip": 129,
+      "fixture": "gis",
+      "sourceSeconds": 2981.46,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9672539830207825
+    },
+    {
+      "clip": 130,
+      "fixture": "cs",
+      "sourceSeconds": 3004.61,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9623146653175354
+    },
+    {
+      "clip": 131,
+      "fixture": "biology",
+      "sourceSeconds": 3024.85,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9600553512573242
+    },
+    {
+      "clip": 132,
+      "fixture": "lecture",
+      "sourceSeconds": 3046.28,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.953071653842926
+    },
+    {
+      "clip": 133,
+      "fixture": "gis",
+      "sourceSeconds": 3073.76,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.966040313243866
+    },
+    {
+      "clip": 134,
+      "fixture": "cs",
+      "sourceSeconds": 3096.91,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9617785811424255
+    },
+    {
+      "clip": 135,
+      "fixture": "biology",
+      "sourceSeconds": 3117.15,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9628130793571472
+    },
+    {
+      "clip": 136,
+      "fixture": "lecture",
+      "sourceSeconds": 3138.58,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9498301148414612
+    },
+    {
+      "clip": 137,
+      "fixture": "gis",
+      "sourceSeconds": 3166.06,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9637848138809204
+    },
+    {
+      "clip": 138,
+      "fixture": "cs",
+      "sourceSeconds": 3189.21,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9659587144851685
+    },
+    {
+      "clip": 139,
+      "fixture": "biology",
+      "sourceSeconds": 3209.45,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9603199362754822
+    },
+    {
+      "clip": 140,
+      "fixture": "lecture",
+      "sourceSeconds": 3230.89,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9409075975418091
+    },
+    {
+      "clip": 141,
+      "fixture": "gis",
+      "sourceSeconds": 3258.36,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9693390130996704
+    },
+    {
+      "clip": 142,
+      "fixture": "cs",
+      "sourceSeconds": 3281.51,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9683982729911804
+    },
+    {
+      "clip": 143,
+      "fixture": "biology",
+      "sourceSeconds": 3301.76,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.961866557598114
+    },
+    {
+      "clip": 144,
+      "fixture": "lecture",
+      "sourceSeconds": 3323.19,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9408367872238159
+    },
+    {
+      "clip": 145,
+      "fixture": "gis",
+      "sourceSeconds": 3350.67,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.967720091342926
+    },
+    {
+      "clip": 146,
+      "fixture": "cs",
+      "sourceSeconds": 3373.81,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9681149125099182
+    },
+    {
+      "clip": 147,
+      "fixture": "biology",
+      "sourceSeconds": 3394.06,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9610896706581116
+    },
+    {
+      "clip": 148,
+      "fixture": "lecture",
+      "sourceSeconds": 3415.49,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9437346458435059
+    },
+    {
+      "clip": 149,
+      "fixture": "gis",
+      "sourceSeconds": 3442.97,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.965621292591095
+    },
+    {
+      "clip": 150,
+      "fixture": "cs",
+      "sourceSeconds": 3466.12,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9671899080276489
+    },
+    {
+      "clip": 151,
+      "fixture": "biology",
+      "sourceSeconds": 3486.36,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9559176564216614
+    },
+    {
+      "clip": 152,
+      "fixture": "lecture",
+      "sourceSeconds": 3507.79,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9471701979637146
+    },
+    {
+      "clip": 153,
+      "fixture": "gis",
+      "sourceSeconds": 3535.27,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.966658353805542
+    },
+    {
+      "clip": 154,
+      "fixture": "cs",
+      "sourceSeconds": 3558.42,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9640225172042847
+    },
+    {
+      "clip": 155,
+      "fixture": "biology",
+      "sourceSeconds": 3578.66,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9602357745170593
+    },
+    {
+      "clip": 156,
+      "fixture": "lecture",
+      "sourceSeconds": 3600.09,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9424136281013489
+    },
+    {
+      "clip": 157,
+      "fixture": "gis",
+      "sourceSeconds": 3627.57,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9712299704551697
+    },
+    {
+      "clip": 158,
+      "fixture": "cs",
+      "sourceSeconds": 3650.72,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9668005704879761
+    },
+    {
+      "clip": 159,
+      "fixture": "biology",
+      "sourceSeconds": 3670.96,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9567564725875854
+    },
+    {
+      "clip": 160,
+      "fixture": "lecture",
+      "sourceSeconds": 3692.4,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9447975754737854
+    },
+    {
+      "clip": 161,
+      "fixture": "gis",
+      "sourceSeconds": 3719.87,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9700666666030884
+    },
+    {
+      "clip": 162,
+      "fixture": "cs",
+      "sourceSeconds": 3743.02,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9653716087341309
+    },
+    {
+      "clip": 163,
+      "fixture": "biology",
+      "sourceSeconds": 3763.27,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9623539447784424
+    },
+    {
+      "clip": 164,
+      "fixture": "lecture",
+      "sourceSeconds": 3784.7,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.946998119354248
+    },
+    {
+      "clip": 165,
+      "fixture": "gis",
+      "sourceSeconds": 3812.18,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9726049304008484
+    },
+    {
+      "clip": 166,
+      "fixture": "cs",
+      "sourceSeconds": 3835.32,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9663954377174377
+    },
+    {
+      "clip": 167,
+      "fixture": "biology",
+      "sourceSeconds": 3855.57,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9650487303733826
+    },
+    {
+      "clip": 168,
+      "fixture": "lecture",
+      "sourceSeconds": 3877.0,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9431391954421997
+    },
+    {
+      "clip": 169,
+      "fixture": "gis",
+      "sourceSeconds": 3904.48,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9689157605171204
+    },
+    {
+      "clip": 170,
+      "fixture": "cs",
+      "sourceSeconds": 3927.63,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9650869369506836
+    },
+    {
+      "clip": 171,
+      "fixture": "biology",
+      "sourceSeconds": 3947.87,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9559897184371948
+    },
+    {
+      "clip": 172,
+      "fixture": "lecture",
+      "sourceSeconds": 3969.3,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9478670358657837
+    },
+    {
+      "clip": 173,
+      "fixture": "gis",
+      "sourceSeconds": 3996.78,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9646132588386536
+    },
+    {
+      "clip": 174,
+      "fixture": "cs",
+      "sourceSeconds": 4019.93,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9627487063407898
+    },
+    {
+      "clip": 175,
+      "fixture": "biology",
+      "sourceSeconds": 4040.17,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9601560831069946
+    },
+    {
+      "clip": 176,
+      "fixture": "lecture",
+      "sourceSeconds": 4061.6,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9444207549095154
+    },
+    {
+      "clip": 177,
+      "fixture": "gis",
+      "sourceSeconds": 4089.08,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9661900997161865
+    },
+    {
+      "clip": 178,
+      "fixture": "cs",
+      "sourceSeconds": 4112.23,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.965453565120697
+    },
+    {
+      "clip": 179,
+      "fixture": "biology",
+      "sourceSeconds": 4132.47,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9594693183898926
+    },
+    {
+      "clip": 180,
+      "fixture": "lecture",
+      "sourceSeconds": 4153.91,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9498586654663086
+    },
+    {
+      "clip": 181,
+      "fixture": "gis",
+      "sourceSeconds": 4181.39,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9654684066772461
+    },
+    {
+      "clip": 182,
+      "fixture": "cs",
+      "sourceSeconds": 4204.53,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.96406489610672
+    },
+    {
+      "clip": 183,
+      "fixture": "biology",
+      "sourceSeconds": 4224.78,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9583148956298828
+    },
+    {
+      "clip": 184,
+      "fixture": "lecture",
+      "sourceSeconds": 4246.21,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9536373615264893
+    },
+    {
+      "clip": 185,
+      "fixture": "gis",
+      "sourceSeconds": 4273.69,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9709728956222534
+    },
+    {
+      "clip": 186,
+      "fixture": "cs",
+      "sourceSeconds": 4296.84,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9623796939849854
+    },
+    {
+      "clip": 187,
+      "fixture": "biology",
+      "sourceSeconds": 4317.08,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9612388610839844
+    },
+    {
+      "clip": 188,
+      "fixture": "lecture",
+      "sourceSeconds": 4338.51,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9514751434326172
+    },
+    {
+      "clip": 189,
+      "fixture": "gis",
+      "sourceSeconds": 4365.99,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9706946611404419
+    },
+    {
+      "clip": 190,
+      "fixture": "cs",
+      "sourceSeconds": 4389.14,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9627526998519897
+    },
+    {
+      "clip": 191,
+      "fixture": "biology",
+      "sourceSeconds": 4409.38,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9592384696006775
+    },
+    {
+      "clip": 192,
+      "fixture": "lecture",
+      "sourceSeconds": 4430.81,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9493692517280579
+    },
+    {
+      "clip": 193,
+      "fixture": "gis",
+      "sourceSeconds": 4458.29,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.965648889541626
+    },
+    {
+      "clip": 194,
+      "fixture": "cs",
+      "sourceSeconds": 4481.44,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9631184935569763
+    },
+    {
+      "clip": 195,
+      "fixture": "biology",
+      "sourceSeconds": 4501.68,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9583204388618469
+    },
+    {
+      "clip": 196,
+      "fixture": "lecture",
+      "sourceSeconds": 4523.12,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9434351325035095
+    },
+    {
+      "clip": 197,
+      "fixture": "gis",
+      "sourceSeconds": 4550.59,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9687556028366089
+    },
+    {
+      "clip": 198,
+      "fixture": "cs",
+      "sourceSeconds": 4573.74,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.968088686466217
+    },
+    {
+      "clip": 199,
+      "fixture": "biology",
+      "sourceSeconds": 4593.99,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9607442021369934
+    },
+    {
+      "clip": 200,
+      "fixture": "lecture",
+      "sourceSeconds": 4615.42,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9448372721672058
+    },
+    {
+      "clip": 201,
+      "fixture": "gis",
+      "sourceSeconds": 4642.9,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9667270183563232
+    },
+    {
+      "clip": 202,
+      "fixture": "cs",
+      "sourceSeconds": 4666.04,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9673789739608765
+    },
+    {
+      "clip": 203,
+      "fixture": "biology",
+      "sourceSeconds": 4686.29,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.961327314376831
+    },
+    {
+      "clip": 204,
+      "fixture": "lecture",
+      "sourceSeconds": 4707.72,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9474746584892273
+    },
+    {
+      "clip": 205,
+      "fixture": "gis",
+      "sourceSeconds": 4735.2,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9666008949279785
+    },
+    {
+      "clip": 206,
+      "fixture": "cs",
+      "sourceSeconds": 4758.35,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9646999835968018
+    },
+    {
+      "clip": 207,
+      "fixture": "biology",
+      "sourceSeconds": 4778.59,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9584724307060242
+    },
+    {
+      "clip": 208,
+      "fixture": "lecture",
+      "sourceSeconds": 4800.02,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9475482702255249
+    },
+    {
+      "clip": 209,
+      "fixture": "gis",
+      "sourceSeconds": 4827.5,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9650483131408691
+    },
+    {
+      "clip": 210,
+      "fixture": "cs",
+      "sourceSeconds": 4850.65,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9620020985603333
+    },
+    {
+      "clip": 211,
+      "fixture": "biology",
+      "sourceSeconds": 4870.89,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9634511470794678
+    },
+    {
+      "clip": 212,
+      "fixture": "lecture",
+      "sourceSeconds": 4892.32,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9436885714530945
+    },
+    {
+      "clip": 213,
+      "fixture": "gis",
+      "sourceSeconds": 4919.8,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9663740396499634
+    },
+    {
+      "clip": 214,
+      "fixture": "cs",
+      "sourceSeconds": 4942.95,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9669458270072937
+    },
+    {
+      "clip": 215,
+      "fixture": "biology",
+      "sourceSeconds": 4963.19,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9589040279388428
+    },
+    {
+      "clip": 216,
+      "fixture": "lecture",
+      "sourceSeconds": 4984.63,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9405651092529297
+    },
+    {
+      "clip": 217,
+      "fixture": "gis",
+      "sourceSeconds": 5012.1,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9698596596717834
+    },
+    {
+      "clip": 218,
+      "fixture": "cs",
+      "sourceSeconds": 5035.25,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9659786224365234
+    },
+    {
+      "clip": 219,
+      "fixture": "biology",
+      "sourceSeconds": 5055.5,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.961082935333252
+    },
+    {
+      "clip": 220,
+      "fixture": "lecture",
+      "sourceSeconds": 5076.93,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9439185261726379
+    },
+    {
+      "clip": 221,
+      "fixture": "gis",
+      "sourceSeconds": 5104.41,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.970819354057312
+    },
+    {
+      "clip": 222,
+      "fixture": "cs",
+      "sourceSeconds": 5127.55,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9666652679443359
+    },
+    {
+      "clip": 223,
+      "fixture": "biology",
+      "sourceSeconds": 5147.8,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9617735147476196
+    },
+    {
+      "clip": 224,
+      "fixture": "lecture",
+      "sourceSeconds": 5169.23,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.943273663520813
+    },
+    {
+      "clip": 225,
+      "fixture": "gis",
+      "sourceSeconds": 5196.71,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.96583491563797
+    },
+    {
+      "clip": 226,
+      "fixture": "cs",
+      "sourceSeconds": 5219.86,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9660640954971313
+    },
+    {
+      "clip": 227,
+      "fixture": "biology",
+      "sourceSeconds": 5240.1,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9557424783706665
+    },
+    {
+      "clip": 228,
+      "fixture": "lecture",
+      "sourceSeconds": 5261.53,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.948322594165802
+    },
+    {
+      "clip": 229,
+      "fixture": "gis",
+      "sourceSeconds": 5289.01,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9644065499305725
+    },
+    {
+      "clip": 230,
+      "fixture": "cs",
+      "sourceSeconds": 5312.16,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.964694619178772
+    },
+    {
+      "clip": 231,
+      "fixture": "biology",
+      "sourceSeconds": 5332.4,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9597278833389282
+    },
+    {
+      "clip": 232,
+      "fixture": "lecture",
+      "sourceSeconds": 5353.83,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9431565999984741
+    },
+    {
+      "clip": 233,
+      "fixture": "gis",
+      "sourceSeconds": 5381.31,
+      "bestDriftSeconds": -0.16,
+      "envelopeCorrelation": 0.9657877087593079
+    }
+  ],
+  "method": "100 Hz RMS envelope correlation against known synthetic playback; confirms matching signal across the timeline, not word accuracy or independent audio quality.",
+  "passed": true
+}

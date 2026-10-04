@@ -21,6 +21,7 @@ interface Confirmation {
   body: string;
   action: string;
   danger?: boolean;
+  confirmationText?: string;
 }
 interface WorkspaceValue {
   data: Bootstrap;
@@ -50,6 +51,7 @@ export function WorkspaceProvider({
     (Confirmation & { resolve: (answer: boolean) => void }) | null
   >(null);
   const pending = useRef(false);
+  const [confirmationText, setConfirmationText] = useState('');
   const confirm = useCallback(
     (options: Confirmation) =>
       new Promise<boolean>((resolve) => {
@@ -58,6 +60,7 @@ export function WorkspaceProvider({
           return;
         }
         pending.current = true;
+        setConfirmationText('');
         setDialog({ ...options, resolve });
       }),
     [],
@@ -73,12 +76,27 @@ export function WorkspaceProvider({
       {dialog && (
         <Modal title={dialog.title} onClose={close}>
           <p className="modal-copy">{dialog.body}</p>
+          {dialog.confirmationText && (
+            <label className="form-stack">
+              Type {dialog.confirmationText} to confirm
+              <input
+                value={confirmationText}
+                autoComplete="off"
+                spellCheck={false}
+                onChange={(event) => setConfirmationText(event.target.value)}
+              />
+            </label>
+          )}
           <div className="form-actions">
             <button className="button secondary" onClick={close}>
               {ui.s258}
             </button>
             <button
               className={`button ${dialog.danger ? 'danger' : 'primary'}`}
+              disabled={
+                !!dialog.confirmationText &&
+                confirmationText !== dialog.confirmationText
+              }
               onClick={() => {
                 dialog.resolve(true);
                 pending.current = false;

@@ -1,0 +1,100 @@
+{
+  "passed": true,
+  "tables": [
+    {
+      "table": "courses",
+      "originalRows": 5,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "lectures",
+      "originalRows": 32,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "notes",
+      "originalRows": 2,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "glossary_terms",
+      "originalRows": 4,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "app_settings",
+      "originalRows": 1,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "answers",
+      "originalRows": 2,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "local_models",
+      "originalRows": 3,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "transcript_edits",
+      "originalRows": 4,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "translation_versions",
+      "originalRows": 1017,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "processing_tasks",
+      "originalRows": 36,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "note_versions",
+      "originalRows": 5,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "study_marks",
+      "originalRows": 4,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "note_drafts",
+      "originalRows": 0,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "course_documents",
+      "originalRows": 1,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "lecture_pins",
+      "originalRows": 0,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "transcript_segments",
+      "originalRows": 1520,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "review_checkpoints",
+      "originalRows": 4,
+      "missingOrChangedRows": 0
+    },
+    {
+      "table": "cleanup_commits",
+      "originalRows": 0,
+      "missingOrChangedRows": 0
+    }
+  ],
+  "originalFilesHashed": 34,
+  "changedFiles": 0,
+  "sqliteQuickCheck": "ok",
+  "foreignKeyErrors": 0,
+  "scope": "All original SQLite rows including preferences; original WAV, GGUF and BIN file hashes. New labelled test content is retained."
+}

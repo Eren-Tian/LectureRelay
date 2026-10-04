@@ -26,7 +26,7 @@ h2 {
 }
 .sidebar-toggle {
   align-self: flex-end;
-  border: 1px solid var(--line);
+  border: 1px solid var(--control-line);
   background: var(--paper);
   border-radius: 8px;
   margin-top: 14px;

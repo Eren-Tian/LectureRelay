@@ -39,6 +39,7 @@ export function StudyNotes({
     [version, setVersion] = useState('');
   const queue = useRef(Promise.resolve()),
     timer = useRef<ReturnType<typeof setTimeout> | null>(null),
+    savingRef = useRef(false),
     latest = useRef(draft);
   const persist = (body: string) => {
     queue.current = queue.current
@@ -53,6 +54,7 @@ export function StudyNotes({
     [],
   );
   const change = (value: string) => {
+    if (savingRef.current) return;
     latest.current = value;
     setDraft(value);
     setStatus('Saving draft…');
@@ -73,6 +75,8 @@ export function StudyNotes({
     }, 650);
   };
   const save = async (body = draft) => {
+    if (savingRef.current) return;
+    savingRef.current = true;
     setSaving(true);
     if (timer.current) clearTimeout(timer.current);
     try {
@@ -93,6 +97,7 @@ export function StudyNotes({
       setStatus(errorText(e));
       notify(errorText(e), true);
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   };
@@ -125,6 +130,7 @@ export function StudyNotes({
           <div className="study-toolbar">
             <button
               className="text-button"
+              disabled={saving}
               onClick={() =>
                 change(
                   draft + `\n[${clock(position)}](#t=${Math.floor(position)}) `,
@@ -141,6 +147,7 @@ export function StudyNotes({
             className="study-note-editor"
             aria-label="Lecture notes"
             value={draft}
+            disabled={saving}
             maxLength={100000}
             onChange={(e) => change(e.target.value)}
           />
@@ -158,17 +165,27 @@ export function StudyNotes({
                   }))
                 )
                   return;
+                if (savingRef.current) return;
+                savingRef.current = true;
+                setSaving(true);
                 if (timer.current) clearTimeout(timer.current);
                 try {
                   await queue.current.catch(() => {});
                   await api.clearDraft(id);
-                  localStorage.removeItem(key);
+                  try {
+                    localStorage.removeItem(key);
+                  } catch {
+                    /* The database draft has already been cleared. */
+                  }
                   setDraft(note?.body ?? '');
                   latest.current = note?.body ?? '';
                   setEditing(false);
                   setStatus('');
                 } catch (e) {
                   notify(errorText(e), true);
+                } finally {
+                  savingRef.current = false;
+                  setSaving(false);
                 }
               }}
             >

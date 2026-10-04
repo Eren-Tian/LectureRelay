@@ -19,12 +19,20 @@ try {
   }
   $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
   $vs = & $vswhere -latest -products '*' -format json | ConvertFrom-Json
+  $payload = @{}
+  $installedRoot = [IO.Path]::GetFullPath($verified.InstalledDirectory)
+  $payloadFiles = @((Get-Item -LiteralPath (Join-Path $installedRoot 'lecturerelay-desktop.exe')))
+  $payloadFiles += @(Get-ChildItem -LiteralPath (Join-Path $installedRoot 'local-asr'),(Join-Path $installedRoot 'local-text') -Recurse -File)
+  foreach ($file in $payloadFiles) {
+    $relative = $file.FullName.Substring($installedRoot.Length+1).Replace('\','/')
+    $payload[$relative] = Get-SourceSha256 $file.FullName
+  }
   $evidence = [ordered]@{
     sourceCommit=$source; version=$verified.Version; coldBuild=$true; restoredProjectOrDependencyCaches=$false
     runUrl="https://github.com/$env:GITHUB_REPOSITORY/actions/runs/$env:GITHUB_RUN_ID"
     runner=@{label='windows-2025';imageOS=$env:ImageOS;imageVersion=$env:ImageVersion;os=[Environment]::OSVersion.VersionString}
     toolchain=@{node=(& node --version);pnpm=(& pnpm.cmd --version);rust=(& rustc --version);cargo=(& cargo --version);visualStudio=@($vs | Select-Object installationVersion,displayName)}
-    manifestSha256=$manifests; installer=@{name=[IO.Path]::GetFileName($installer);bytes=(Get-Item $installer).Length;sha256=$sha}
+    manifestSha256=$manifests; payloadSha256=$payload; installer=@{name=[IO.Path]::GetFileName($installer);bytes=(Get-Item $installer).Length;sha256=$sha}
     verification=@{installedRuntimeHashes=$true;releasePayload=$true;icons=$true;licensesAndNotices=$true;databaseUnchanged=$true}
     executed=@('Frozen pnpm install','Locked Tauri/Cargo release build','Native worker build','NSIS installation','Resource/license/icon/payload verification')
     exclusions=@('Ordinary regressions run in the separate Windows checks job','Model weights and inference','Hardware audio capture','Installed classroom GUI','90-minute continuity','Signing','Fresh WebView2 bootstrap')

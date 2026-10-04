@@ -14,6 +14,8 @@ The existing release script builds the C++ speech worker, React frontend, Rust/T
 
 The artifact `windows-x64-<source-sha>-cold` contains only the installer, its SHA-256 file and `build-metadata.json`. Metadata records source, runner image/version, toolchains, input/manifest hashes, installer size/hash, verification and explicit test exclusions. Retention is 14 days. Tokens have `contents: read`, checkout does not retain credentials, jobs have bounded timeouts and superseded runs on the same PR/ref are cancelled. No release publishing, repository setting changes or paid larger runners are configured.
 
+Metadata also includes SHA-256 values for the installed app and native runtime/license files. To validate a downloaded candidate, close the app and run `scripts/verification/installer.ps1 -InstallerPath "<downloaded EXE>" -BuildMetadata "<downloaded build-metadata.json>"`. This first checks the installer hash/size, then installs to the stable current-user directory and compares its file set and hashes with that hosted build's payload. It does not compare a hosted binary against a different local compiler's output. Without `-BuildMetadata`, the original local release/staging verification remains in use.
+
 A single cold build establishes clean buildability, **not byte-for-byte reproducibility**. Compiler/runner/NSIS differences must not be normalized away to claim binary identity.
 
 ## Test tiers and rollout

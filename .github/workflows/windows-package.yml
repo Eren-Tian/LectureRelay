@@ -1,0 +1,59 @@
+name: Windows packaging
+on:
+  # This path runs before merge; workflow_dispatch alone requires the default branch.
+  push:
+    branches: ['codex/windows-ci-*']
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Full 40-character source commit to build
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: windows-package-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  package:
+    name: Windows installer (cold)
+    runs-on: windows-2025
+    timeout-minutes: 60
+    env:
+      EXPECTED_SOURCE_SHA: ${{ inputs.source_sha || github.sha }}
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.source_sha || github.sha }}
+          persist-credentials: false
+      - name: Assert explicit source and empty build directories
+        id: source
+        run: |
+          $env:CARGO_HOME = Join-Path $env:RUNNER_TEMP 'lecturerelay-cargo'
+          "CARGO_HOME=$env:CARGO_HOME" >> $env:GITHUB_ENV
+          if ($env:EXPECTED_SOURCE_SHA -notmatch '^[0-9a-f]{40}$') { throw 'A full source SHA is required' }
+          $source = git rev-parse HEAD
+          if ($source -ne $env:EXPECTED_SOURCE_SHA) { throw 'Checkout differs from requested source' }
+          foreach ($path in @('target', '.pnpm-store', 'node_modules', '.tools', 'apps/desktop/src-tauri/resources/local-asr', 'apps/desktop/src-tauri/resources/local-text', $env:CARGO_HOME)) {
+            if (Test-Path -LiteralPath $path) { throw "Cold-build input already exists: $path" }
+          }
+          "sha=$source" >> $env:GITHUB_OUTPUT
+      - uses: ./.github/actions/setup
+      - name: Install locked frontend dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build pinned native worker, app and NSIS
+        run: pnpm release
+      - name: Verify installed payload, icons and notices
+        run: ./scripts/verification/installer.ps1
+      - name: Record build evidence and collect artifacts
+        run: ./scripts/ci/package-evidence.ps1
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: windows-x64-${{ steps.source.outputs.sha }}-cold
+          path: target/ci-package/*
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

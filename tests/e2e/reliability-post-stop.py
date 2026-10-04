@@ -7,7 +7,7 @@ import subprocess
 import sys
 import time
 
-root = Path('target/acceptance-v0.3.1')
+root = Path(os.environ.get('LECTURERELAY_ACCEPTANCE_ROOT', 'target/acceptance-v0.3.1'))
 soak = json.loads((root/'independent-result.json').read_text(encoding='utf-8'))
 assert soak['seconds'] >= 5400
 exe = Path(os.environ['LOCALAPPDATA'])/'Programs/LectureRelay/lecturerelay-desktop.exe'

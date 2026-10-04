@@ -1,6 +1,6 @@
 {
   "name": "lecturerelay",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "description": "LectureRelay Windows development workspace",
   "packageManager": "pnpm@11.25.0",
@@ -29,6 +29,7 @@
     "verify:repo": "node scripts/verification/repository.mjs",
     "verify:resources": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/verification/runtime-resources.ps1",
     "test:native": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test/native-smoke.ps1",
+    "test:components": "node scripts/test/components.mjs",
     "release": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/release/package.ps1"
   },
   "devDependencies": {

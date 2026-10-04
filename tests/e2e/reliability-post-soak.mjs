@@ -4,20 +4,20 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import { WebDriver } from './webdriver.mjs';
 
-const root = 'target/acceptance-v0.3.1';
+const root =
+  process.env.LECTURERELAY_ACCEPTANCE_ROOT || 'target/acceptance-v0.3.1';
+const version = process.env.LECTURERELAY_ACCEPTANCE_VERSION || '0.3.1';
 const result = JSON.parse(
   await fs.readFile(`${root}/independent-result.json`, 'utf8'),
 );
 assert.ok(result.seconds >= 5400);
 const d = await WebDriver.current();
-assert.equal((await d.native('bootstrap')).storage.version, '0.3.1');
+assert.equal((await d.native('bootstrap')).storage.version, version);
 assert.equal(await d.native('recording_status'), null);
 assert.equal(await d.native('job_status'), null);
 assert.equal((await d.native('live_status')).active, false);
 const detail = await d.native('lecture_detail', { id: result.lectureId });
-assert.ok(
-  detail.lecture.title.startsWith('[ACCEPTANCE] v0.3.1 independent 90 minutes'),
-);
+assert.ok(detail.lecture.title.startsWith(`[ACCEPTANCE] v${version} `));
 assert.equal(detail.lecture.status, 'completed');
 assert.ok(detail.lecture.durationSeconds >= 5400);
 assert.ok(detail.segments.length >= result.finalSavedSegments);
@@ -94,7 +94,7 @@ for (const index of indexes) {
     true,
   );
 }
-await d.screenshot('v031-independent-90-replay');
+await d.screenshot(`v${version}-independent-90-replay`);
 await fs.writeFile(
   `${root}/independent-replay.json`,
   JSON.stringify(

@@ -12,6 +12,7 @@ import {
 import { ModelManagerCard } from '../model-manager/ModelManagerCard';
 import { TrashCard } from '../trash/TrashCard';
 import { StorageUsage } from './StorageUsage';
+import { SetupGuide } from './SetupGuide';
 import {
   AudioSettings,
   CaptionSettings,
@@ -20,14 +21,15 @@ import {
 } from './SettingsSections';
 
 const categories = [
-  ['General', 'settings'],
-  ['Audio', 'mic'],
-  ['Live Captions', 'books'],
-  ['AI Providers', 'cloud'],
-  ['Local AI', 'spark'],
-  ['Data', 'folder'],
-  ['Security & Privacy', 'shield'],
-  ['About', 'info'],
+  ['首次使用', 'check'],
+  ['通用', 'settings'],
+  ['声音', 'mic'],
+  ['字幕显示', 'books'],
+  ['AI 服务', 'cloud'],
+  ['本地 AI', 'spark'],
+  ['数据与存储', 'folder'],
+  ['安全与隐私', 'shield'],
+  ['关于', 'info'],
 ] as const;
 type Category = (typeof categories)[number][0];
 
@@ -37,12 +39,14 @@ export function SettingsPage() {
   const [settings, setSettings] = useState<AppSettings>(
     workspace.data.settings,
   );
-  const [category, setCategory] = useState<Category>('General');
+  const [category, setCategory] = useState<Category>('首次使用');
   const [model, setModel] = useState<ModelStatus>();
   const [textModels, setTextModels] = useState<ModelStatus[]>([]);
   const [trash, setTrash] = useState<Course[]>([]);
   const [storageRevision, setStorageRevision] = useState(0);
-  const [loadError, setLoadError] = useState('');
+  const [loadErrors, setLoadErrors] = useState<Record<string, string>>({});
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const loadError = Object.values(loadErrors).join(' ');
   const { busy, run } = useAction();
   const keyForm = useProviderKeyForm(run);
   const page = useRef<HTMLDivElement>(null);
@@ -67,17 +71,26 @@ export function SettingsPage() {
   }, [saved]);
   useEffect(() => {
     let disposed = false;
-    void Promise.all([api.localModel(), api.trash(), api.textModels()])
-      .then(([model, trash, textModels]) => {
-        if (!disposed) {
-          setModel(model);
-          setTrash(trash);
-          setTextModels(textModels);
-        }
-      })
-      .catch((error) => {
-        if (!disposed) setLoadError(errorText(error));
-      });
+    setLoadErrors({});
+    const failed = (key: string, error: unknown) => {
+      if (!disposed)
+        setLoadErrors((errors) => ({ ...errors, [key]: errorText(error) }));
+    };
+    // Unrelated library reads must not keep successfully loaded models disabled.
+    const load = <T,>(
+      key: string,
+      request: Promise<T>,
+      apply: (value: T) => void,
+    ) => {
+      void request
+        .then((value) => {
+          if (!disposed) apply(value);
+        })
+        .catch((error) => failed(key, error));
+    };
+    load('speech', api.localModel(), setModel);
+    load('text', api.textModels(), setTextModels);
+    load('trash', api.trash(), setTrash);
     const subscription = listen<ModelStatus>('model-status', (e) => {
       if (!disposed) {
         if (e.payload.id === 'nemotron-streaming') setModel(e.payload);
@@ -86,12 +99,15 @@ export function SettingsPage() {
             models.map((m) => (m.id === e.payload.id ? e.payload : m)),
           );
       }
+    }).catch((error) => {
+      failed('events', error);
+      return () => {};
     });
     return () => {
       disposed = true;
       void subscription.then((off) => off());
     };
-  }, []);
+  }, [loadAttempt]);
   const blocked =
     busy ||
     !!workspace.recording ||
@@ -99,6 +115,17 @@ export function SettingsPage() {
     !!workspace.live?.active ||
     !!model?.downloading ||
     textModels.some((m) => m.downloading);
+  const modelBlockedReason = workspace.recording
+    ? '请先结束并保存录音，再下载或删除模型。'
+    : workspace.job
+      ? '请先等待当前 AI 任务完成，或取消任务，再管理模型。'
+      : workspace.live?.active
+        ? '字幕或翻译仍在处理，请等待完成，或在课堂记录中停止处理。'
+        : model?.downloading || textModels.some((m) => m.downloading)
+          ? '一次只能下载一个模型。请等待下载完成，或点击“取消下载”。'
+          : busy
+            ? '请等待当前设置操作完成。'
+            : '';
   const dirty = JSON.stringify(settings) !== saved;
   const select = (next: Category) => {
     keyForm.setKey('');
@@ -111,12 +138,12 @@ export function SettingsPage() {
     <div className="settings-page" ref={page}>
       <header className="page-heading settings-heading">
         <div>
-          <h1>Settings</h1>
+          <h1>{'设置'}</h1>
         </div>
         <span className="pill">v{workspace.data.storage.version}</span>
       </header>
       <div className="settings-layout">
-        <nav className="settings-nav" aria-label="Settings categories">
+        <nav className="settings-nav" aria-label="设置分类">
           {categories.map(([name, icon]) => (
             <button
               key={name}
@@ -133,28 +160,47 @@ export function SettingsPage() {
             <h2>{category}</h2>
           </header>
           {loadError && (
-            <p role="alert" className="audio-warning">
-              {loadError}
-            </p>
+            <div role="alert" className="audio-warning">
+              <p>{loadError}</p>
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setLoadAttempt((attempt) => attempt + 1)}
+              >
+                {'重新加载'}
+              </button>
+            </div>
           )}
-          {category === 'General' && <GeneralSettings {...props} />}
-          {category === 'Audio' && <AudioSettings {...props} />}
-          {category === 'Live Captions' && (
-            <CaptionSettings
+          {category === '首次使用' && (
+            <SetupGuide
               {...props}
-              onProviders={() => select('AI Providers')}
+              model={model}
+              textModels={textModels}
+              run={run}
+              onModels={() => select('本地 AI')}
+              onAudio={() => select('声音')}
             />
           )}
-          {category === 'AI Providers' && (
+          {category === '通用' && <GeneralSettings {...props} />}
+          {category === '声音' && <AudioSettings {...props} />}
+          {category === '字幕显示' && (
+            <CaptionSettings {...props} onProviders={() => select('AI 服务')} />
+          )}
+          {category === 'AI 服务' && (
             <ProviderSettings
               {...props}
               providers={workspace.data.providers}
-              onSecurity={() => select('Security & Privacy')}
-              onLocal={() => select('Local AI')}
+              onSecurity={() => select('安全与隐私')}
+              onLocal={() => select('本地 AI')}
             />
           )}
-          {category === 'Local AI' && (
+          {category === '本地 AI' && (
             <>
+              {modelBlockedReason && (
+                <p role="status" className="field-hint">
+                  {modelBlockedReason}
+                </p>
+              )}
               <ModelManagerCard
                 model={model}
                 blocked={blocked}
@@ -162,22 +208,28 @@ export function SettingsPage() {
                 setModel={setModel}
               />
               <section className="settings-card">
-                <h3>Setup</h3>
+                <h3>{'使用说明'}</h3>
                 <p>
-                  Download each model once. Choose Local English for speech and
-                  Local for translation and study tools in AI Providers.
+                  {
+                    '模型只需下载一次。下载后，在“AI 服务”中将语音识别、翻译和学习工具设为本地运行。'
+                  }
                 </p>
                 <p className="field-hint">
-                  During class: speech and translation. After class: release
-                  live models before loading Qwen. Local mode never falls back
-                  to a cloud service. Allow about 4.3 GiB for all three
-                  downloads and additional working memory.
+                  {
+                    '上课时运行识别和翻译，课后释放实时模型再加载 Qwen。本地模式不会自动切换到云端。三个模型共需约 4.3 GiB 存储空间，运行时还需额外内存。'
+                  }
                 </p>
                 <button
-                  className="button secondary"
-                  onClick={() => select('AI Providers')}
+                  className="button primary"
+                  onClick={() => select('首次使用')}
                 >
-                  Choose AI models
+                  {'返回首次设置'}
+                </button>
+                <button
+                  className="button secondary"
+                  onClick={() => select('AI 服务')}
+                >
+                  {'选择 AI 模型'}
                   <Icon name="arrow" size={16} />
                 </button>
               </section>
@@ -196,22 +248,19 @@ export function SettingsPage() {
               ))}
             </>
           )}
-          {category === 'Data' && (
+          {category === '数据与存储' && (
             <>
               <section className="settings-card">
-                <h3>Class library</h3>
+                <h3>{'课堂资料'}</h3>
                 <StorageUsage key={storageRevision} />
-                <p>
-                  Recordings, transcripts and course context stay on this
-                  computer.
-                </p>
+                <p>{'录音、转录文本和课程背景保存在这台电脑上。'}</p>
                 <dl className="storage-list">
                   <div>
-                    <dt>Library</dt>
+                    <dt>{'资料库'}</dt>
                     <dd>{workspace.data.storage.library}</dd>
                   </div>
                   <div>
-                    <dt>Exports</dt>
+                    <dt>{'导出文件'}</dt>
                     <dd>{workspace.data.storage.exports}</dd>
                   </div>
                 </dl>
@@ -221,30 +270,31 @@ export function SettingsPage() {
                     onClick={() => void run(() => api.openFolder('library'))}
                   >
                     <Icon name="folder" size={16} />
-                    Open library
+                    {'打开资料库文件夹'}
                   </button>
                   <button
                     className="button text"
                     onClick={() => void run(() => api.openFolder('exports'))}
                   >
-                    Open exports
+                    {'打开导出文件夹'}
                   </button>
                 </div>
                 <details className="settings-advanced">
-                  <summary>Storage details</summary>
+                  <summary>{'存储位置'}</summary>
                   <dl className="storage-list">
                     <div>
-                      <dt>Database</dt>
+                      <dt>{'数据库'}</dt>
                       <dd>{workspace.data.storage.database}</dd>
                     </div>
                     <div>
-                      <dt>App data</dt>
+                      <dt>{'应用数据'}</dt>
                       <dd>{workspace.data.storage.state}</dd>
                     </div>
                   </dl>
                   <p className="field-hint">
-                    Keep the library and database together when backing up your
-                    classes. Export a transcript or notes from lecture replay.
+                    {
+                      '备份时请同时保存资料库和数据库。转录与笔记可在课堂回放页导出。'
+                    }
                   </p>
                 </details>
               </section>
@@ -256,17 +306,16 @@ export function SettingsPage() {
                 onDeleted={async () => setStorageRevision((n) => n + 1)}
               />
               <section className="settings-card">
-                <h2>Free all storage</h2>
+                <h2>{'清空课堂数据与模型'}</h2>
                 <p>
-                  Permanently delete all courses, including Trash, recordings,
-                  transcripts, notes, reviews, PDFs, in-app exports, downloaded
-                  models and processing caches. Models must be downloaded again
-                  before local AI can run.
+                  {
+                    '永久删除所有课程（含回收站）、录音、转录、笔记、复习指南、PDF、应用内导出文件、已下载模型及处理缓存。再次使用本地 AI 前需重新下载模型。'
+                  }
                 </p>
                 <p className="field-hint">
-                  The application, preferences and Windows Credential Manager
-                  keys remain. Small database and browser settings files remain.
-                  Copies outside LectureRelay are not deleted.
+                  {
+                    '应用、偏好设置和 Windows 凭据管理器中的 API Key 会保留，也会保留少量数据库和界面设置文件。应用之外的文件副本不会删除。'
+                  }
                 </p>
                 <button
                   className="button danger"
@@ -275,11 +324,11 @@ export function SettingsPage() {
                     void run(async () => {
                       if (
                         !(await workspace.confirm({
-                          title: 'Delete all class data and models?',
-                          body: 'All courses (including Trash), recordings, transcripts, notes, saved reviews, PDFs, in-app exports, local models and processing caches will be permanently removed. This cannot be undone. Export anything you need first. Application preferences and provider keys will be kept.',
-                          action: 'Delete all data and models',
+                          title: '清空全部课堂数据和模型？',
+                          body: '所有课程（含回收站）、录音、转录、笔记、复习指南、PDF、应用内导出文件、本地模型和处理缓存都会永久删除，无法恢复。请先导出需要保留的内容。偏好设置和 API Key 会保留。',
+                          action: '清空数据与模型',
                           danger: true,
-                          confirmationText: 'DELETE ALL',
+                          confirmationText: '清空全部数据',
                         }))
                       )
                         return;
@@ -294,17 +343,17 @@ export function SettingsPage() {
                         await workspace.refresh();
                       }
                       workspace.notify(
-                        'Class data and models deleted. Storage freed.',
+                        '课堂数据和模型已清空，存储空间已释放。',
                       );
                     })
                   }
                 >
-                  Free all storage…
+                  {'清空课堂数据与模型…'}
                 </button>
               </section>
             </>
           )}
-          {category === 'Security & Privacy' && (
+          {category === '安全与隐私' && (
             <>
               <ProviderKeyForm
                 settings={settings}
@@ -313,61 +362,63 @@ export function SettingsPage() {
                 form={keyForm}
               />
               <section className="settings-card">
-                <h3>What stays here. What is sent.</h3>
+                <h3>{'数据保存在哪里？何时会上传？'}</h3>
                 <div className="privacy-row">
                   <Icon name="folder" />
                   <div>
-                    <strong>On your computer</strong>
+                    <strong>{'保存在本机'}</strong>
                     <p>
-                      Your recordings, courses and transcripts. Local English
-                      recognition processes audio on this device.
+                      {
+                        '录音、课程资料和转录文本保存在本机。本地英文识别也在这台电脑上完成。'
+                      }
                     </p>
                   </div>
                 </div>
                 <div className="privacy-row">
                   <Icon name="cloud" />
                   <div>
-                    <strong>Only when you choose a cloud feature</strong>
+                    <strong>{'启用云端功能时才会上传'}</strong>
                     <p>
-                      Cloud speech sends audio. Text features set to Cloud send
-                      relevant text and course context to the selected provider.
-                      Local translation and study tools process text on this
-                      device. Provider charges may apply.
+                      {
+                        '云端识别会上传录音；设为云端的文本功能会将相关文本和课程背景发送给所选服务商。本地翻译和学习工具在本机处理。云端服务可能收费。'
+                      }
                     </p>
                   </div>
                 </div>
                 <p className="field-hint">
-                  Keys are stored in Windows Credential Manager and excluded
-                  from class exports. No LectureRelay account is required.
+                  {
+                    'API Key 存放在 Windows 凭据管理器中，不会随课堂资料导出。使用 LectureRelay 无需注册账号。'
+                  }
                 </p>
               </section>
             </>
           )}
-          {category === 'About' && (
+          {category === '关于' && (
             <section className="settings-card about-card">
               <h2>LectureRelay</h2>
               <span className="pill">
-                Version {workspace.data.storage.version} · Windows
+                {'版本'}
+                {workspace.data.storage.version} · Windows
               </span>
               <dl className="storage-list">
                 <div>
-                  <dt>Interface</dt>
-                  <dd>English</dd>
+                  <dt>{'界面语言'}</dt>
+                  <dd>简体中文</dd>
                 </div>
                 <div>
-                  <dt>Translation languages</dt>
-                  <dd>Chinese, Japanese and Korean</dd>
+                  <dt>{'支持的译文语言'}</dt>
+                  <dd>{'中文、日语、韩语'}</dd>
                 </div>
                 <div>
-                  <dt>Project license</dt>
-                  <dd>Not yet finalized for distribution</dd>
+                  <dt>{'项目许可证'}</dt>
+                  <dd>{'尚未确定'}</dd>
                 </div>
                 <div>
-                  <dt>Open source components</dt>
-                  <dd>Bundled third-party notices accompany the app.</dd>
+                  <dt>{'开源组件'}</dt>
+                  <dd>{'第三方许可证与声明随应用一起提供。'}</dd>
                 </div>
                 <div>
-                  <dt>Source repository</dt>
+                  <dt>{'源码仓库'}</dt>
                   <dd>github.com/Ellen-Tian/LectureRelay</dd>
                 </div>
               </dl>
@@ -376,10 +427,10 @@ export function SettingsPage() {
           <div className="settings-savebar">
             <span role="status">
               {blocked
-                ? 'Appearance and Quiet Mode remain available. Finish active work to save other settings.'
+                ? '录音或处理期间仍可调整外观和安静模式。其他设置请在任务结束后保存。'
                 : dirty
-                  ? 'You have unsaved changes.'
-                  : 'All preferences saved.'}
+                  ? '有尚未保存的修改。'
+                  : '设置已保存。'}
             </span>
             <div className="button-row">
               {dirty && (
@@ -388,7 +439,7 @@ export function SettingsPage() {
                   disabled={blocked}
                   onClick={() => setSettings(JSON.parse(saved) as AppSettings)}
                 >
-                  Reset changes
+                  {'撤销修改'}
                 </button>
               )}
               <button
@@ -398,11 +449,11 @@ export function SettingsPage() {
                   void run(async () => {
                     await api.saveSettings(settings);
                     await workspace.refresh();
-                  }, 'Preferences saved.')
+                  }, '设置已保存。')
                 }
               >
                 <Icon name="check" size={16} />
-                Save changes
+                {'保存修改'}
               </button>
             </div>
           </div>

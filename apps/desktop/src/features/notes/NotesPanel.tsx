@@ -42,8 +42,8 @@ export function NotesPanel({
             {note
               ? ui.s145(
                   note.origin === 'cloud'
-                    ? 'AI assisted; check lecture evidence'
-                    : 'Written by you',
+                    ? 'AI 整理，请结合课堂原文核对'
+                    : '手写笔记',
                   dateText(note.updatedAt),
                 )
               : ui.s146}

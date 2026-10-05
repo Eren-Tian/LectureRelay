@@ -1,3 +1,4 @@
+import { messageText } from '../../i18n/messages';
 import { QuestionsPanel } from '../qa/QuestionsPanel';
 import { NotesPanel } from '../notes/NotesPanel';
 import { ui } from '../../i18n';
@@ -123,8 +124,8 @@ export function LecturePage({ id }: { id: string }) {
           ? ui.s101(
               cloud,
               note || editingNote
-                ? 'This replaces current notes. Save or export the version you want to keep first.'
-                : 'Generated notes are saved locally.',
+                ? '此操作将替换当前笔记。请先保存或导出需要保留的版本。'
+                : '生成的笔记会保存在本机。',
             )
           : ui.s102(cloud);
     if (
@@ -207,11 +208,12 @@ export function LecturePage({ id }: { id: string }) {
       </button>
       <header className="page-heading">
         <div>
-          <div className="eyebrow">LECTURE REPLAY</div>
+          <div className="eyebrow">{'课堂回放'}</div>
           <h1>{lecture.title}</h1>
           <p>
-            {dateText(lecture.startedAt)} · {clock(lecture.durationSeconds)} ·
-            English → {languageName(course.assistanceLanguage)}
+            {dateText(lecture.startedAt)} · {clock(lecture.durationSeconds)}
+            {'· 英文 →'}
+            {languageName(course.assistanceLanguage)}
           </p>
         </div>
         <span
@@ -221,7 +223,7 @@ export function LecturePage({ id }: { id: string }) {
             ? ui.s109
             : lecture.status === 'failed'
               ? lecture.audioSource === 'import'
-                ? 'Import failed'
+                ? '导入失败'
                 : ui.s110
               : ui.s111}
         </span>
@@ -245,7 +247,7 @@ export function LecturePage({ id }: { id: string }) {
       )}
       {ownLive?.state === 'unavailable' && ownLive.message && (
         <div className="notice warning" role="alert">
-          {ownLive.message} {ui.savedAudioHint}
+          {messageText(ownLive.message)} {ui.savedAudioHint}
         </div>
       )}
       {ownLive?.translation.message &&
@@ -255,7 +257,7 @@ export function LecturePage({ id }: { id: string }) {
             ownLive.translation.deferredIds.includes(segment.id),
         ) && (
           <div className="notice warning" role="status">
-            {ownLive.translation.message}
+            {messageText(ownLive.translation.message)}
           </div>
         )}
       <section className="audio-player-panel">
@@ -292,22 +294,22 @@ export function LecturePage({ id }: { id: string }) {
           <div className="playback-tools">
             <button
               className="button secondary"
-              aria-label="Back 10 seconds"
+              aria-label="后退 10 秒"
               onClick={() => skip(-10)}
             >
               −10s
             </button>
             <button
               className="button secondary"
-              aria-label="Forward 10 seconds"
+              aria-label="快进 10 秒"
               onClick={() => skip(10)}
             >
               +10s
             </button>
             <label>
-              Playback speed
+              {'播放速度'}
               <select
-                aria-label="Playback speed"
+                aria-label="播放速度"
                 value={speed}
                 onChange={(e) => {
                   const rate = Number(e.target.value);
@@ -381,7 +383,10 @@ export function LecturePage({ id }: { id: string }) {
           <div className="section-heading">
             <div>
               <h2>{ui.s130}</h2>
-              <p>English · {languageName(course.assistanceLanguage)}</p>
+              <p>
+                {'英文 ·'}
+                {languageName(course.assistanceLanguage)}
+              </p>
             </div>
             <div className="button-row">
               <button
@@ -423,20 +428,20 @@ export function LecturePage({ id }: { id: string }) {
                 <Icon name="search" size={18} />
                 <input
                   type="search"
-                  aria-label="Search transcript"
-                  placeholder="Search English or translation…"
+                  aria-label="搜索转录文本"
+                  placeholder="搜索英文原文或译文…"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </label>
               <span role="status">
                 {query
-                  ? `${visibleSegments.length} of ${segments.length} segments`
-                  : `${segments.length} segments`}
+                  ? `${visibleSegments.length} / ${segments.length} 段`
+                  : `${segments.length} 段`}
               </span>
               {search && (
                 <button className="button text" onClick={() => setSearch('')}>
-                  Clear search
+                  {'清空搜索'}
                 </button>
               )}
             </div>
@@ -445,7 +450,7 @@ export function LecturePage({ id }: { id: string }) {
             <div className="transcript-list">
               {visibleSegments.length === 0 && (
                 <p className="empty-state" role="status">
-                  No matching captions.
+                  {'没有找到匹配的字幕。'}
                 </p>
               )}
               {visibleSegments.map(({ entry, index }) => (

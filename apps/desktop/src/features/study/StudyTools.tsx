@@ -1,3 +1,4 @@
+import { messageText } from '../../i18n/messages';
 import {
   lazy,
   Suspense,
@@ -13,7 +14,13 @@ import { useWorkspace } from '../../app/Workspace';
 import { ResourceState } from '../../components/ResourceState';
 import { StudyNotes } from './StudyNotes';
 import { DeepReview } from './DeepReview';
-import { clock } from '../../lib/presentation';
+import { ClassroomSummary } from './ClassroomSummary';
+import {
+  clock,
+  languageName,
+  taskName,
+  taskStateName,
+} from '../../lib/presentation';
 import type { LectureDetail } from '../../types/domain';
 const PdfPanel = lazy(() => import('./PdfPanel'));
 
@@ -37,9 +44,10 @@ export function StudyTools({
   const id = detail.lecture.id;
   const load = useCallback(() => api.study(id), [id]);
   const { data, error, reload } = useResource(load);
-  const [tab, setTab] = useState('notes'),
+  const [tab, setTab] = useState('summary'),
     [label, setLabel] = useState(''),
     [kind, setKind] = useState<'bookmark' | 'chapter'>('bookmark');
+  const [append, setAppend] = useState<{ key: string; body: string }>();
   useEffect(() => {
     void reload();
   }, [
@@ -60,8 +68,9 @@ export function StudyTools({
   };
   return (
     <section className="study-tools">
-      <div className="study-tabs" role="tablist" aria-label="Study tools">
+      <div className="study-tabs" role="tablist" aria-label="学习工具">
         {[
+          'summary',
           'notes',
           'index',
           'slides',
@@ -78,11 +87,12 @@ export function StudyTools({
             {
               (
                 {
-                  notes: 'Notes',
-                  index: 'Index',
-                  slides: 'Slides',
-                  questions: 'Q&A',
-                  tasks: 'Processing',
+                  summary: '课堂要点',
+                  notes: '我的笔记',
+                  index: '时间索引',
+                  slides: '讲义',
+                  questions: '问答',
+                  tasks: '处理进度',
                 } as Record<string, string>
               )[name]
             }
@@ -94,8 +104,28 @@ export function StudyTools({
           <ResourceState error={error} reload={reload} />
         ) : (
           <>
+            <div hidden={tab !== 'summary'}>
+              <ClassroomSummary
+                id={id}
+                study={data}
+                language={detail.course.assistanceLanguage}
+                live={
+                  recording?.lectureId === id ||
+                  (live?.lectureId === id && live.active)
+                }
+                blocked={busy || !!job || !!live?.active || !!recording}
+                canGenerate={!!onAI}
+                onSeek={onSeek}
+                onSaved={refresh}
+                onAppend={(body) => {
+                  setAppend({ key: crypto.randomUUID(), body });
+                  setTab('notes');
+                }}
+              />
+            </div>
             <div hidden={tab !== 'notes'}>
               <StudyNotes
+                append={append}
                 id={id}
                 note={detail.note}
                 study={data}
@@ -122,7 +152,7 @@ export function StudyTools({
             </div>
             {tab === 'index' && (
               <>
-                <h2>Moments to return to</h2>
+                <h2>{'标记值得回顾的片段'}</h2>
                 <form
                   className="mark-form"
                   onSubmit={(e) => {
@@ -136,27 +166,27 @@ export function StudyTools({
                 >
                   <span className="pill">{clock(position)}</span>
                   <select
-                    aria-label="Index type"
+                    aria-label="标记类型"
                     value={kind}
                     onChange={(e) => setKind(e.target.value as typeof kind)}
                   >
-                    <option value="bookmark">Bookmark</option>
-                    <option value="chapter">Chapter</option>
+                    <option value="bookmark">{'书签'}</option>
+                    <option value="chapter">{'章节'}</option>
                   </select>
                   <input
-                    aria-label="Bookmark label"
-                    placeholder="What matters here?"
+                    aria-label="标记名称"
+                    placeholder="这个片段讲了什么？"
                     value={label}
                     maxLength={150}
                     onChange={(e) => setLabel(e.target.value)}
                     required
                   />
                   <button className="button primary" disabled={busy}>
-                    Add
+                    {'添加'}
                   </button>
                 </form>
                 <p className="field-hint">
-                  Chapters are your own labels for recorded moments.
+                  {'用章节为课堂片段命名，方便之后回顾。'}
                 </p>
                 <div className="study-mark-list">
                   {data.marks.map((mark) => (
@@ -169,12 +199,14 @@ export function StudyTools({
                         {clock(mark.seconds)}
                       </button>
                       <div>
-                        <small>{mark.kind}</small>
+                        <small>
+                          {mark.kind === 'chapter' ? '章节' : '书签'}
+                        </small>
                         <strong>{mark.label}</strong>
                       </div>
                       <button
                         className="icon-button"
-                        aria-label={'Remove ' + mark.label}
+                        aria-label={'移除 ' + mark.label}
                         onClick={() =>
                           void run(async () => {
                             await api.deleteMark(id, mark.id);
@@ -190,7 +222,7 @@ export function StudyTools({
               </>
             )}
             {tab === 'slides' && (
-              <Suspense fallback={<p>Loading PDF reader…</p>}>
+              <Suspense fallback={<p>{'正在加载 PDF 阅读器…'}</p>}>
                 <PdfPanel
                   courseId={detail.course.id}
                   documents={data.documents}
@@ -206,43 +238,41 @@ export function StudyTools({
             {tab === 'questions' && questions}
             {tab === 'tasks' && (
               <>
-                <h2>Recording & processing</h2>
+                <h2>{'录音与处理进度'}</h2>
                 <p className="notice">
                   {detail.lecture.status === 'recording'
-                    ? 'Audio is being saved on this device.'
+                    ? '录音正在保存到本机。'
                     : detail.lecture.durationSeconds > 0
-                      ? 'Audio saved. AI processing can be retried separately.'
-                      : 'No completed audio is available for this attempt.'}
+                      ? '录音已保存，AI 处理可以单独重试。'
+                      : '本次操作没有生成可用录音。'}
                 </p>
                 {detail.lecture.transcribedUntil <
                   detail.lecture.durationSeconds - 0.1 && (
                   <p className="notice warning">
-                    Transcription is incomplete from{' '}
-                    {clock(detail.lecture.transcribedUntil)} to{' '}
-                    {clock(detail.lecture.durationSeconds)}.
+                    {'尚未转录的时间范围：'}{' '}
+                    {clock(detail.lecture.transcribedUntil)} 至{' '}
+                    {clock(detail.lecture.durationSeconds)}
                   </p>
                 )}
                 <p className="field-hint">
                   {detail.segments.filter((s) => !s.translatedText).length}{' '}
-                  segments need translation. Restarting the app never
-                  automatically sends a paid request.
+                  {'段尚未翻译。重启应用不会自动发起付费请求。'}
                 </p>
                 {data.tasks.length ? (
                   data.tasks.map((task) => (
                     <article className="task-row" key={task.id}>
                       <div>
                         <strong>
-                          {task.kind.replaceAll('-', ' ')} ·{' '}
-                          {task.language.toUpperCase()}
+                          {taskName(task.kind)} · {languageName(task.language)}
                         </strong>
                         <span className={'task-state ' + task.state}>
-                          {task.state}
+                          {taskStateName(task.state)}
                         </span>
                         <p>
                           {task.total
                             ? `${task.completed} / ${task.total}`
                             : ''}{' '}
-                          {task.message}
+                          {messageText(task.message)}
                         </p>
                       </div>
                       {['failed', 'cancelled', 'interrupted'].includes(
@@ -269,13 +299,13 @@ export function StudyTools({
                               )
                             }
                           >
-                            Retry
+                            {'重试'}
                           </button>
                         )}
                     </article>
                   ))
                 ) : (
-                  <p>No background processing yet.</p>
+                  <p>{'暂无后台处理任务。'}</p>
                 )}
               </>
             )}

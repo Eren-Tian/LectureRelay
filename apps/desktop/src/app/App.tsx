@@ -18,6 +18,7 @@ import { LivePage } from '../features/live-lecture/LivePage';
 import { LecturePage } from '../features/lecture-history/LectureWorkspace';
 import { SettingsPage } from '../features/settings/SettingsPage';
 import { WorkspaceProvider, useWorkspace } from './Workspace';
+import { nextLiveStatus } from '../lib/live-status';
 
 function CloseGuard() {
   const { confirm, notify, refresh } = useWorkspace();
@@ -36,7 +37,7 @@ function CloseGuard() {
         try {
           const recording = await api.recording();
           if (recording && recording.lectureId !== event.payload) {
-            notify('The active lecture changed. Close was cancelled.');
+            notify('当前录音已切换，已取消退出。');
             return;
           }
           if (recording) await api.stopLecture(recording.lectureId);
@@ -105,12 +106,12 @@ export function App() {
       setRecording(event.payload),
     );
     const liveSubscription = listen<LiveStatus>('live-status', (event) =>
-      setLive(event.payload),
+      setLive((current) => nextLiveStatus(current, event.payload)),
     );
     const readLive = () =>
       void api
         .live()
-        .then(setLive)
+        .then((value) => setLive((current) => nextLiveStatus(current, value)))
         .catch(() => {});
     readLive();
     const interval = setInterval(() => {
@@ -197,7 +198,7 @@ export function App() {
           </button>
           <button
             className="sidebar-toggle"
-            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            aria-label={collapsed ? '展开侧栏' : '收起侧栏'}
             aria-expanded={!collapsed}
             onClick={() => {
               setCollapsed(!collapsed);
@@ -227,7 +228,7 @@ export function App() {
               <span>{ui.s018}</span>
             </button>
           </nav>
-          <div className="sidebar-courses" aria-label="Courses">
+          <div className="sidebar-courses" aria-label="课程">
             {data.courses.map((course) => (
               <button
                 key={course.id}

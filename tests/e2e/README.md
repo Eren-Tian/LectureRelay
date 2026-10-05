@@ -1,6 +1,20 @@
 # Installed Windows application acceptance
 
+The 0.3.7 classroom outline is covered by `pnpm test:components` with controlled text/state fixtures in headless Edge. Native `classroom-summary-native.mjs` uses an existing real MIT recording/transcript and local Qwen; `classroom-summary-restart.mjs` checks saved summaries and exact appended drafts across native app restarts. Set `LECTURERELAY_WEBDRIVER_PORT` and `LECTURERELAY_SUMMARY_EXE`, and launch the driver with the isolated root from the [summary report](../../docs/testing/classroom-summary-v0.3.7.md). Functional pass does not imply semantic quality; the report records unsupported claims.
+
 This suite drives the **installed release EXE and its real WebView2** through external `tauri-driver` and the matching Microsoft Edge WebDriver. It does not run Vite, mock `invoke`, use a mock runtime, or add an automation plugin to the shipped application. [Tauri manual setup](https://v2.tauri.app/develop/tests/webdriver/manual-setup/) documents this route; [Microsoft](https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/) supplies Edge WebDriver.
+
+## Model download component regression
+
+`localization.mjs` runs the complete React app with synthetic IPC replies and production CSS. It covers all settings categories, course creation, replay, live captions, processing states and Chinese deletion confirmations. It verifies that model names, original English classroom content and stored subject IDs are preserved, including dynamic recording warnings. Evidence is written to `target/localization/components`. Run it alone with `pnpm test:components localization.mjs`; it is also included in the full component suite. This is separate from native WebView2 or actual audio/model acceptance.
+
+`model-controls.mjs` is a separate **headless React fixture**, included in `pnpm test:components`. It renders the production Settings page at `/tests/fixtures/models.html` with controlled IPC replies. It checks that a failed Trash read does not disable model downloads, failed model-status reads can be retried, connecting downloads offer cancellation before receiving data, failures restore usable controls, completed downloads survive a failed status refresh, and recording explains why model actions are disabled. Evidence stays under `target/model-controls/components.json`. It does not download models, access user data or establish installed WebView2 acceptance.
+
+The ordinary Rust test `model_download_announces_connection_and_allows_cancellation_before_network` separately checks the native start notification and cancellation using an isolated library and a stalled loopback server; no external service or model weights are needed.
+
+## 0.3.4 isolated classroom controls
+
+The separate `classroom-fixes.mjs` suite exercises the 0.3.4 controls against an explicitly isolated native debug library. Its `setup`, `captions`, `controls`, `observe`, `stop` and `delete` stages require the fixed `target/classroom-fixes/ui-1` root and local-only settings. The observe stage lasts five real minutes; playback must be supplied separately. Set `LECTURERELAY_CLASSROOM_EVIDENCE` to keep candidate observations separate. See [scope and results](../../docs/testing/classroom-fixes-v0.3.4.md); these runs do not replace installed acceptance.
 
 ## v0.3.3 continuity candidate
 
@@ -63,6 +77,20 @@ The 2026-09-30 measured run requested screenshots repeatedly throughout each 15-
 Do not infer authenticated cloud behavior, device-unplug behavior, disk-full recovery, laptop power/fan noise, or an independent security audit from these results. See the [acceptance report](../../docs/testing/installed-acceptance-v0.2.md).
 
 ## October product iteration
+
+For subsequent acoustic quality, latency and actual classroom runs, use real TED or university open-course lecturers. See [audio source policy](../../docs/testing/audio-sources.md). Older synthetic audio reports retain their original scope and are not new human-lecture evidence.
+
+## Local streamed captions (0.3.6)
+
+After the capture sessions have closed, `local-caption-restart.mjs` reopens the preserved EXE, asserts the same isolated root and compares each saved lecture with its capture result. It checks final text, warnings, durations, preferences and cleared provisional state without audio playback or provider requests.
+
+After `pnpm build:debug`, preserve the self-contained EXE under the ignored evidence folder and test that copy. Ordinary `cargo test` can replace the shared `target/.../debug/lecturerelay-desktop.exe` with a dev-server build; reopening that path after Rust checks is not a valid restart test of the earlier candidate. Do not run Cargo builds against a capture in progress.
+
+`local-caption-latency.mjs <label>` requires `LECTURERELAY_LATENCY_EXE` pointing at the exact native debug EXE, `LECTURERELAY_LATENCY_AUDIO` pointing at a documented 90-second real lecturer WAV, and the native driver port in `LECTURERELAY_WEBDRIVER_PORT`. Start the driver with `LECTURERELAY_TEST_ROOT=target/classroom-fixes/ui-1` and optional timestamp-only `LECTURERELAY_TRACE_CAPTIONS=1`. The app positions its test window on the portrait display before showing. The script refuses a different library, a configured cloud provider, non-local speech/translation, disabled Quiet Mode or active work.
+
+`LECTURERELAY_LATENCY_SOURCE` selects `system` (default) or `microphone`; microphone mode records the real speaker playback through the default selected mic. `LECTURERELAY_LATENCY_FLOATING=1` also opens the real caption window, checks native event subscription, display and Close without stopping recording. Post-stop checks load the recording and click a timestamp to play. Evidence remains in `target/local-latency/<label>`; the EXE hash is captured before launch. Preserve the baseline binary before rebuilding.
+
+`python tests/e2e/analyse-caption-latency.py <before-folder> <after-folder> --output <ignored-json>` compares identical source audio. Omit the second folder for a single-run report. It joins actual caption DOM observations with timestamps, reads every saved WAV frame and reports a few RMS-envelope alignments. Microphone acoustics cannot be judged with the direct loopback correlation threshold. Neither the model-to-model transcript agreement nor the envelope check establishes word accuracy. See [measured results and exclusions](../../docs/testing/local-caption-latency-v0.3.6.md).
 
 `product-iteration.mjs` exercises the new eight-category Settings UI, shared preferences draft, save/restart, local-model and storage status, caption visibility switches and a short real system-audio classroom run using `target/product-iteration/app/lecturerelay-desktop.exe`. It uses the existing labelled acceptance course, saves original non-secret preferences to the local evidence folder and restores them at successful completion. On controller failure inspect that file and the active app before continuing; do not overwrite the baseline with temporary test preferences.
 

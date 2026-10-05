@@ -3,7 +3,12 @@ import { CourseGlossaryEditor } from '../glossary/CourseGlossaryEditor';
 import { ui } from '../../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/client';
-import { clock, dateText, languageName } from '../../lib/presentation';
+import {
+  clock,
+  dateText,
+  languageName,
+  subjectName,
+} from '../../lib/presentation';
 import { Icon } from '../../components/Icon';
 import { ResourceState } from '../../components/ResourceState';
 import { useAction } from '../../hooks/useAction';
@@ -59,11 +64,14 @@ export function CoursePage({ id }: { id: string }) {
       </button>
       <header className="page-heading">
         <div>
-          <div className="eyebrow">{course.code || course.subject}</div>
+          <div className="eyebrow">
+            {course.code || subjectName(course.subject)}
+          </div>
           <h1>{course.name}</h1>
           <div className="heading-meta">
             <span className="pill">
-              English → {languageName(course.assistanceLanguage)}
+              {'英文 →'}
+              {languageName(course.assistanceLanguage)}
             </span>
             <span>
               {data.lectures.length} {ui.s055}
@@ -104,41 +112,44 @@ export function CoursePage({ id }: { id: string }) {
           {data.lectures.length ? (
             <div className="lecture-list">
               {data.lectures.map((lecture) => (
-                <button
-                  className="lecture-row"
-                  key={lecture.id}
-                  onClick={() =>
-                    workspace.navigate({
-                      view: lecture.status === 'recording' ? 'live' : 'lecture',
-                      id: lecture.id,
-                    })
-                  }
-                >
-                  <span className="lecture-symbol">
-                    <Icon name="mic" />
-                  </span>
-                  <div>
-                    <h3>{lecture.title}</h3>
-                    <p>
-                      {dateText(lecture.startedAt)} ·{' '}
-                      {clock(lecture.durationSeconds)}
-                    </p>
-                  </div>
-                  <span
-                    className={`pill ${lecture.status === 'interrupted' || lecture.status === 'failed' ? 'gold' : ''}`}
+                <div className="lecture-list-item" key={lecture.id}>
+                  <button
+                    className="lecture-row"
+                    onClick={() =>
+                      workspace.navigate({
+                        view:
+                          lecture.status === 'recording' ? 'live' : 'lecture',
+                        id: lecture.id,
+                      })
+                    }
                   >
-                    {lecture.status === 'completed'
-                      ? ui.s060
-                      : lecture.status === 'interrupted'
-                        ? ui.s061
-                        : lecture.status === 'failed'
-                          ? lecture.audioSource === 'import'
-                            ? 'Import failed'
-                            : ui.s062
-                          : ui.s063}
-                  </span>
-                  <Icon name="arrow" size={18} />
-                </button>
+                    <span className="lecture-symbol">
+                      <Icon name="mic" />
+                    </span>
+                    <div>
+                      <h3>{lecture.title}</h3>
+                      <p>
+                        {dateText(lecture.startedAt)} ·{' '}
+                        {clock(lecture.durationSeconds)}
+                      </p>
+                    </div>
+                    <span
+                      className={`pill ${lecture.status === 'interrupted' || lecture.status === 'failed' ? 'gold' : ''}`}
+                    >
+                      {lecture.status === 'completed'
+                        ? ui.s060
+                        : lecture.status === 'interrupted'
+                          ? ui.s061
+                          : lecture.status === 'failed'
+                            ? lecture.audioSource === 'import'
+                              ? '导入失败'
+                              : ui.s062
+                            : ui.s063}
+                    </span>
+                    <Icon name="arrow" size={18} />
+                  </button>
+                  <DeleteLecture lecture={lecture} onDeleted={reload} />
+                </div>
               ))}
             </div>
           ) : (
@@ -180,3 +191,4 @@ export function CoursePage({ id }: { id: string }) {
     </>
   );
 }
+import { DeleteLecture } from '../lecture-history/DeleteLecture';

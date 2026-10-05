@@ -48,6 +48,78 @@ fn state(fixture: &Fixture) -> crate::AppState {
 }
 
 #[test]
+#[ignore = "requires pinned local weights; verifies streaming HTTP cancellation and model reuse"]
+fn local_stream_preview_preemption_and_final() {
+    use crate::providers::LiveTranslationControl;
+    use std::sync::atomic::{AtomicBool, Ordering};
+    let fixture = Fixture::new();
+    let state = state(&fixture);
+    let provider = configured_text(&state, Role::Translation, true).unwrap();
+    tauri::async_runtime::block_on(provider.prepare_live()).unwrap();
+    let source = TranscriptSegment {
+        id: "stream-fixture".into(), lecture_id: "fixture".into(),
+        source_text: "Correlation does not imply causation. Increasing sample size reduces sampling error but does not remove confounding.".into(),
+        start_seconds:0., end_seconds:10., translated_text:String::new(),
+        origin:"local".into(), provider:"local".into(),status:"final".into(),
+        transcript_version:"fixture".into(), revision:0,
+    };
+    let obsolete = AtomicBool::new(false);
+    let progress = |_: &str, _: &str| {
+        obsolete.store(true, Ordering::Relaxed);
+    };
+    let superseded = || obsolete.load(Ordering::Relaxed);
+    let interrupted = tauri::async_runtime::block_on(provider.translate_live(
+        "Statistics",
+        std::slice::from_ref(&source),
+        "zh",
+        LiveTranslationControl {
+            progress: &progress,
+            superseded: &superseded,
+            preview: true,
+        },
+    ));
+    assert!(
+        obsolete.load(Ordering::Relaxed),
+        "The actual model must stream before completing"
+    );
+    assert_eq!(
+        interrupted.err().unwrap(),
+        crate::providers::local::SUPERSEDED
+    );
+    let mut final_source = source;
+    final_source.source_text = "The initial count is 42, not 24.".into();
+    let output = Mutex::new(String::new());
+    let progress = |id: &str, text: &str| {
+        assert_eq!(id, "stream-fixture");
+        *output.lock().unwrap() = text.into();
+    };
+    let superseded = || false;
+    let at = Instant::now();
+    let result = tauri::async_runtime::block_on(provider.translate_live(
+        "Numbers",
+        &[final_source],
+        "zh",
+        LiveTranslationControl {
+            progress: &progress,
+            superseded: &superseded,
+            preview: false,
+        },
+    ))
+    .unwrap();
+    assert_eq!(result.len(), 1);
+    assert!(result[0].text.contains("42") && result[0].text.contains("24"));
+    assert_eq!(*output.lock().unwrap(), result[0].text);
+    assert!(
+        at.elapsed().as_secs() < 30,
+        "A cancelled preview must not occupy the decoder indefinitely"
+    );
+    println!(
+        "Streamed preview cancelled on first output; subsequent final completed in {} ms",
+        at.elapsed().as_millis()
+    );
+}
+
+#[test]
 #[ignore = "downloads Hy-MT2 once plus a cancelled attempt into an isolated fixture"]
 fn local_text_download_cancel_verify_and_remove() {
     let fixture = Fixture::new();

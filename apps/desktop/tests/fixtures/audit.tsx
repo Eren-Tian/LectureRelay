@@ -65,6 +65,7 @@ const data: Bootstrap = {
   },
 };
 const study: StudyState = {
+  sections: [],
   reviews: [],
   tasks: [],
   marks: [],

@@ -60,6 +60,8 @@ fn source_parts(lines: impl Iterator<Item = String>, limit: usize) -> Vec<Review
         for piece in local::chunks(&line, limit) {
             if current.len() + piece.len() > limit && !current.is_empty() {
                 parts.push(ReviewPart {
+                    start_seconds: None,
+                    end_seconds: None,
                     source: std::mem::take(&mut current),
                     depth: 0,
                     body: None,
@@ -70,6 +72,8 @@ fn source_parts(lines: impl Iterator<Item = String>, limit: usize) -> Vec<Review
     }
     if !current.is_empty() {
         parts.push(ReviewPart {
+            start_seconds: None,
+            end_seconds: None,
             source: current,
             depth: 0,
             body: None,
@@ -96,6 +100,10 @@ fn split(part: &ReviewPart) -> Option<[ReviewPart; 2]> {
     }
     Some(
         [&part.source[..at], &part.source[at..]].map(|source| ReviewPart {
+            // A recovery chunk can share a spoken segment with its sibling.
+            // Keep the parent evidence range rather than invent precise boundaries.
+            start_seconds: part.start_seconds,
+            end_seconds: part.end_seconds,
             source: source.into(),
             depth: part.depth + 1,
             body: None,
@@ -131,16 +139,29 @@ pub async fn run(state: &AppState, id: &str, request: &str, resume: Option<&str>
                 "cloud"
             }
             .into(),
-            parts: source_parts(
-                detail.segments.iter().map(|s| {
-                    format!(
-                        "[{}] {}\n",
-                        super::assistance::timestamp(s.start_seconds),
-                        s.source_text
-                    )
-                }),
-                6000,
-            ),
+            parts: if request.trim().is_empty() {
+                crate::database::outline::classroom_sections(&detail.segments)
+                    .into_iter()
+                    .map(|s| ReviewPart {
+                        start_seconds: Some(s.start_seconds),
+                        end_seconds: Some(s.end_seconds),
+                        source: s.source,
+                        depth: 0,
+                        body: None,
+                    })
+                    .collect()
+            } else {
+                source_parts(
+                    detail.segments.iter().map(|s| {
+                        format!(
+                            "[{}] {}\n",
+                            super::assistance::timestamp(s.start_seconds),
+                            s.source_text
+                        )
+                    }),
+                    6000,
+                )
+            },
             levels: Vec::new(),
             recoveries: 0,
             state: "paused".into(),
@@ -232,19 +253,37 @@ async fn generate(
         .iter()
         .enumerate()
         .map(|(i, p)| {
+            let heading = if review.language == "zh" {
+                format!("第 {} 段", i + 1)
+            } else {
+                format!("Section {}", i + 1)
+            };
+            let time = p
+                .start_seconds
+                .map(|seconds| {
+                    format!(" [{}](#t={seconds})", super::assistance::timestamp(seconds))
+                })
+                .unwrap_or_default();
             format!(
-                "### Section {}\n\n{}",
-                i + 1,
+                "### {heading}{time}\n\n{}",
                 p.body.as_deref().unwrap_or_default()
             )
         })
         .collect::<Vec<_>>()
         .join("\n\n");
-    let body = format!(
-        "# {title}\n\n{overview}\n\n---\n\n## Source section notes\n\nCoverage: {} of {} source sections.\n\n{sections}",
-        review.parts.len(),
-        review.parts.len()
-    );
+    let coverage = if review.language == "zh" {
+        format!(
+            "## 分段课堂要点\n\n已覆盖全部 {} 段原文。",
+            review.parts.len()
+        )
+    } else {
+        format!(
+            "## Source section notes\n\nCoverage: {} of {} source sections.",
+            review.parts.len(),
+            review.parts.len()
+        )
+    };
+    let body = format!("# {title}\n\n{overview}\n\n---\n\n{coverage}\n\n{sections}");
     // Course edits and publication share this gate; no mixed-version publish after validation.
     let _gate = state
         .gate

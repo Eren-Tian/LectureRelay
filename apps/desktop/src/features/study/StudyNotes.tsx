@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, errorText } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { MarkdownBody } from '../../components/MarkdownBody';
-import { clock, dateText } from '../../lib/presentation';
+import { clock, dateText, languageName } from '../../lib/presentation';
 import type { Note, StudyState } from '../../types/domain';
 
 export function StudyNotes({
@@ -14,6 +14,7 @@ export function StudyNotes({
   onSaved,
   onGenerate,
   blocked,
+  append,
 }: {
   id: string;
   note: Note | null;
@@ -23,6 +24,7 @@ export function StudyNotes({
   onSaved: () => Promise<void>;
   onGenerate?: () => void;
   blocked: boolean;
+  append?: { key: string; body: string };
 }) {
   const key = 'lecturerelay-note-draft:' + id;
   const { notify, confirm } = useWorkspace();
@@ -41,6 +43,7 @@ export function StudyNotes({
     timer = useRef<ReturnType<typeof setTimeout> | null>(null),
     savingRef = useRef(false),
     latest = useRef(draft);
+  const appended = useRef('');
   const persist = (body: string) => {
     queue.current = queue.current
       .catch(() => {})
@@ -57,19 +60,17 @@ export function StudyNotes({
     if (savingRef.current) return;
     latest.current = value;
     setDraft(value);
-    setStatus('Saving draft…');
+    setStatus('正在保存草稿…');
     try {
       localStorage.setItem(key, value);
     } catch {
-      setStatus(
-        'Local recovery cache is unavailable; waiting for database save.',
-      );
+      setStatus('本地恢复缓存暂时不可用，正在等待数据库保存。');
     }
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       void persist(value)
         .then(() => {
-          if (latest.current === value) setStatus('Draft saved on this device');
+          if (latest.current === value) setStatus('草稿已保存在本机');
         })
         .catch((e) => setStatus(errorText(e)));
     }, 650);
@@ -91,7 +92,7 @@ export function StudyNotes({
       setDraft(body);
       setEditing(false);
       setVersion('');
-      setStatus('Saved');
+      setStatus('已保存');
       await onSaved();
     } catch (e) {
       setStatus(errorText(e));
@@ -101,6 +102,25 @@ export function StudyNotes({
       setSaving(false);
     }
   };
+  useEffect(() => {
+    if (!append || appended.current === append.key || saving) return;
+    appended.current = append.key;
+    const body = latest.current + append.body;
+    if (body.length > 100000) {
+      notify('笔记长度已达上限，请先导出或精简内容。', true);
+      return;
+    }
+    change(body);
+    // An explicit append should reach SQLite immediately, including a quick exit.
+    if (timer.current) clearTimeout(timer.current);
+    void persist(body)
+      .then(() => {
+        if (latest.current === body) setStatus('草稿已保存在本机');
+      })
+      .catch((e) => setStatus(errorText(e)));
+    setEditing(true);
+    setVersion('');
+  }, [append, saving]);
   const selected = study.versions.find((v) => v.id === version);
   return (
     <div className="study-notes">
@@ -113,7 +133,7 @@ export function StudyNotes({
             setVersion('');
           }}
         >
-          {editing ? 'Preview draft' : 'Write notes'}
+          {editing ? '预览草稿' : '编辑笔记'}
         </button>
         {onGenerate && (
           <button
@@ -121,7 +141,7 @@ export function StudyNotes({
             disabled={blocked}
             onClick={onGenerate}
           >
-            Generate AI draft
+            {'生成 AI 草稿'}
           </button>
         )}
       </div>
@@ -137,15 +157,16 @@ export function StudyNotes({
                 )
               }
             >
-              + Timestamp {clock(position)}
+              {'+ 插入时间戳'}
+              {clock(position)}
             </button>
             <span role="status" className="muted">
-              {status || 'Recovered draft'}
+              {status || '已恢复的草稿'}
             </span>
           </div>
           <textarea
             className="study-note-editor"
-            aria-label="Lecture notes"
+            aria-label="课堂笔记"
             value={draft}
             disabled={saving}
             maxLength={100000}
@@ -158,9 +179,9 @@ export function StudyNotes({
               onClick={async () => {
                 if (
                   !(await confirm({
-                    title: 'Discard this draft?',
-                    body: 'Your last saved notes and version history will stay available.',
-                    action: 'Discard draft',
+                    title: '放弃这份草稿？',
+                    body: '已保存的笔记和历史版本会保留。',
+                    action: '放弃草稿',
                     danger: true,
                   }))
                 )
@@ -189,14 +210,14 @@ export function StudyNotes({
                 }
               }}
             >
-              Discard draft
+              {'放弃草稿'}
             </button>
             <button
               className="button primary"
               disabled={saving}
               onClick={() => void save()}
             >
-              {saving ? 'Saving…' : 'Save notes'}
+              {saving ? '正在保存…' : '保存笔记'}
             </button>
           </div>
         </>
@@ -204,29 +225,29 @@ export function StudyNotes({
         <>
           {draft !== (note?.body ?? '') && !selected && (
             <p className="notice">
-              An unpublished draft is available.{' '}
+              {'有一份尚未保存为正式笔记的草稿。'}{' '}
               <button className="text-button" onClick={() => setEditing(true)}>
-                Continue writing
+                {'继续编辑'}
               </button>
             </p>
           )}
           {study.versions.length > 0 && (
             <label className="version-picker">
-              Saved versions
+              {'历史版本'}
               <select
-                aria-label="Note version"
+                aria-label="笔记版本"
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
               >
-                <option value="">Current notes</option>
+                <option value="">{'当前笔记'}</option>
                 {study.versions.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.origin === 'local'
-                      ? 'Local AI draft'
+                      ? '本地 AI 草稿'
                       : v.origin === 'cloud'
-                        ? 'Cloud AI draft'
-                        : 'Previous notes'}{' '}
-                    · {v.language.toUpperCase()} · {dateText(v.createdAt)}
+                        ? '云端 AI 草稿'
+                        : '此前的笔记'}{' '}
+                    · {languageName(v.language)} · {dateText(v.createdAt)}
                   </option>
                 ))}
               </select>
@@ -236,8 +257,8 @@ export function StudyNotes({
             <div className="notice">
               <span>
                 {selected.sourceVersion !== study.sourceVersion
-                  ? 'Transcript has changed since this version. Check its evidence.'
-                  : 'This version is saved separately from your notes.'}
+                  ? '此版本生成后，转录文本已修改，请重新核对引用。'
+                  : '此版本单独保存，不会覆盖你的笔记。'}
               </span>
               <button
                 className="button secondary"
@@ -245,15 +266,15 @@ export function StudyNotes({
                 onClick={async () => {
                   if (
                     await confirm({
-                      title: 'Use this version?',
-                      body: 'Your current saved notes will remain in version history. Any local draft will be replaced.',
-                      action: 'Use version',
+                      title: '将此版本设为当前笔记？',
+                      body: '当前已保存的笔记会保留在历史版本中，尚未保存的草稿会被替换。',
+                      action: '采用此版本',
                     })
                   )
                     await save(selected.body);
                 }}
               >
-                Use version
+                {'采用此版本'}
               </button>
             </div>
           )}
@@ -261,10 +282,11 @@ export function StudyNotes({
             <MarkdownBody body={selected?.body ?? note!.body} onSeek={onSeek} />
           ) : (
             <div className="empty-state">
-              <h3>Your notes</h3>
+              <h3>{'我的笔记'}</h3>
               <p>
-                Write freely and connect ideas to moments in the recording. AI
-                drafts stay separate until you choose one.
+                {
+                  '记录想法，用时间戳关联课堂片段。AI 草稿会单独保存，由你决定是否采用。'
+                }
               </p>
             </div>
           )}

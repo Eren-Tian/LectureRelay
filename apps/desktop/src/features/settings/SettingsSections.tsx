@@ -19,13 +19,10 @@ export function GeneralSettings({ settings, setSettings, blocked }: Props) {
   return (
     <>
       <section className="settings-card">
-        <h3>Your language</h3>
-        <p>
-          English is the lecture language. Choose a default translation language
-          for new courses.
-        </p>
+        <h3>{'译文语言'}</h3>
+        <p>{'当前支持英文课堂。请选择新建课程默认使用的译文语言。'}</p>
         <label>
-          Default translation language
+          {'默认译文语言'}
           <select
             disabled={blocked}
             value={settings.assistanceLanguage}
@@ -45,7 +42,7 @@ export function GeneralSettings({ settings, setSettings, blocked }: Props) {
           </select>
         </label>
         <p className="field-hint">
-          Existing courses keep their own language. Change it in course details.
+          {'不会更改已有课程的语言；如需调整，请编辑课程。'}
         </p>
       </section>
       <RuntimePreferences />
@@ -85,13 +82,10 @@ export function AudioSettings({ settings, setSettings, blocked }: Props) {
   }, [revision]);
   return (
     <section className="settings-card">
-      <h3>Audio input</h3>
-      <p>
-        Use a microphone in the classroom, or capture a lecture playing on your
-        computer.
-      </p>
+      <h3>{'声音来源'}</h3>
+      <p>{'线下课堂可使用麦克风；电脑播放的课程可选择系统声音。'}</p>
       <label>
-        Default audio source
+        {'默认声音来源'}
         <select
           disabled={blocked}
           value={settings.audioSource}
@@ -102,8 +96,8 @@ export function AudioSettings({ settings, setSettings, blocked }: Props) {
             })
           }
         >
-          <option value="microphone">Microphone</option>
-          <option value="system">System audio</option>
+          <option value="microphone">{'麦克风'}</option>
+          <option value="system">{'系统声音'}</option>
         </select>
       </label>
       {(['microphone', 'system'] as const).map((source) => {
@@ -112,9 +106,7 @@ export function AudioSettings({ settings, setSettings, blocked }: Props) {
         const selected = settings[key];
         return (
           <label key={source}>
-            {source === 'microphone'
-              ? 'Microphone device'
-              : 'System playback device'}
+            {source === 'microphone' ? '麦克风设备' : '系统播放设备'}
             <select
               disabled={blocked || loading}
               value={selected}
@@ -122,14 +114,14 @@ export function AudioSettings({ settings, setSettings, blocked }: Props) {
                 setSettings({ ...settings, [key]: e.target.value })
               }
             >
-              <option value="">Windows default</option>
+              <option value="">{'使用 Windows 默认设备'}</option>
               {selected && !devices[source].some((d) => d.id === selected) && (
-                <option value={selected}>Saved device unavailable</option>
+                <option value={selected}>{'此前选择的设备不可用'}</option>
               )}
               {devices[source].map((d) => (
                 <option key={d.id} value={d.id}>
                   {d.name}
-                  {d.isDefault ? ' (default)' : ''}
+                  {d.isDefault ? '（默认）' : ''}
                 </option>
               ))}
             </select>
@@ -146,12 +138,12 @@ export function AudioSettings({ settings, setSettings, blocked }: Props) {
         disabled={loading || blocked}
         onClick={() => refresh((n) => n + 1)}
       >
-        {loading ? 'Finding devices…' : 'Refresh devices'}
+        {loading ? '正在查找设备…' : '刷新设备列表'}
       </button>
       <p className="field-hint">
-        You can change the source before every class. If a saved device is
-        disconnected, the start dialog selects an available device for you to
-        review.
+        {
+          '每次录音前都可以更换声音来源。如果原设备已断开，开始录音时会提示你确认可用设备。'
+        }
       </p>
       <AudioInputTest
         source={settings.audioSource}
@@ -190,24 +182,16 @@ export function CaptionSettings({
   return (
     <>
       <section className="settings-card">
-        <h3>Reading preferences</h3>
+        <h3>{'阅读偏好'}</h3>
         <div className="caption-toggles">
           {(
             [
-              [
-                'showEnglish',
-                'Show English',
-                'The original words, always easy to find.',
-              ],
-              [
-                'showTranslation',
-                'Show translation',
-                'Your selected language, just below each sentence.',
-              ],
+              ['showEnglish', '显示英文原文', '保留原文，便于核对课堂内容。'],
+              ['showTranslation', '显示译文', '译文显示在对应英文下方。'],
               [
                 'autoScroll',
-                'Follow live captions',
-                'Scroll up to read earlier text; Jump to Live brings you back.',
+                '自动跟随最新字幕',
+                '向上滚动可查看前文，点击“回到最新字幕”继续跟随。',
               ],
             ] as const
           ).map(([key, title, hint]) => (
@@ -229,8 +213,8 @@ export function CaptionSettings({
         <div className="settings-two-columns">
           {(
             [
-              ['englishFontSize', 'English size', 16, 44],
-              ['translationFontSize', 'Translation size', 14, 36],
+              ['englishFontSize', '英文字号', 16, 44],
+              ['translationFontSize', '译文字号', 14, 36],
             ] as const
           ).map(([key, label, min, max]) => (
             <label key={key}>
@@ -255,7 +239,8 @@ export function CaptionSettings({
       </section>
       <section className="settings-card caption-preview">
         <div className="preview-label">
-          CAPTION PREVIEW <span>Sample text</span>
+          {'字幕预览'}
+          <span>{'示例字幕'}</span>
         </div>
         {settings.showEnglish && (
           <p
@@ -279,11 +264,10 @@ export function CaptionSettings({
       <div className="settings-inline-note">
         <Icon name="cloud" size={18} />
         <p>
-          Choose local Hy-MT2 or your own cloud provider for live translation in
-          AI Providers.
+          {'可在“AI 服务”中选择本地 Hy-MT2，或配置自己的云端服务来翻译字幕。'}
         </p>
         <button className="text-button" onClick={onProviders}>
-          Set up
+          {'前往设置'}
           <Icon name="arrow" size={14} />
         </button>
       </div>
@@ -311,10 +295,10 @@ export function ProviderSettings({
   return (
     <>
       <section className="settings-card">
-        <h3>English speech recognition</h3>
-        <p>Turn spoken English into captions while audio is safely recorded.</p>
+        <h3>{'英文语音识别'}</h3>
+        <p>{'将英文讲话转成字幕，录音会独立保存。'}</p>
         <label>
-          Speech recognition
+          {'语音识别'}
           <select
             disabled={blocked}
             value={settings.speechProvider}
@@ -325,23 +309,23 @@ export function ProviderSettings({
               })
             }
           >
-            <option value="local">Local English · on this computer</option>
-            <option value="none">Audio only · captions off</option>
-            <option value="openai">OpenAI · cloud audio</option>
-            <option value="groq">Groq · cloud audio</option>
+            <option value="local">{'本地英文识别 · 在本机运行'}</option>
+            <option value="none">{'仅录音 · 不生成字幕'}</option>
+            <option value="openai">{'OpenAI · 云端识别'}</option>
+            <option value="groq">{'Groq · 云端识别'}</option>
           </select>
         </label>
         {settings.speechProvider === 'local' ? (
           <button className="button text" onClick={onLocal}>
-            Manage the local model
+            {'管理本地模型'}
             <Icon name="arrow" size={16} />
           </button>
         ) : (
           settings.speechProvider !== 'none' && (
             <p className="field-hint">
               {speechHasKey
-                ? 'Provider key saved. Connection has not been verified here.'
-                : 'Add a provider key in Security & Privacy before recording with cloud speech.'}
+                ? 'API Key 已保存，尚未验证连接和模型权限。'
+                : '使用云端识别前，请先在“安全与隐私”中添加服务商的 API Key。'}
             </p>
           )
         )}
@@ -349,20 +333,18 @@ export function ProviderSettings({
       <section className="settings-card">
         <div className="settings-title">
           <div>
-            <h3>Translation & study tools</h3>
-            <p>
-              Dedicated translation. One shared model for summaries and review.
-            </p>
+            <h3>{'翻译与学习工具'}</h3>
+            <p>{'翻译使用专用模型，总结和复习共用另一个模型。'}</p>
           </div>
           <span className="pill">
             {settings.translationMode === 'local' &&
             settings.studyMode === 'local'
-              ? 'On this computer'
-              : 'Separate providers'}
+              ? '在本机运行'
+              : '分别选择服务'}
           </span>
         </div>
         <label>
-          Translation
+          {'翻译'}
           <select
             disabled={blocked}
             value={settings.translationMode}
@@ -374,14 +356,14 @@ export function ProviderSettings({
               })
             }
           >
-            <option value="local">Local · on this computer</option>
-            <option value="cloud">Cloud · my provider below</option>
-            <option value="none">Off</option>
+            <option value="local">{'本地 · 在本机运行'}</option>
+            <option value="cloud">{'云端 · 使用下方所选服务'}</option>
+            <option value="none">{'关闭'}</option>
           </select>
         </label>
         {settings.translationMode === 'local' && (
           <label>
-            Local translation model
+            {'本地翻译模型'}
             <select
               disabled={blocked}
               value={settings.translationModel}
@@ -394,21 +376,21 @@ export function ProviderSettings({
               }
             >
               <option value="hy-mt2-1.8b">
-                Hy-MT2-1.8B · smaller, faster candidate
+                {'Hy-MT2-1.8B · 体积较小，速度优先'}
               </option>
               <option value="qwen3.5-4b">
-                Qwen3.5-4B · alternative, shares study download
+                {'Qwen3.5-4B · 备选，与学习工具共用模型'}
               </option>
             </select>
             <span className="field-hint">
-              Preview models. Verify technical terms, numbers and negation
-              against the English transcript; neither model is guaranteed
-              accurate.
+              {
+                '当前模型仍在评测中。专业术语、数字和否定表达请结合英文原文核对。'
+              }
             </span>
           </label>
         )}
         <label>
-          Summary, deep review & Q&A
+          {'总结、深度复习与问答'}
           <select
             disabled={blocked}
             value={settings.studyMode}
@@ -419,16 +401,17 @@ export function ProviderSettings({
               })
             }
           >
-            <option value="local">Local · Qwen3.5-4B</option>
-            <option value="cloud">Cloud · my provider below</option>
-            <option value="none">Off</option>
+            <option value="local">{'本地 · Qwen3.5-4B'}</option>
+            <option value="cloud">{'云端 · 使用下方所选服务'}</option>
+            <option value="none">{'关闭'}</option>
           </select>
         </label>
         <button className="button text" onClick={onLocal}>
-          Download and manage local models <Icon name="arrow" size={16} />
+          {'下载与管理本地模型'}
+          <Icon name="arrow" size={16} />
         </button>
         <label>
-          Optional cloud text provider
+          {'可选云端文本服务'}
           <select
             disabled={blocked}
             value={settings.provider}
@@ -444,18 +427,15 @@ export function ProviderSettings({
               });
             }}
           >
-            <option value="none">Not connected</option>
+            <option value="none">{'未连接'}</option>
             <option value="openai">OpenAI</option>
             <option value="groq">Groq</option>
           </select>
         </label>
         <label className="toggle-row">
           <span>
-            <strong>Translate during class</strong>
-            <small>
-              Finalized English sentences are translated into the course
-              language.
-            </small>
+            <strong>{'上课时自动翻译'}</strong>
+            <small>{'英文句子定稿后，自动翻译为该课程所选的语言。'}</small>
           </span>
           <input
             type="checkbox"
@@ -468,20 +448,20 @@ export function ProviderSettings({
           />
         </label>
         <div className="provider-features">
-          <span>Live translation</span>
-          <span>Lecture notes</span>
-          <span>Q&A with sources</span>
+          <span>{'实时翻译'}</span>
+          <span>{'课堂笔记'}</span>
+          <span>{'带原文引用的问答'}</span>
         </div>
         {settings.provider !== 'none' && (
           <>
             <button className="button secondary" onClick={onSecurity}>
               <Icon name="shield" size={16} />
-              {hasKey ? 'Manage provider keys' : 'Add provider key'}
+              {hasKey ? '管理 API Key' : '添加 API Key'}
             </button>
             <details className="settings-advanced">
-              <summary>Advanced model settings</summary>
+              <summary>{'模型高级设置'}</summary>
               <label>
-                Text model
+                {'文本模型'}
                 <input
                   disabled={blocked}
                   maxLength={100}
@@ -492,15 +472,17 @@ export function ProviderSettings({
                 />
               </label>
               <p className="field-hint">
-                Use a model available to your provider account. A saved key does
-                not confirm model access.
+                {
+                  '请填写你的服务商账号可用的模型名。保存 API Key 并不代表已获得该模型的访问权限。'
+                }
               </p>
             </details>
           </>
         )}
         <p className="field-hint">
-          Cloud features require your own key and may incur provider charges.
-          When unavailable, English and recorded audio remain saved.
+          {
+            '云端功能使用你自己的 API Key，服务商可能收费。云端不可用时，已保存的英文转录和录音仍会保留。'
+          }
         </p>
       </section>
     </>

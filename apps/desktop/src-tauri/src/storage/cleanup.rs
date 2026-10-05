@@ -65,7 +65,11 @@ fn pair(paths: &AppPaths, entry: &Entry) -> AppResult<(PathBuf, PathBuf)> {
         matches!(
             names.first().map(|v| v.as_ref()),
             Some("Courses" | "Exports")
-        ) && names.len() <= 2
+        ) && (names.len() <= 2
+            || (names.len() == 3
+                && names[0] == "Courses"
+                && uuid::Uuid::parse_str(&names[1]).is_ok()
+                && uuid::Uuid::parse_str(&names[2]).is_ok()))
     } else {
         matches!(
             names.first().map(|v| v.as_ref()),
@@ -184,22 +188,56 @@ pub fn run(paths: &AppPaths, db: &Storage, course: Option<&str>) -> AppResult<Ve
         ]
     };
     if course.is_some() {
-        for (library, folder) in [(true, "Exports"), (false, "logs"), (false, "recovery")] {
-            let root = if library { &paths.library } else { &paths.data };
-            for entry in fs::read_dir(safe(root, Path::new(folder))?)
-                .user_error("Cannot inspect course files.")?
+        targets.extend(lecture_extras(paths, &ids)?);
+    }
+    execute(paths, db, targets, |operation| {
+        db.purge_content(operation, course)
+    })?;
+    Ok(ids)
+}
+
+pub fn delete_lecture(paths: &AppPaths, db: &Storage, id: &str) -> AppResult<()> {
+    recover(paths, db)?;
+    uuid::Uuid::parse_str(id).map_err(|_| "Invalid lecture.")?;
+    let lecture = db.lecture(id)?;
+    // Validate both identifiers before deriving any deletion path.
+    paths.lecture_dir(&lecture.course_id, id)?;
+    if lecture.status == "recording" {
+        return Err("Stop and save this lecture before deleting it.".into());
+    }
+    let mut targets = vec![(true, Path::new("Courses").join(&lecture.course_id).join(id))];
+    targets.extend(lecture_extras(paths, &[id.to_owned()])?);
+    execute(paths, db, targets, |operation| {
+        db.purge_lecture_content(operation, id)
+    })
+}
+
+fn lecture_extras(paths: &AppPaths, ids: &[String]) -> AppResult<Vec<(bool, PathBuf)>> {
+    let mut targets = Vec::new();
+    for (library, folder) in [(true, "Exports"), (false, "logs"), (false, "recovery")] {
+        let root = if library { &paths.library } else { &paths.data };
+        for entry in fs::read_dir(safe(root, Path::new(folder))?)
+            .user_error("Cannot inspect course files.")?
+        {
+            let entry = entry.user_error("Cannot inspect course files.")?;
+            let name = entry.file_name().to_string_lossy().into_owned();
+            if ids
+                .iter()
+                .any(|id| name.starts_with(&format!("{id}-")) || name == format!("{id}.json"))
             {
-                let entry = entry.user_error("Cannot inspect course files.")?;
-                let name = entry.file_name().to_string_lossy().into_owned();
-                if ids
-                    .iter()
-                    .any(|id| name.starts_with(&format!("{id}-")) || name == format!("{id}.json"))
-                {
-                    targets.push((library, Path::new(folder).join(name)));
-                }
+                targets.push((library, Path::new(folder).join(name)));
             }
         }
     }
+    Ok(targets)
+}
+
+fn execute(
+    paths: &AppPaths,
+    db: &Storage,
+    targets: Vec<(bool, PathBuf)>,
+    commit: impl FnOnce(&str) -> AppResult<()>,
+) -> AppResult<()> {
     let operation = new_id();
     let mut journal = Journal {
         id: operation,
@@ -236,14 +274,14 @@ pub fn run(paths: &AppPaths, db: &Storage, course: Option<&str>) -> AppResult<Ve
                 "Cannot free storage while files are in use. Close external players and try again.",
             )?;
         }
-        db.purge_content(&journal.id, course)
+        commit(&journal.id)
     })();
     let settled = settle(paths, db, &journal);
     AppPaths::initialize(paths.data.clone(), paths.library.clone())?;
     settled?;
     result?;
     db.compact()?;
-    Ok(ids)
+    Ok(())
 }
 
 #[cfg(test)]

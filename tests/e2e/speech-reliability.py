@@ -13,13 +13,14 @@ import wave
 import psutil
 
 root = Path(__file__).resolve().parents[2]
-runtime = Path.home() / 'AppData/Local/Programs/LectureRelay/local-asr'
+runtime = Path(os.environ.get('LECTURERELAY_ASR_RUNTIME', str(Path.home() / 'AppData/Local/Programs/LectureRelay/local-asr')))
+executable = Path(os.environ.get('LECTURERELAY_ASR_WORKER', str(runtime / 'asr-worker.exe')))
 model = root / 'target/asr-evaluation/models/nemotron-speech-streaming-en-0.6b.q8_0.gguf'
-out = root / 'target/acceptance-v0.3.1'
+out = Path(os.environ.get('LECTURERELAY_SPEECH_EVIDENCE', str(root / 'target/acceptance-v0.3.1')))
 out.mkdir(exist_ok=True, parents=True)
 block_seconds = float(sys.argv[1]) if len(sys.argv) > 1 else 2.0
 glossary = len(sys.argv) > 2 and sys.argv[2] == 'glossary'
-worker = subprocess.Popen([str(runtime/'asr-worker.exe'), str(runtime), str(model)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, creationflags=0x08000000)
+worker = subprocess.Popen([str(executable), str(runtime), str(model)], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, creationflags=0x08000000)
 process = psutil.Process(worker.pid)
 process.cpu_affinity(process.cpu_affinity()[:4])
 def receive():

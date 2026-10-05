@@ -38,7 +38,7 @@ async function click(text) {
 async function append(text) {
   const element = await command('POST', '/element', {
     using: 'css selector',
-    value: 'textarea[aria-label="Lecture notes"]',
+    value: 'textarea[aria-label="课堂笔记"]',
   });
   await command(
     'POST',
@@ -75,17 +75,17 @@ try {
   );
   await read('window.auditFixture.settle();');
   await until('return !document.querySelector("#double-action").disabled;');
-  await click('Write notes');
+  await click('编辑笔记');
   await append(' with revision');
   const draft = await read('return document.querySelector("textarea").value;');
-  await click('Save notes');
+  await click('保存笔记');
   assert.equal(
     await read('return document.querySelector("textarea").disabled;'),
     true,
   );
   assert.equal(
     await read(
-      'return [...document.querySelectorAll("button")].find(b=>b.textContent.startsWith("+ Timestamp")).disabled;',
+      'return [...document.querySelectorAll("button")].find(b=>b.textContent.startsWith("+ 插入时间戳")).disabled;',
     ),
     true,
   );
@@ -104,12 +104,12 @@ try {
     ),
     null,
   );
-  await click('Write notes');
+  await click('编辑笔记');
   await append(' unsaved');
   const unsaved = await read(
     'return document.querySelector("textarea").value;',
   );
-  await click('Save notes');
+  await click('保存笔记');
   await read('window.auditFixture.settle(true);');
   await until('return !document.querySelector("textarea").disabled;');
   assert.equal(
@@ -122,7 +122,7 @@ try {
     ),
     unsaved,
   );
-  await click('Discard draft');
+  await click('放弃草稿');
   await read('document.querySelector("[role=dialog] .button.danger").click();');
   await until('return document.querySelector("textarea").disabled;');
   await read('window.auditFixture.settle();');

@@ -49,6 +49,8 @@ OpenAI/Groq remain optional, with your own API key and provider charges. Local m
 
 ## Preview status
 
+The development branch includes the **0.3.7 candidate** with a default classroom outline: finalized captions are collected into timestamped sections during class, then local Qwen can summarize each section after recording. Saved summaries appear directly beside playback, with source text, replay links and an action to append to your own notes. This retains the 0.3.6 streamed translation previews and shorter English updates; provisional translations are never exported as completed results. See [candidate changes](docs/releases/v0.3.7.md), [summary validation](docs/testing/classroom-summary-v0.3.7.md) and [real MIT caption measurements](docs/testing/local-caption-latency-v0.3.6.md). The download links above still point to the published 0.3.3 release.
+
 The downloadable preview is **0.3.3**. It protects recording against short writer stalls with a bounded five-second audio buffer, retains detailed continuity diagnostics and adds automated Windows checks and cold installer builds. It includes the earlier note-saving, theme-contrast, review and confirmed storage-cleanup improvements. See the [release notes](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.3), [audio investigation](docs/testing/audio-continuity-v0.3.3.md) and [CI guide](docs/development/ci.md).
 
 An installed CI candidate with this product code completed **90m05.11s** of local speech/translation capture, followed by source-audio comparison, timestamp replay, restart and original-data/preference checks. All 21,600 regular source probes matched; application queue loss was zero. The release page identifies the exact acceptance candidate separately from the published rebuild and records the release source, Windows build and installer checksum.
@@ -79,7 +81,7 @@ The first build downloads hash-pinned CPU speech and text runtimes; model weight
 | `pnpm format:check`, `pnpm format:rust:check` | Formatting checks                                  |
 | `pnpm verify:repo`, `pnpm verify:resources`   | Imports/links/secret hygiene and runtime staging   |
 | `pnpm build:debug`                            | Native debug executable                            |
-| `pnpm release`                                | Release EXE + current-user English NSIS + checksum |
+| `pnpm release`                                | Release EXE + current-user Chinese NSIS + checksum |
 
 Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.3_x64-setup.exe`. Publish the installer, checksum and build metadata as GitHub Release assets; build output is excluded from Git.
 

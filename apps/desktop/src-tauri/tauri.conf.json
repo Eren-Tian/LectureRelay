@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "LectureRelay",
-  "version": "0.3.3",
+  "version": "0.3.7",
   "identifier": "com.lecturerelay.desktop",
   "build": {
     "beforeDevCommand": "pnpm -w build:asr && pnpm -w build:text && pnpm dev",
@@ -33,7 +33,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "shortDescription": "Every lecture, in your language.",
+    "shortDescription": "课堂录音、字幕翻译与课后复习",
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
@@ -48,7 +48,7 @@
         "installMode": "currentUser",
         "installerIcon": "icons/icon.ico",
         "uninstallerIcon": "icons/icon.ico",
-        "languages": ["English"],
+        "languages": ["SimpChinese"],
         "displayLanguageSelector": false
       }
     },

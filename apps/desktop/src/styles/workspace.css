@@ -472,6 +472,73 @@ h2 {
   font-size: 15px;
   line-height: 1.7;
 }
+.summary-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.summary-heading h2 {
+  margin: 0;
+}
+.summary-heading .field-hint {
+  margin: 6px 0 14px;
+}
+.summary-card {
+  margin: 14px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  overflow-wrap: anywhere;
+}
+.summary-card header,
+.summary-pages {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.summary-state {
+  color: var(--muted);
+  font-size: 12px;
+}
+.summary-time {
+  margin: 8px 0;
+  font-variant-numeric: tabular-nums;
+}
+.summary-card .markdown {
+  padding: 0;
+  font-size: 15px;
+  line-height: 1.75;
+}
+.summary-excerpt,
+.summary-source {
+  font-size: 14px;
+  line-height: 1.75;
+}
+.summary-source {
+  white-space: pre-wrap;
+}
+.summary-card details {
+  margin: 12px 0;
+}
+.summary-card summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+}
+.summary-empty {
+  padding: 24px 8px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+.summary-pages {
+  margin: 16px 0;
+  font-size: 13px;
+}
 .study-notes .markdown {
   padding: 0;
   font-size: 15px;

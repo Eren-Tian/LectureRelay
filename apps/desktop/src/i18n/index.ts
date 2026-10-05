@@ -1,1 +1,1 @@
-export { en as ui } from './en';
+export { zhCN as ui } from './zh-CN';

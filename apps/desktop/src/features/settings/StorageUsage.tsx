@@ -31,14 +31,16 @@ export function StorageUsage() {
         (usage ? (
           <>
             <span>
-              <strong>{size(usage.libraryBytes)}</strong> Library & exports
+              <strong>{size(usage.libraryBytes)}</strong>
+              {'资料库与导出文件'}
             </span>
             <span>
-              <strong>{size(usage.modelBytes)}</strong> Local models
+              <strong>{size(usage.modelBytes)}</strong>
+              {'本地模型'}
             </span>
           </>
         ) : (
-          'Measuring storage…'
+          '正在计算存储占用…'
         ))}
     </div>
   );

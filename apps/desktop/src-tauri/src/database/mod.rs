@@ -2,6 +2,7 @@ mod cleanup;
 mod courses;
 mod learning;
 mod lectures;
+pub(crate) mod outline;
 mod preferences;
 pub(crate) mod review;
 mod rows;

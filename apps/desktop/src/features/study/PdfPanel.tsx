@@ -121,11 +121,11 @@ export default function PdfPanel({
     <div className="pdf-panel">
       <div className="study-toolbar">
         <select
-          aria-label="Course PDF"
+          aria-label="课程 PDF"
           value={id}
           onChange={(e) => setId(e.target.value)}
         >
-          <option value="">Choose a PDF</option>
+          <option value="">{'选择 PDF'}</option>
           {documents.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
@@ -133,7 +133,7 @@ export default function PdfPanel({
           ))}
         </select>
         <button className="button secondary" onClick={onAttach}>
-          Add PDF
+          {'添加 PDF'}
         </button>
       </div>
       {pdf && (
@@ -146,9 +146,9 @@ export default function PdfPanel({
             ←
           </button>
           <label>
-            Page
+            {'页码'}
             <input
-              aria-label="PDF page"
+              aria-label="PDF 页码"
               type="number"
               min={1}
               max={pdf.numPages}
@@ -172,13 +172,13 @@ export default function PdfPanel({
             →
           </button>
           <select
-            aria-label="PDF zoom"
+            aria-label="PDF 缩放"
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
           >
             {[0.75, 1, 1.25, 1.5].map((n) => (
               <option key={n} value={n}>
-                {n === 1 ? 'Fit width' : Math.round(n * 100) + '%'}
+                {n === 1 ? '适应宽度' : Math.round(n * 100) + '%'}
               </option>
             ))}
           </select>
@@ -189,26 +189,25 @@ export default function PdfPanel({
           {error}
         </p>
       )}
-      {loading && <p role="status">Opening local PDF…</p>}
+      {loading && <p role="status">{'正在打开本地 PDF…'}</p>}
       <div ref={view} className="pdf-canvas-scroll">
         <canvas
           ref={canvas}
-          aria-label={'Course PDF page ' + page}
+          aria-label={`课程 PDF，第 ${page} 页`}
           hidden={!pdf}
         />
         {!id && (
           <p className="empty-state">
-            Add course slides to read beside the lecture. Files stay on this
-            device.
+            {'添加课程讲义，边回顾课堂边阅读。文件保存在本机。'}
           </p>
         )}
       </div>
       {pdf && (
         <details>
-          <summary>Page {page} text</summary>
+          <summary>第 {page} 页文字</summary>
           <p className="pdf-text">
             {text ||
-              'No extractable text on this page. Scanned pages are shown as images; they are not used as AI evidence.'}
+              '此页没有可提取的文字。扫描页会作为图片显示，不会用于 AI 引用。'}
           </p>
         </details>
       )}

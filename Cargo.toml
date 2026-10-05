@@ -3,7 +3,7 @@ members = ["apps/desktop/src-tauri", "crates/environment-check"]
 resolver = "3"
 
 [workspace.package]
-version = "0.3.3"
+version = "0.3.7"
 edition = "2024"
 rust-version = "1.98"
 publish = false

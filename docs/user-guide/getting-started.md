@@ -1,14 +1,18 @@
-# Classroom use
+# 开始使用 LectureRelay
 
-Install the v0.3.0 Windows EXE preview; WebView2 is required and the installer offers to download it if missing. End users do not need development tools, Python, CUDA, Ollama, FFmpeg or external SQLite.
+安装 Windows EXE 即可使用，无需安装开发工具、Python、CUDA、Ollama 或 FFmpeg。首次安装时，如果电脑缺少 WebView2，安装器会联网下载。
 
-1. Create a course, choose Chinese/Japanese/Korean assistance and add course context/glossary terms.
-2. For offline English captions, open **Settings → Local AI**, download the model, then choose **Local English** under **AI Providers → Speech recognition**. Download before class; the global model is shared across courses.
-3. Start a lecture with **Microphone** or **System Audio**. System Audio captures other apps playing through the selected Windows output device. Combined microphone/system mixing is unavailable.
-4. For bilingual captions, download **Hy-MT2** in **Local AI**, select **Local** translation and enable **Translate during class** under **AI Providers**. Qwen is an alternative translator. Finalized English is translated into the course language below each paragraph. Scrolling up preserves your reading position; **Jump to Live** returns to the newest caption. Caption controls are under **Live Captions**. See [local AI setup and quality limits](local-ai.md).
-5. Pause/resume and **Stop & save**. Recording is saved first; any remaining AI work has a separate processing status. You can open the saved lecture or cancel remaining processing. Replay and seek audio, correct transcripts, and export Markdown/JSON or subtitles.
-6. Download **Qwen** for local summaries, user-directed whole-class review and Q&A. Once live processing finishes, use **Generate AI draft**, **Notes → Review the whole class**, or **Questions**. AI drafts are saved as separate versions; manual notes are preserved.
+以下文案对应 **0.3.5 中文版**。目前 GitHub 已发布的 0.3.3 仍是英文界面，功能名称和首次设置方式有所不同。
 
-Fresh installations default to audio-only speech and local text AI. Choose Local English after downloading the speech model. An existing explicit cloud text selection is preserved on upgrade. Recording/manual work remains available without any model or key. AI failures leave recording running; there is no automatic cloud fallback or in-class model download. Quiet Mode gives all local AI a shared budget of up to four logical CPUs.
+1. 打开 **设置 → 首次使用**。可选“仅英文原文”或“英文原文 + 译文”。到 **本地 AI** 下载所需模型，返回首次设置，点击 **启用本地英文字幕** 或 **启用本地双语字幕**。模型只需下载一次，所有课程共用；课后总结使用的 Qwen 可以稍后下载。
+2. 点击 **选择设备并测试声音**。线下课堂用 **麦克风**，电脑播放的课程用 **系统声音**。先完成 5 秒声音测试；当前不支持混合录制麦克风与系统声音。
+3. **新建课程**，选择中文、日语或韩语作为译文语言。补充课程背景和专业术语后，点击 **开始录音**，确认声音来源、设备与字幕方式。
+4. 英文字幕随识别更新，译文在句子定稿后显示。向上滚动可查看前文，点击 **回到最新字幕** 继续跟随。**独立字幕窗** 可以单独关闭，录音继续。若英文识别持续落后，可 **切换到全速模式**，或 **暂停翻译**，让英文识别优先处理。
+5. 课堂结束时点击 **结束并保存**。录音先保存，剩余字幕或翻译会显示独立的处理状态。可以回放录音、点击时间戳、修订文本、补全翻译，也可以导出 Markdown、JSON、SRT 或 VTT。
+6. 下载 Qwen 后，待实时处理结束，使用 **生成 AI 草稿**、**笔记 → 整堂复习** 或 **问答**。AI 草稿和复习指南保存在 **历史版本** 中，由你决定是否采用；已有手写笔记会保留。
 
-See [local speech](local-speech.md), [optional own-key cloud setup](../providers/setup.md), [data locations](../architecture/overview.md) and [current evaluation limits](../testing/local-ai-v0.3.md). Trash restores course indexes; uninstall keeps data. Back up database and library together after exiting. Content has no application-level encryption.
+首次安装可直接录音，配置字幕后才会运行语音识别。升级会保留已有偏好。没有模型或 API Key 时仍可录音和手动编辑；本地 AI 失败不会自动切换到云端。**安静模式** 对所有本地 AI 共用的 CPU 预算生效，关闭后允许使用全部可用 CPU 核心。译文仍可能落后数秒或更久，英文进度提示不代表翻译延迟。参见 [本地 AI 与质量限制](local-ai.md)。
+
+删除一节课时，在课程历史或回放页点击 **删除课堂记录**，核对标题并输入 **删除**。会永久删除这一节课的录音和学习资料，其他课堂记录、课程背景、术语表和 PDF 保留。课程移入 **回收站** 后可恢复，也可确认后永久删除。**设置 → 数据与存储 → 清空课堂数据与模型** 需要输入 **清空全部数据**，请先导出需要保留的内容。
+
+卸载应用会保留课堂资料。备份前请退出应用，并同时保存数据库和资料库。课堂内容未使用应用层加密。更多说明：[本地识别](local-speech.md)、[可选云端服务](../providers/setup.md)、[存储位置](../architecture/overview.md)、[质量评测](../testing/local-ai-v0.3.md)。

@@ -1,6 +1,87 @@
 use super::*;
 
 #[test]
+fn model_download_announces_connection_and_allows_cancellation_before_network() {
+    use std::sync::{
+        Arc, Mutex,
+        atomic::{AtomicBool, Ordering},
+    };
+    use std::time::Duration;
+    let fixture = Fixture::new();
+    let state = Arc::new(crate::AppState {
+        audio_preview: Default::default(),
+        performance: crate::speech::local::performance::Performance::new(true).unwrap(),
+        storage: Arc::new(fixture.db()),
+        paths: fixture.paths.clone(),
+        recorder: Default::default(),
+        jobs: Default::default(),
+        live: Default::default(),
+        models: Default::default(),
+        runtime: fixture.root.join("unused-runtime"),
+        gate: Mutex::new(()),
+        recovered_count: 0,
+        _instance_lock: fixture.paths.acquire_instance_lock().unwrap(),
+    });
+    let server = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+    let url = format!("http://{}/model", server.local_addr().unwrap());
+    server.set_nonblocking(true).unwrap();
+    let done = Arc::new(AtomicBool::new(false));
+    let server_done = done.clone();
+    let server_thread = std::thread::spawn(move || {
+        let mut connections = Vec::new();
+        while !server_done.load(Ordering::Relaxed) {
+            if let Ok((stream, _)) = server.accept() {
+                connections.push(stream);
+            }
+            // Deliberately withhold response headers; cancellation must not wait for data.
+            std::thread::sleep(Duration::from_millis(5));
+        }
+        connections.len()
+    });
+    let fallback = state.clone();
+    let watchdog = std::thread::spawn(move || {
+        std::thread::sleep(Duration::from_millis(250));
+        fallback.models.cancel.store(true, Ordering::Relaxed);
+    });
+    let events = Mutex::new(Vec::new());
+    let result = tauri::async_runtime::block_on(async {
+        tokio::time::timeout(
+            Duration::from_secs(2),
+            crate::models::manager::download_model_from(
+                &state,
+                crate::models::manager::MODEL_ID,
+                &url,
+                |status| {
+                    events
+                        .lock()
+                        .unwrap()
+                        .push((status.downloading, status.downloaded_bytes));
+                    if status.downloading {
+                        state.models.cancel.store(true, Ordering::Relaxed);
+                    }
+                },
+            ),
+        )
+        .await
+    });
+    done.store(true, Ordering::Relaxed);
+    let connections = server_thread.join().unwrap();
+    watchdog.join().unwrap();
+    assert_eq!(result.unwrap().unwrap_err(), "Model download cancelled.");
+    assert_eq!(*events.lock().unwrap(), vec![(true, 0), (false, 0)]);
+    assert_eq!(
+        connections, 0,
+        "Cancellation from the initial event avoids even opening the network request"
+    );
+    assert!(!crate::models::manager::downloading(&state).unwrap());
+    assert!(
+        !crate::models::manager::path(&state)
+            .with_extension("part")
+            .exists()
+    );
+}
+
+#[test]
 #[ignore = "prepares a fresh debug-only UI fixture with pinned downloaded text models"]
 fn prepare_local_ai_ui_fixture() {
     prepare_isolated_native_ui_fixture();

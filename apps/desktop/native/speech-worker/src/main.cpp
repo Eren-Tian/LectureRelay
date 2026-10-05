@@ -56,7 +56,11 @@ int wmain(int argc,wchar_t**argv){
     nemo_speech_asr_result*r=nullptr;while(code==0){code=next(stream,&r);if(!r)break;hypothesis=text(r,0);is_final=final_result(r);free_result(r);r=nullptr;}
    }
   }
-  bool finalize=command==2||quiet||received>=320000;
+  // Submit complete sentences sooner without cutting every eight seconds through
+  // a word. Keep the existing upper bound for speech without sentence boundaries.
+  auto last=hypothesis.find_last_not_of(" \r\n\t\"");
+  bool sentence_end=last!=std::string::npos&&(hypothesis[last]=='.'||hypothesis[last]=='?'||hypothesis[last]=='!');
+  bool finalize=command==2||quiet||(received>=96000&&sentence_end)||received>=320000;
   if(stream&&finalize&&code==0){code=finish(stream);nemo_speech_asr_result*r=nullptr;while(code==0){code=next(stream,&r);if(!r)break;hypothesis=text(r,0);is_final=final_result(r);free_result(r);r=nullptr;}is_final=true;}
   std::string value="{\"text\":"+quote(hypothesis.c_str())+",\"final\":"+((finalize||is_final)?"true":"false")+"}";
   if(!reply(code,value))break;

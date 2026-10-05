@@ -2,7 +2,7 @@ import { ui } from '../../i18n';
 import { useState, useCallback, type FormEvent } from 'react';
 import { api } from '../../api/client';
 import { type Course, type CourseInput } from '../../types/domain';
-import { LANGUAGES, SUBJECTS } from '../../lib/presentation';
+import { LANGUAGES, SUBJECTS, subjectName } from '../../lib/presentation';
 import { Modal } from '../../components/Modal';
 import { useAction } from '../../hooks/useAction';
 import { useWorkspace } from '../../app/Workspace';
@@ -88,7 +88,9 @@ export function CourseForm({
             onChange={(event) => field('subject', event.target.value)}
           >
             {SUBJECTS.map((subject) => (
-              <option key={subject}>{subject}</option>
+              <option key={subject} value={subject}>
+                {subjectName(subject)}
+              </option>
             ))}
           </select>
         </label>

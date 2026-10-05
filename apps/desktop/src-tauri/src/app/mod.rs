@@ -126,6 +126,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::study::open_caption_window,
+            commands::study::close_caption_window,
+            commands::study::caption_state,
+            commands::study::pause_live_translation,
             commands::study::print_document,
             commands::study::cancel_live_processing,
             commands::study::study_state,
@@ -151,6 +154,7 @@ pub fn run() {
             commands::save_course,
             commands::delete_course,
             commands::permanently_delete_course,
+            commands::permanently_delete_lecture,
             commands::free_all_storage,
             commands::existing_lecture_ids,
             commands::save_term,
@@ -198,7 +202,7 @@ pub fn run() {
             MessageBoxW(
                 None,
                 w!(
-                    "LectureRelay could not start. Check app data and Documents permissions, WebView2 Runtime, and whether another instance is running. Existing lecture files are preserved."
+                    "LectureRelay 无法启动。请检查应用数据与文档目录权限、WebView2 Runtime，并确认应用是否已在运行。已有课堂资料会保留。"
                 ),
                 w!("LectureRelay"),
                 MB_OK | MB_ICONERROR,

@@ -1,7 +1,7 @@
 import { LibraryPanel } from '../library/LibraryPanel';
 import { ui } from '../../i18n';
 import { Icon } from '../../components/Icon';
-import { languageName } from '../../lib/presentation';
+import { languageName, subjectName } from '../../lib/presentation';
 import { useWorkspace } from '../../app/Workspace';
 
 export function CoursesPage({ onCreate }: { onCreate: () => void }) {
@@ -22,6 +22,20 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
           {ui.s082}
         </button>
       </header>
+      {(!count || data.settings.speechProvider === 'none') && (
+        <section className="notice setup-welcome">
+          <div>
+            <strong>{'开始使用 LectureRelay'}</strong>
+            <p>{'先设置字幕并测试声音，再创建课程、开始录音。'}</p>
+          </div>
+          <button
+            className="button secondary"
+            onClick={() => navigate({ view: 'settings' })}
+          >
+            {'完成首次设置'}
+          </button>
+        </section>
+      )}
       {data.courses.length ? (
         <div className="course-grid">
           {data.courses.map((course, index) => (
@@ -35,11 +49,12 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
                   <Icon name="books" size={26} />
                 </span>
                 <span className="pill">
-                  English → {languageName(course.assistanceLanguage)}
+                  {'英文 →'}
+                  {languageName(course.assistanceLanguage)}
                 </span>
               </div>
               <span className="course-subject">
-                {course.code || course.subject}
+                {course.code || subjectName(course.subject)}
               </span>
               <h3>{course.name}</h3>
               {course.description && <p>{course.description}</p>}

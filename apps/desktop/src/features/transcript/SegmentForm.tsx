@@ -83,7 +83,7 @@ export function SegmentForm({
           </label>
         </div>
         <label>
-          English
+          {'英文'}
           <textarea
             required
             rows={4}

@@ -6,13 +6,13 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 
 ## 下载与安装
 
-**[下载最新预览版：LectureRelay 0.3.12 · Windows x64 安装包](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.12/LectureRelay_0.3.12_x64-setup.exe)**
+**[下载最新预览版：LectureRelay 0.3.13 · Windows x64 安装包](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.13/LectureRelay_0.3.13_x64-setup.exe)**
 
-[更新说明与下载列表](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.12) · [SHA-256 校验文件](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.12/LectureRelay_0.3.12_x64-setup.exe.sha256)
+[更新说明与下载列表](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.13) · [SHA-256 校验文件](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.13/LectureRelay_0.3.13_x64-setup.exe.sha256)
 
 运行新安装包即可升级，课堂资料和已下载模型会保留。Release 附件来自 GitHub 干净 Windows 构建；源码版本、资源校验和安装包哈希记录在随附的 `build-metadata.json` 中。
 
-1. 在 Release 页面的 **Assets** 中下载 **`LectureRelay_0.3.12_x64-setup.exe`**。普通用户无需下载 **Source code** 源码压缩包。
+1. 在 Release 页面的 **Assets** 中下载 **`LectureRelay_0.3.13_x64-setup.exe`**。普通用户无需下载 **Source code** 源码压缩包。
 2. 运行安装程序，按提示完成安装。若电脑缺少 Microsoft WebView2，安装器会联网下载。
 3. 从开始菜单或桌面快捷方式打开 **LectureRelay**。
 4. 进入 **设置 → 首次设置**，按清单完成配置。到 **AI 与模型 → 本地模型** 下载 **Nemotron**，用于英文字幕；需要本地翻译时再下载 **Hy-MT2**，返回首次设置启用相应字幕。模型只需下载一次，所有课程共用。
@@ -70,7 +70,7 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 
 LectureRelay 仍处于开发预览阶段。英文转录可能漏词，翻译可能误解术语或否定句，AI 总结也可能曲解课堂内容。**引用能够跳回原文，并不代表结论一定正确。** 复习重要内容时，请保留原文与录音作为核对依据。
 
-普通笔记本的功耗、噪音以及实际设备断开场景仍待验证。每个版本实际做过哪些测试，记录在对应的 [发布说明](docs/releases/v0.3.12.md) 中；测试分层与验收方法见 [验证说明](docs/testing/validation.md)。
+普通笔记本的功耗、噪音以及实际设备断开场景仍待验证。每个版本实际做过哪些测试，记录在对应的 [发布说明](docs/releases/v0.3.13.md) 中；测试分层与验收方法见 [验证说明](docs/testing/validation.md)。
 
 ## 数据与隐私
 
@@ -82,7 +82,7 @@ LectureRelay 仍处于开发预览阶段。英文转录可能漏词，翻译可�
 
 ## 参与开发
 
-以下内容仅供开发者使用，**普通用户安装 EXE 无需执行这些步骤**。如需复现已发布安装版，请检出对应 tag，例如 `v0.3.12`；默认分支和功能分支可能与 Release 不同。
+以下内容仅供开发者使用，**普通用户安装 EXE 无需执行这些步骤**。如需复现已发布安装版，请检出对应 tag，例如 `v0.3.13`；默认分支和功能分支可能与 Release 不同。
 
 项目使用 Tauri 2、React、TypeScript、Rust、SQLite 和原生语音 worker。开发环境需要 Windows x64、Node 24.15.x、pnpm 11.25.0、Rust 1.98.1 MSVC、C++ Build Tools／Windows SDK 与 WebView2。
 

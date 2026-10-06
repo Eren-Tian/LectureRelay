@@ -6,13 +6,13 @@ LectureRelay is a **Windows desktop app** that records classes, displays English
 
 ## Download and install
 
-**[Download the latest published preview: 0.3.11 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.11/LectureRelay_0.3.11_x64-setup.exe)**
+**[Download the latest published preview: 0.3.12 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.12/LectureRelay_0.3.12_x64-setup.exe)**
 
-[Release notes and downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.11) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.11/LectureRelay_0.3.11_x64-setup.exe.sha256)
+[Release notes and downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.12) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.12/LectureRelay_0.3.12_x64-setup.exe.sha256)
 
 Upgrade by running the new installer; classroom data and downloaded models are preserved. The published package comes from a clean GitHub Windows build; its source revision, payload checks and installer hash are recorded in the release's `build-metadata.json`.
 
-1. Download **`LectureRelay_0.3.11_x64-setup.exe`** from the release's **Assets**. The **Source code** archives are for developers.
+1. Download **`LectureRelay_0.3.12_x64-setup.exe`** from the release's **Assets**. The **Source code** archives are for developers.
 2. Run the installer. It installs for your Windows user and downloads Microsoft WebView2 if needed, which requires internet access.
 3. Open **LectureRelay** from the Start menu or desktop shortcut.
 4. Open **设置 → 首次设置**. In **AI 与模型 → 本地模型**, download **Nemotron** for English captions. Add **Hy-MT2** if you want local translation, then enable the corresponding captions in the setup checklist. Models are downloaded once and shared across courses.
@@ -70,7 +70,7 @@ See [live summary setup](docs/user-guide/live-summaries.md) and [provider config
 
 LectureRelay is a development preview. Transcription can omit words, translation can misread terminology or negation, and AI summaries can misrepresent the lesson. **A valid source citation is not proof that a conclusion is correct.** Keep the original text and recording available when reviewing important material.
 
-Ordinary-laptop power/noise and physical device-unplug behavior remain unverified. The release notes of each version, such as [0.3.11](docs/releases/v0.3.11.md), record what was actually tested; [validation](docs/testing/validation.md) describes the test tiers and acceptance procedures.
+Ordinary-laptop power/noise and physical device-unplug behavior remain unverified. The release notes of each version, such as [0.3.12](docs/releases/v0.3.12.md), record what was actually tested; [validation](docs/testing/validation.md) describes the test tiers and acceptance procedures.
 
 ## Data and privacy
 
@@ -82,7 +82,7 @@ Uninstalling the app preserves classroom data. Exit the app before backing up th
 
 ## Contributing and building
 
-These instructions are for developers. **Installing the EXE does not require them.** To reproduce a published installer, check out its release tag, such as `v0.3.11`; the default and feature branches may differ from a release.
+These instructions are for developers. **Installing the EXE does not require them.** To reproduce a published installer, check out its release tag, such as `v0.3.12`; the default and feature branches may differ from a release.
 
 The app uses Tauri 2, React, TypeScript, Rust, SQLite and a native speech worker. Development requires Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2.
 

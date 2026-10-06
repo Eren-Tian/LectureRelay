@@ -68,6 +68,11 @@ fn decode_settings(text: &str) -> AppResult<AppSettings> {
         serde_json::from_str(text).user_error("Saved settings could not be read.")?;
     // Also protect settings reads from an old client writing legacy preferences.
     LiveSummaryPreferences::disable_unsupported(&mut value);
+    // Only preferences saved before processing modes existed lack these
+    // fields. Check before dropping unknown values, so an unreadable mode falls
+    // back to Local instead of being mistaken for a missing one.
+    let predates_translation_mode = value.get("translationMode").is_none();
+    let predates_study_mode = value.get("studyMode").is_none();
     // A stored choice this version does not know falls back to its default
     // instead of making every settings read, including startup, fail.
     drop_unknown::<Theme>(&mut value, "theme");
@@ -77,13 +82,13 @@ fn decode_settings(text: &str) -> AppResult<AppSettings> {
     drop_unknown::<SpeechEngine>(&mut value, "speechProvider");
     drop_unknown::<InputSource>(&mut value, "audioSource");
     let mut settings: AppSettings =
-        serde_json::from_value(value.clone()).user_error("Saved settings could not be read.")?;
+        serde_json::from_value(value).user_error("Saved settings could not be read.")?;
     // Retain a previous explicit cloud selection when upgrading existing preferences.
     if settings.provider.cloud().is_some() {
-        if value.get("translationMode").is_none() {
+        if predates_translation_mode {
             settings.translation_mode = ProcessingMode::Cloud;
         }
-        if value.get("studyMode").is_none() {
+        if predates_study_mode {
             settings.study_mode = ProcessingMode::Cloud;
         }
     }
@@ -152,6 +157,25 @@ mod tests {
             .translation_mode,
             ProcessingMode::Local
         );
+    }
+
+    #[test]
+    fn unreadable_processing_modes_with_a_cloud_provider_stay_local() {
+        for provider in ["groq", "openai"] {
+            for mode in [r#""remote""#, "null", "7"] {
+                let settings = decode_settings(&format!(
+                    r#"{{"provider":"{provider}","translationMode":{mode},"studyMode":{mode}}}"#
+                ))
+                .unwrap();
+                assert_eq!(settings.translation_mode, ProcessingMode::Local, "{mode}");
+                assert_eq!(settings.study_mode, ProcessingMode::Local, "{mode}");
+            }
+        }
+        // Only a field that is really missing keeps the legacy cloud selection.
+        let settings =
+            decode_settings(r#"{"provider":"groq","translationMode":"remote"}"#).unwrap();
+        assert_eq!(settings.translation_mode, ProcessingMode::Local);
+        assert_eq!(settings.study_mode, ProcessingMode::Cloud);
     }
 
     #[test]

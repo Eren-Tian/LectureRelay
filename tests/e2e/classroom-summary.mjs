@@ -127,11 +127,11 @@ try {
     await d.read('return !!document.querySelector(".summary-heading button");'),
     false,
   );
-  assert.match(
+  assert.equal(
     await d.read(
-      'return document.querySelector(".classroom-summary").innerText;',
+      'return !!document.querySelector(".live-summary-panel .summary-empty button") && !document.querySelector(".summary-live-status");',
     ),
-    /尚未启用自动总结/,
+    true,
   );
   await d.read('document.documentElement.dataset.theme="dark";');
   await fs.writeFile(

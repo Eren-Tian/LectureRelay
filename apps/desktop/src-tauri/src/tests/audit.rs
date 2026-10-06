@@ -10,6 +10,7 @@ fn state(f: &Fixture) -> crate::AppState {
         recorder: Default::default(),
         jobs: Default::default(),
         live: Default::default(),
+        summaries: Default::default(),
         models: Default::default(),
         runtime: f.root.clone(),
         gate: Mutex::new(()),

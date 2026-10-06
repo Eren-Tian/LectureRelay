@@ -30,6 +30,7 @@ This is an **unsigned development preview**; Windows may display an unknown-publ
 - Choose Light or Dark appearance and a global Quiet Mode for all local AI.
 - Restore courses from Trash and keep your library between app sessions.
 - Delete a single lecture, or collect timestamped classroom source sections and summarize them after recording.
+- Opt into short live summary cards every 2, 4 or 5 minutes using Groq (preferred) or OpenAI independently of speech/translation. In 0.3.10, local Qwen live summaries are disabled to reduce classroom power use; previous local selections become Off without uploading anything. Cards retain English evidence and replay references, and append to manual notes only when requested. See [live summary setup](docs/user-guide/live-summaries.md).
 - Permanently delete trashed courses or free class/model storage with explicit typed confirmation.
 
 See the [getting-started guide](docs/user-guide/getting-started.md), [local AI guide](docs/user-guide/local-ai.md) and [0.3.8 changes](docs/releases/v0.3.8.md).

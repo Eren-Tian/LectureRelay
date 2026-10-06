@@ -45,6 +45,13 @@ const data: Bootstrap = {
   settings: {
     theme: 'light',
     quietMode: true,
+    liveSummaries: {
+      enabled: false,
+      provider: 'groq',
+      model: 'openai/gpt-oss-120b',
+      intervalMinutes: 4,
+      uploadConsent: false,
+    },
     assistanceLanguage: 'zh',
     provider: 'none',
     chatModel: '',

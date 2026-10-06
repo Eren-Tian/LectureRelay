@@ -2,6 +2,7 @@ mod cleanup;
 mod courses;
 mod learning;
 mod lectures;
+pub(crate) mod live_summaries;
 pub(crate) mod outline;
 mod preferences;
 pub(crate) mod review;
@@ -32,7 +33,7 @@ impl Storage {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .user_error("Cannot read database version.")?;
-        if version > 4 {
+        if version > 5 {
             return Err(
                 "This database requires a newer LectureRelay version. Upgrade the app.".into(),
             );
@@ -99,6 +100,19 @@ impl Storage {
         // when an older decoder failed before saving audio_source. Ambiguous rows stay unchanged.
         connection.execute("UPDATE lectures SET audio_source='import' WHERE audio_source!='import' AND EXISTS(SELECT 1 FROM processing_tasks t WHERE t.lecture_id=lectures.id AND t.kind='import')", []).user_error("Cannot repair import metadata.")?;
         connection.execute("UPDATE processing_tasks SET state='interrupted',message='App closed before processing finished. Saved results are preserved.' WHERE state='running'",[]).user_error("Cannot recover processing tasks.")?;
+        if version < 5 {
+            let tx = connection
+                .transaction()
+                .user_error("Cannot start live summary migration.")?;
+            tx.execute_batch(include_str!("migrations/005_live_summaries.sql"))
+                .user_error("Live summary migration failed.")?;
+            tx.execute_batch("PRAGMA user_version=5;")
+                .user_error("Cannot save database version.")?;
+            tx.commit()
+                .user_error("Cannot commit live summary migration.")?;
+        }
+        connection.execute("UPDATE live_summary_cards SET state='deferred',message='应用退出前总结未完成。原文已保存，可点击重试。' WHERE state='running'", []).user_error("Cannot recover live summaries.")?;
+        preferences::disable_local_live_summaries(&connection)?;
         Ok(Self {
             connection: Mutex::new(connection),
             snapshots: Mutex::new(()),

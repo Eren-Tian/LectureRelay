@@ -46,6 +46,8 @@ export class WebDriver {
         'provider_status',
         'trash_courses',
         'existing_lecture_ids',
+        'live_summary_state',
+        'live_summary_setup',
       ].includes(command)
     ) {
       throw new Error(
@@ -95,10 +97,16 @@ export class WebDriver {
   async lecture(title) {
     if (!title.startsWith('[ACCEPTANCE]'))
       throw new Error('Require labelled test lecture');
-    const element = await this.read(
-      "return [...document.querySelectorAll('.lecture-row')].find(e=>e.querySelector('h3')?.textContent.trim()===arguments[0]);",
-      [title],
-    );
+    const deadline = Date.now() + 30000;
+    let element;
+    do {
+      element = await this.read(
+        "return [...document.querySelectorAll('.lecture-row')].find(e=>e.querySelector('h3')?.textContent.trim()===arguments[0]);",
+        [title],
+      );
+      if (element) break;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    } while (Date.now() < deadline);
     if (!element) throw new Error('Exact acceptance lecture missing');
     return this.command(
       'POST',

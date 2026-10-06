@@ -43,7 +43,40 @@ pub fn configured(settings: &AppSettings) -> AppResult<OfficialProvider> {
     OfficialProvider::new(&settings.provider, &settings.chat_model)
 }
 
+fn secure_client(headers: reqwest::header::HeaderMap) -> AppResult<reqwest::Client> {
+    // rustls-no-provider requires explicit initialization. Cloud-only use must
+    // work before a download or local worker happens to initialize it.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    reqwest::Client::builder()
+        .default_headers(headers)
+        .redirect(reqwest::redirect::Policy::none())
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(120))
+        .user_agent(concat!("LectureRelay/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .user_error("Cannot initialize a secure connection.")
+}
+
 impl OfficialProvider {
+    pub async fn classroom_summary(
+        &self,
+        system: &str,
+        user: &str,
+    ) -> Result<String, super::SummaryFailure> {
+        let body = summary_payload(&self.provider, &self.model, system, user);
+        let response = self
+            .client
+            .post(format!("{}/chat/completions", self.base))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|_| super::SummaryFailure {
+                message: "无法连接总结服务或请求超时，请检查网络后重试；录音继续保存。".into(),
+                retry_after: 0,
+            })?;
+        let value = super::http::read_summary_response(response).await?;
+        chat_text(&value).map_err(Into::into)
+    }
     pub fn new(provider: &str, model: &str) -> AppResult<Self> {
         use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
         let base = crate::security::endpoints::provider_base(provider)?;
@@ -53,14 +86,7 @@ impl OfficialProvider {
         authorization.set_sensitive(true);
         let mut headers = HeaderMap::new();
         headers.insert(AUTHORIZATION, authorization);
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .redirect(reqwest::redirect::Policy::none())
-            .connect_timeout(std::time::Duration::from_secs(15))
-            .timeout(std::time::Duration::from_secs(120))
-            .user_agent(concat!("LectureRelay/", env!("CARGO_PKG_VERSION")))
-            .build()
-            .user_error("Cannot initialize a secure connection.")?;
+        let client = secure_client(headers)?;
         Ok(Self {
             client,
             base,
@@ -106,6 +132,24 @@ impl OfficialProvider {
         let value = read_response(response).await?;
         chat_text(&value)
     }
+}
+
+pub(crate) fn summary_payload(
+    provider: &str,
+    model: &str,
+    system: &str,
+    user: &str,
+) -> serde_json::Value {
+    let mut body = serde_json::json!({"model":model,"messages":[{"role":"system","content":system},{"role":"user","content":user}],"max_completion_tokens":2048,"stream":false,
+        "response_format":{"type":"json_schema","json_schema":{"name":"classroom_summary","strict":true,"schema":{"type":"object","properties":{"title":{"type":"string"},"points":{"type":"array","items":{"type":"object","properties":{"text":{"type":"string"},"sourceIds":{"type":"array","items":{"type":"string"}}},"required":["text","sourceIds"],"additionalProperties":false}}},"required":["title","points"],"additionalProperties":false}}}});
+    if provider == "groq" && model.starts_with("openai/gpt-oss-") {
+        body["reasoning_effort"] = serde_json::json!("low");
+        body["include_reasoning"] = serde_json::json!(false);
+    }
+    if provider == "openai" {
+        body["store"] = serde_json::json!(false);
+    }
+    body
 }
 
 #[async_trait]
@@ -250,6 +294,31 @@ pub fn parse_translations(text: &str) -> AppResult<Vec<Translation>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cloud_transport_is_ready_in_a_fresh_process() {
+        if std::env::var("LECTURERELAY_TEST_COLD_HTTP").as_deref() == Ok("1") {
+            assert!(rustls::crypto::CryptoProvider::get_default().is_none());
+            secure_client(Default::default()).unwrap();
+            secure_client(Default::default()).unwrap();
+            return;
+        }
+        use std::os::windows::process::CommandExt;
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "providers::official::tests::cloud_transport_is_ready_in_a_fresh_process",
+            ])
+            .env("LECTURERELAY_TEST_COLD_HTTP", "1")
+            .creation_flags(0x08000000)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "Fresh-process transport failed: {} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
     #[test]
     fn truncated_or_filtered_cloud_text_is_never_published_as_complete() {
         for reason in ["length", "content_filter", "tool_calls", "unknown"] {

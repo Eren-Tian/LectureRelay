@@ -21,6 +21,9 @@ import {
   type SegmentInput,
   type LiveStatus,
   type ModelStatus,
+  type LiveSummaryPreferences,
+  type SummarySetup,
+  type SummaryState,
 } from '../types/domain';
 
 function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
@@ -29,6 +32,19 @@ function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
 }
 
 export const api = {
+  summaryState: (id: string) =>
+    call<SummaryState>('live_summary_state', { id }),
+  summaryAudio: (id: string, cardId: string, sourceId: string) =>
+    call<ArrayBuffer>('summary_audio', { id, cardId, sourceId }),
+  summarySetup: () => call<SummarySetup>('live_summary_setup'),
+  saveSummarySettings: (preferences: LiveSummaryPreferences) =>
+    call<void>('save_live_summary_settings', { preferences }),
+  summarizeNow: (id: string, cardId: string | null = null) =>
+    call<void>('summarize_now', { id, cardId }),
+  testSummaryProvider: (provider: string, model: string) =>
+    call<void>('test_summary_provider', { provider, model }),
+  openSummaryPage: (provider: string, kind: 'keys' | 'privacy' | 'limits') =>
+    call<void>('open_summary_provider_page', { provider, kind }),
   permanentlyDeleteLecture: (id: string, confirmation: string) =>
     call<void>('permanently_delete_lecture', { id, confirmation }),
   existingLectureIds: (ids: string[]) =>

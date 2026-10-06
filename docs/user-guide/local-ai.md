@@ -1,6 +1,8 @@
 # Local AI (0.3 preview)
 
-In the 0.3.7 candidate, the right-hand **课堂要点** tab collects finalized classroom captions into sections. After stopping and waiting for remaining captions to finish, click **生成课堂要点** to summarize them locally with the downloaded Qwen3.5-4B study model. Click a time range to replay, expand the source to check a claim, or use **加入我的笔记** to append the section to your existing draft. Incomplete runs retain completed sections and offer **继续整理**. Live recording does not run the study model. See [summary validation](../testing/classroom-summary-v0.3.7.md).
+Optional [live summaries](live-summaries.md) use independent settings and start disabled. From 0.3.10, local Qwen live summaries are disabled to reduce classroom power use; old local selections become Off without switching to cloud processing. Groq and OpenAI remain optional own-key providers. Local speech, translation, and manually requested postclass Qwen review/Q&A keep their existing settings.
+
+The postclass outline introduced in 0.3.7 remains available. After stopping and waiting for remaining captions to finish, click **生成课堂要点** to summarize them locally with the downloaded Qwen3.5-4B study model. Click a time range to replay, expand the source to check a claim, or use **加入我的笔记** to append the section to your existing draft. Incomplete runs retain completed sections and offer **继续整理**. Whole-class review and the larger study pipeline still wait until recording finishes. See [summary validation](../testing/classroom-summary-v0.3.7.md).
 
 In the 0.3.6 candidate, local translation can show a stable-prefix preview before a sentence is final. **临时译文 · 将随原文调整** marks provisional text; **翻译中…** marks a final sentence whose translation is still being generated. Only completed translations enter saved records and exports. Model loading and long sentences still need time. See [real lecturer audio validation](../testing/local-caption-latency-v0.3.6.md).
 

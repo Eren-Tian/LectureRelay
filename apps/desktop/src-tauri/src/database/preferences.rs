@@ -34,6 +34,7 @@ impl Storage {
     }
 
     pub fn save_settings(&self, settings: AppSettings) -> AppResult<()> {
+        settings.live_summaries.validate()?;
         if !matches!(
             settings.translation_model.as_str(),
             "hy-mt2-1.8b" | "qwen3.5-4b"
@@ -90,7 +91,43 @@ fn decode_settings(text: &str) -> AppResult<AppSettings> {
             settings.study_mode = "cloud".into();
         }
     }
+    // Also protect settings reads from an old client writing legacy preferences.
+    settings.live_summaries.disable_legacy_local();
     Ok(settings)
+}
+
+pub(super) fn disable_local_live_summaries(connection: &rusqlite::Connection) -> AppResult<()> {
+    let text: Option<String> = connection
+        .query_row(
+            "SELECT value FROM app_settings WHERE key='preferences'",
+            [],
+            |row| row.get(0),
+        )
+        .optional()
+        .user_error("无法读取实时总结设置。")?;
+    let Some(text) = text else {
+        return Ok(());
+    };
+    let mut value: serde_json::Value =
+        serde_json::from_str(&text).user_error("Saved settings could not be read.")?;
+    if value["liveSummaries"]["provider"] != "local" {
+        return Ok(());
+    }
+    // Change only this feature. Keep unrelated and unknown preferences intact,
+    // and never migrate local processing into a cloud upload.
+    let preferences = &mut value["liveSummaries"];
+    preferences["enabled"] = false.into();
+    preferences["provider"] = "none".into();
+    preferences["model"] = LiveSummaryPreferences::default().model.into();
+    preferences["uploadConsent"] = false.into();
+    let updated = serde_json::to_string(&value).user_error("无法保存实时总结设置。")?;
+    connection
+        .execute(
+            "UPDATE app_settings SET value=?1 WHERE key='preferences' AND value=?2",
+            params![updated, text],
+        )
+        .user_error("无法停用旧的本地实时总结设置。")?;
+    Ok(())
 }
 
 #[cfg(test)]

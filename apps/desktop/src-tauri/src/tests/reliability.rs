@@ -312,6 +312,7 @@ fn stale_review_rejects_transcript_context_language_and_model_changes() {
         recorder: Default::default(),
         jobs: Default::default(),
         live: Default::default(),
+        summaries: Default::default(),
         models: Default::default(),
         runtime: f.root.clone(),
         gate: Mutex::new(()),

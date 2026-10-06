@@ -58,6 +58,13 @@ const fixture = {
 };
 Object.assign(window, { summaryFixture: fixture });
 api.study = async () => structuredClone(study);
+api.summaryState = async () => ({
+  cards: [],
+  busy: false,
+  message: '',
+  remaining: 0,
+  collectingSeconds: 0,
+});
 api.saveDraft = async (_id, body) => {
   fixture.draft = body;
 };

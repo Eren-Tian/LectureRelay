@@ -137,6 +137,9 @@ pub(crate) async fn download_model_from(
     let model = catalog::get(id)?;
     let mut value = {
         let _gate = state.gate.lock().user_error("The app is busy.")?;
+        if state.summaries.busy() {
+            return Err("实时总结正在处理，请等待完成，或关闭总结后再下载模型。".into());
+        }
         if state.recorder.status()?.is_some()
             || state.live.active()
             || state.jobs.status()?.is_some()
@@ -240,6 +243,9 @@ pub fn remove(state: &AppState) -> AppResult<()> {
 pub fn remove_model(state: &AppState, id: &str) -> AppResult<()> {
     catalog::get(id)?;
     let _gate = state.gate.lock().user_error("The app is busy.")?;
+    if state.summaries.busy() {
+        return Err("实时总结正在处理，请等待完成，或关闭总结后再删除模型。".into());
+    }
     if state.recorder.status()?.is_some()
         || state.live.active()
         || state.jobs.status()?.is_some()

@@ -138,6 +138,7 @@ pub struct AppSettings {
     pub show_english: bool,
     pub show_translation: bool,
     pub auto_scroll: bool,
+    pub live_summaries: LiveSummaryPreferences,
 }
 
 impl Default for AppSettings {
@@ -162,6 +163,7 @@ impl Default for AppSettings {
             show_english: true,
             show_translation: true,
             auto_scroll: true,
+            live_summaries: LiveSummaryPreferences::default(),
         }
     }
 }
@@ -187,4 +189,62 @@ pub fn new_id() -> String {
 
 pub fn valid_language(language: &str) -> bool {
     matches!(language, "zh" | "ja" | "ko")
+}
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct LiveSummaryPreferences {
+    pub enabled: bool,
+    pub provider: String,
+    pub model: String,
+    pub interval_minutes: u32,
+    pub upload_consent: bool,
+}
+impl Default for LiveSummaryPreferences {
+    fn default() -> Self {
+        Self {
+            enabled: false,
+            provider: "groq".into(),
+            model: "openai/gpt-oss-120b".into(),
+            interval_minutes: 4,
+            upload_consent: false,
+        }
+    }
+}
+impl LiveSummaryPreferences {
+    pub fn disable_legacy_local(&mut self) {
+        if self.provider == "local" {
+            self.enabled = false;
+            self.provider = "none".into();
+            self.model = Self::default().model;
+            self.upload_consent = false;
+        }
+    }
+    pub fn validate(&self) -> crate::error::AppResult<()> {
+        if self.provider == "local" {
+            return Err(
+                "本地 Qwen 实时总结已停用，以降低课堂功耗。请选择 Groq、OpenAI 或关闭总结。".into(),
+            );
+        }
+        if !matches!(self.provider.as_str(), "groq" | "openai" | "none")
+            || !matches!(self.interval_minutes, 2 | 4 | 5)
+            || self.model.is_empty()
+            || self.model.len() > 120
+            || !self
+                .model
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || "-._/".contains(c))
+        {
+            return Err("请选择有效的总结服务、模型和 2、4 或 5 分钟间隔。".into());
+        }
+        if self.enabled
+            && matches!(self.provider.as_str(), "groq" | "openai")
+            && !self.upload_consent
+        {
+            return Err(
+                "启用云端总结前，请确认允许向所选服务商发送对应英文转录与课程背景。".into(),
+            );
+        }
+        Ok(())
+    }
 }

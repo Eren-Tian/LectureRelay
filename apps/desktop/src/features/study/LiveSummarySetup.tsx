@@ -74,6 +74,7 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
     await api.saveSummarySettings(next);
     setPreferences(next);
     await workspace.refresh();
+    await load();
     onSaved?.();
     setMessage(
       next.enabled

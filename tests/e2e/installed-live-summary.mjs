@@ -67,6 +67,14 @@ if (action.startsWith('configure-') || action === 'local-tail') {
       [action === 'configure-groq-off' ? 'groq' : 'local'],
     );
   }
+  if (process.env.LECTURERELAY_LIVE_SUMMARY_INTERVAL) {
+    const interval = Number(process.env.LECTURERELAY_LIVE_SUMMARY_INTERVAL);
+    assert.ok([2, 4, 5].includes(interval));
+    await d.read(
+      "const e=document.querySelectorAll('.live-summary-setup select')[1];e.value=arguments[0];e.dispatchEvent(new Event('change',{bubbles:true}));",
+      [String(interval)],
+    );
+  }
   await d.clickText(
     ['configure-local', 'local-tail'].includes(action)
       ? '启用实时总结'
@@ -242,7 +250,7 @@ if (action === 'tail') {
   );
   assert.equal(
     await d.read(
-      "return document.querySelector('.summary-stale button:last-child')?.disabled;",
+      "return [...document.querySelectorAll('.summary-stale button')].find(b=>b.innerText.trim()==='加入我的笔记')?.disabled;",
     ),
     true,
   );

@@ -32,4 +32,4 @@
 
 删除一节课时，在课程历史或回放页点击 **删除课堂记录**，核对标题并输入 **删除**。会永久删除这一节课的录音和学习资料，其他课堂记录、课程背景、术语表和 PDF 保留。课程移入 **回收站** 后可恢复，也可确认后永久删除。**设置 → 数据与存储 → 清空课堂数据与模型** 需要输入 **清空全部数据**，请先导出需要保留的内容。
 
-卸载应用会保留课堂资料。备份前请退出应用，并同时保存数据库和资料库。课堂内容未使用应用层加密。更多说明：[本地识别](local-speech.md)、[可选云端服务](../providers/setup.md)、[存储位置](../architecture/overview.md)、[质量评测](../testing/local-ai-v0.3.md)。
+卸载应用会保留课堂资料。备份前请退出应用，并同时保存数据库和资料库。课堂内容未使用应用层加密。更多说明：[本地识别](local-speech.md)、[可选云端服务](../providers/setup.md)、[存储位置](../architecture/overview.md)、[质量评测](https://github.com/Eren-Tian/LectureRelay/blob/0c59144aa950e213def3c5f2b4df441bdcbffadc/docs/testing/local-ai-v0.3.md)。

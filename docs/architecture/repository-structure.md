@@ -11,17 +11,20 @@ apps/desktop/
     types/                   serialized domain/IPC contracts
     components/              shared Icon, Modal, Markdown and resource-state UI
     hooks/                   shared async action/resource hooks
-    lib/, i18n/, styles/      presentation helpers, Chinese UI/native messages,
-                             English catalog, shared theme and layout CSS
+    lib/, styles/             presentation helpers, shared theme and layout CSS
+    i18n/                    zh-CN UI catalog (runtime), matching English catalog,
+                             native English→Chinese message catalog
   src-tauri/
     src/
-      app/                   startup/state, exclusive jobs, post-class assistance
+      app/                   startup/state, busy-work policies (busy.rs), exclusive
+                             jobs, post-class assistance, live summaries
       commands/              IPC validation and cross-domain concurrency gates
       audio/                 capture/device callback, recording writer, WAV encoding
       database/              connection/version gate, repositories, row mappings,
         migrations/          immutable, sequential SQL migrations
       domain.rs              canonical Rust serialized learning/settings values
-      speech/                engine selection and streaming coordinator
+      speech/                live session (streaming.rs), recognition loop,
+                             live translation worker and queue
         local/               Nemotron worker IPC/containment and batch adapter
       providers/             contracts, shared official adapter and safe HTTP responses
       models/                pinned download/install/remove manager
@@ -36,16 +39,17 @@ apps/desktop/
   native/speech-worker/      C++ source, audited DLL manifest and build/protocol notes
 assets/branding/phoenix/     canonical original SVG; generated copies are documented
 crates/environment-check/   bundled SQLite/toolchain smoke check
-experiments/local-stt/      isolated model comparisons, worker-policy snapshot, reports
+experiments/local-stt/      isolated model comparison scripts and worker-policy snapshot
 tests/fixtures/, soak/      fixture policy and long native/WAV/SQLite harness
-tests/e2e/                  React/browser regressions, opt-in installed acceptance
+tests/e2e/                  React component regressions, opt-in installed acceptance
 apps/desktop/tests/fixtures/ isolated React views with synthetic native replies
 scripts/dev/                setup, activation, doctor, native command launcher
 scripts/build/              pinned SDK preparation, worker build, branding staging
 scripts/test/               component driver/runner and opt-in native checks
 scripts/ci/                 isolated CI capture and cold installer provenance
 scripts/release/            NSIS/release wrapper and installer checksum
-scripts/verification/       source hygiene/import/link audit and staged/installed resources
+scripts/verification/       source hygiene/import/link audit, UI string and native
+                            message catalogs, staged/installed resources
 docs/                       requirements, architecture, ADRs, providers, security,
                             testing, user-guide, releases, development and licenses
 ```
@@ -56,7 +60,7 @@ docs/                       requirements, architecture, ADRs, providers, securit
 | ------------------ | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
 | Frontend features  | Product views, feature form/panel state                                                             | Generic UI in components; credentials/HTTP in Rust      |
 | Frontend app       | Route selection, shared workspace/confirmation orchestration                                        | SQL, model engines, feature-specific controls           |
-| Native commands    | Input checks and the single recording/live/job gate                                                 | Queries, HTTP implementation, secret persistence        |
+| Native commands    | Input checks; take the gate and name their `Operation` for the busy-work table in `app/busy.rs`     | Queries, HTTP implementation, secret persistence        |
 | Audio              | CPAL microphone/render loopback, levels, bounded callback, native-rate WAV, checkpoint/pause writer | STT resampling/protocol in speech/local                 |
 | Database           | Connection initialization, schema transactions and domain queries                                   | File snapshots, user library and recovery orchestration |
 | Speech             | Local worker protocol, batch/streaming integration, speech engine selection                         | Experimental engines or downloaded weights              |

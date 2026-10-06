@@ -1,7 +1,0 @@
-{
-  "passed": true,
-  "consecutiveGuiExports": 2,
-  "explorerWindowIdsBefore": [1185658, 37163920, 80876554],
-  "explorerWindowIdsAfter": [1185658, 37163920, 80876554],
-  "method": "Native window inventory immediately before/after two actual GUI export clicks; existing windows unchanged."
-}

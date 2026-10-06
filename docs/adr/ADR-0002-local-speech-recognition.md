@@ -8,7 +8,7 @@ LectureRelay needs genuine live English captions on Windows without an end-user 
 
 ## Evidence and candidates
 
-The [benchmark report](../testing/local-stt-benchmark-v0.2.md) covers actual Nemotron, Moonshine, Parakeet and Whisper runs; Qwen3-ASR and Fun-ASR were investigated only. The five-clip corpus is 95 seconds/175 words, mostly synthetic, and cannot establish general lecture accuracy.
+The [benchmark report](https://github.com/Eren-Tian/LectureRelay/blob/0c59144aa950e213def3c5f2b4df441bdcbffadc/docs/testing/local-stt-benchmark-v0.2.md) covers actual Nemotron, Moonshine, Parakeet and Whisper runs; Qwen3-ASR and Fun-ASR were investigated only. The five-clip corpus is 95 seconds/175 words, mostly synthetic, and cannot establish general lecture accuracy.
 
 Nemotron native CPU achieved 6.29% WER, approximately 943 MiB RAM and 526 ms computation per two-second feed on the development machine. A 5400.6-second native/WAV/SQLite soak completed without errors or duplicate saves. Moonshine used less memory but the tested reused-session path failed around 200 seconds and forced endpoints lost words. Parakeet matched selected native WER on this small set. Whisper tiny.en was lightweight but is not a genuine streaming architecture. Current secondary native ports are viable research paths, but streaming/hotwords/packaging remain unaccepted; Fun converted-artifact licensing also needs resolution.
 

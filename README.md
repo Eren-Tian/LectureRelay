@@ -10,7 +10,7 @@ LectureRelay is a **Windows desktop app** that records classes, displays English
 
 [Release notes and downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.11) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.11/LectureRelay_0.3.11_x64-setup.exe.sha256)
 
-The published installer is **0.3.11**, with grouped settings, direct links to relevant options and more reliable preference, audio-device and storage-error handling. Optional cloud live summaries remain available; local Qwen live summaries remain disabled. Upgrade by running the new installer; classroom data and downloaded models are preserved. The published package comes from a clean GitHub Windows build; its source revision, payload checks and installer hash are recorded in the release's `build-metadata.json`.
+Upgrade by running the new installer; classroom data and downloaded models are preserved. The published package comes from a clean GitHub Windows build; its source revision, payload checks and installer hash are recorded in the release's `build-metadata.json`.
 
 1. Download **`LectureRelay_0.3.11_x64-setup.exe`** from the release's **Assets**. The **Source code** archives are for developers.
 2. Run the installer. It installs for your Windows user and downloads Microsoft WebView2 if needed, which requires internet access.
@@ -60,7 +60,7 @@ Start from **设置 → AI 与模型 → 实时总结**.
 
 Live summaries start disabled, default to every **4 minutes**, and can be set to **2 or 5 minutes**. You can also summarize the collected text manually. Cards preserve evidence and replay references; **加入我的笔记** appends them only when you choose to. Recording is saved independently of summary completion, and failed work remains visible and recoverable.
 
-**Local Qwen live summaries are disabled in 0.3.10 to reduce classroom resource use.** Old local live-summary preferences become **Off**, with upload consent cleared. Existing cards and downloaded models remain; manually requested postclass review/Q&A still supports local Qwen. Cloud processing is enabled only through explicit setup.
+To reduce classroom resource use, live summaries run only through a cloud provider, enabled through explicit setup; postclass review and Q&A still support local Qwen.
 
 Cloud summaries send selected English transcript sections and bounded course background/terms, not recordings. API keys are entered in the app and stored in Windows Credential Manager. Groq's free account allowance has request/token limits; OpenAI API usage is billed separately from ChatGPT subscriptions. Any charges or quotas belong to the user's provider account.
 
@@ -70,9 +70,7 @@ See [live summary setup](docs/user-guide/live-summaries.md) and [provider config
 
 LectureRelay is a development preview. Transcription can omit words, translation can misread terminology or negation, and AI summaries can misrepresent the lesson. **A valid source citation is not proof that a conclusion is correct.** Keep the original text and recording available when reviewing important material.
 
-Installed 0.3.8 tests used real MIT lectures with local models and Quiet Mode. Earlier 0.3.3 audio continuity tests ran for more than 90 minutes with synthetic probes; those results apply to that specific build and fixture. They do not establish natural-speech accuracy or long-session behavior for a newer version. Ordinary-laptop power/noise and physical device-unplug behavior remain unverified.
-
-The 0.3.11 release source passed **eight React component suites**, **81 desktop Rust tests and one environment-check test**, type checking, formatting, Clippy and repository checks. A separate clean GitHub Windows build passed NSIS installation and runtime, icon, license and payload checks. The UI fixtures use isolated native responses; they do not test the installed classroom GUI, real audio or model inference. This update used no additional API requests or audio playback, and no new 90-minute test. See the [settings engineering review](docs/testing/settings-review-2026-10-06.md) and [0.3.11 release evidence](docs/releases/v0.3.11.md). Earlier actual Groq, local AI and continuity results remain documented in [live-summary acceptance](docs/testing/live-summaries-v0.3.9.md), [local AI evaluation](docs/testing/local-ai-v0.3.md) and [audio continuity evidence](docs/testing/audio-continuity-v0.3.3.md).
+Ordinary-laptop power/noise and physical device-unplug behavior remain unverified. The release notes of each version, such as [0.3.11](docs/releases/v0.3.11.md), record what was actually tested; [validation](docs/testing/validation.md) describes the test tiers and acceptance procedures.
 
 ## Data and privacy
 

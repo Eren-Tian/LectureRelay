@@ -32,4 +32,4 @@ node scripts/dev/run-native.mjs cargo test -p lecturerelay-desktop --test native
 node scripts/dev/run-native.mjs cargo test -p lecturerelay-desktop --lib official_model_download_cancel_install_and_remove -- --ignored --nocapture
 ```
 
-See [release validation](../../docs/releases/v0.2.0.md) and [benchmark evidence](../../docs/testing/local-stt-benchmark-v0.2.md) for outcomes and scope. No isolated test modifies real provider targets or sends lecture content to a cloud provider.
+See [release validation](../../docs/releases/v0.2.0.md) and [benchmark evidence](https://github.com/Eren-Tian/LectureRelay/blob/0c59144aa950e213def3c5f2b4df441bdcbffadc/docs/testing/local-stt-benchmark-v0.2.md) for outcomes and scope. No isolated test modifies real provider targets or sends lecture content to a cloud provider.

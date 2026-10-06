@@ -30,6 +30,6 @@ Update both READMEs, current user/provider guides and the release evidence after
 - Packaging: cold hosted compile, NSIS installation and packaged-resource checks, without inference models.
 - Explicit local acceptance: real audio devices, downloaded local models, installed UI, failures, restart and a timed continuity run. Never substitute native unit tests for installed acceptance.
 
-After review, `Windows checks` can become a required check. `Windows installer (cold)` is an opt-in packaging check unless the team chooses a broader trigger. This task does not change branch protection or merge its own PR. Actual run links and candidate hashes are recorded in the continuity investigation report after execution.
+After review, `Windows checks` can become a required check. `Windows installer (cold)` is an opt-in packaging check unless the team chooses a broader trigger. This task does not change branch protection or merge its own PR. Actual run links and candidate hashes belong in the release notes of the version they verify.
 
 Official references reviewed for this workflow: [checkout](https://github.com/actions/checkout), [setup-node](https://github.com/actions/setup-node), [upload-artifact](https://github.com/actions/upload-artifact), [workflow events](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows). External actions are fixed to release commit SHAs, not floating version tags.

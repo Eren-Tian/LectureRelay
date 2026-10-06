@@ -258,6 +258,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
             settings.live_translation && settings.translation_mode != "none";
         status.translation.configured = translation_configured;
     }
+    crate::diagnostics::caption_stage(&state.paths, id, "speech_prepare_start", &[], 0.0);
     let mut local = if settings.speech_provider == "local" {
         Some(LocalSpeech::open(
             &state.runtime,
@@ -276,6 +277,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
             .collect::<Vec<_>>();
         engine.set_glossary(&terms)?;
     }
+    crate::diagnostics::caption_stage(&state.paths, id, "speech_ready", &[], 0.0);
     let provider = if local.is_none() {
         Some(OfficialProvider::new(
             &settings.speech_provider,
@@ -307,6 +309,13 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                 return;
             };
             if local_translation {
+                crate::diagnostics::caption_stage(
+                    &state.paths,
+                    &id,
+                    "translation_prepare_start",
+                    &[],
+                    0.0,
+                );
                 let warmup = tauri::async_runtime::block_on(async {
                     tokio::time::timeout(Duration::from_secs(30), provider.prepare_live())
                         .await
@@ -314,6 +323,17 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                             "Local model loading timed out. Recording is preserved.".to_string()
                         })?
                 });
+                crate::diagnostics::caption_stage(
+                    &state.paths,
+                    &id,
+                    if warmup.is_ok() {
+                        "translation_ready"
+                    } else {
+                        "translation_prepare_failed"
+                    },
+                    &[],
+                    0.0,
+                );
                 if let Err(error) = warmup
                     && let Ok(mut status) = state.live.status.lock()
                 {
@@ -543,8 +563,8 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
     let mut cursor = lecture.transcribed_until;
     state.live.progressed(cursor);
     let mut utterance_start = cursor;
-    // Four native 160 ms blocks. Cloud transcription retains its existing batch policy.
-    let seconds = if local.is_some() { 0.64 } else { 2.0 };
+    // Two native 160 ms blocks. Cloud transcription retains its existing batch policy.
+    let seconds = if local.is_some() { 0.32 } else { 2.0 };
     let mut stable_prefix = StablePrefix::default();
     let preview_clock = Instant::now();
     let mut last_sample = Instant::now();
@@ -728,6 +748,13 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
             if let Some(text) = partial {
                 cursor = end;
                 state.live.progressed(cursor);
+                crate::diagnostics::caption_stage(
+                    &state.paths,
+                    id,
+                    "speech_partial",
+                    &[local_segment(id, base, end, text.clone())],
+                    end,
+                );
                 publish(
                     state,
                     app,
@@ -753,6 +780,13 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
                 {
                     let mut segment = local_segment(id, base, end, source);
                     segment.revision = revision as i64;
+                    crate::diagnostics::caption_stage(
+                        &state.paths,
+                        id,
+                        "preview_eligible",
+                        std::slice::from_ref(&segment),
+                        end,
+                    );
                     translations.preview(segment);
                 }
                 continue;

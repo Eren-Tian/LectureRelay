@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include "nemo_speech/asr.h"
+#include "silence.hpp"
 template<class T>T sym(HMODULE h,const char*n){return reinterpret_cast<T>(GetProcAddress(h,n));}
 std::string utf8(const wchar_t*s){int n=WideCharToMultiByte(CP_UTF8,0,s,-1,nullptr,0,nullptr,nullptr);std::string r(n,'\0');WideCharToMultiByte(CP_UTF8,0,s,-1,r.data(),n,nullptr,nullptr);r.pop_back();return r;}
 std::string quote(const char*s){std::string r="\"";for(auto*p=reinterpret_cast<const unsigned char*>(s?s:"");*p;p++){if(*p=='"'||*p=='\\'){r+='\\';r+=*p;}else if(*p=='\n')r+="\\n";else if(*p=='\r')r+="\\r";else if(*p=='\t')r+="\\t";else if(*p>=32)r+=*p;}return r+"\"";}
@@ -32,7 +33,7 @@ int wmain(int argc,wchar_t**argv){
  auto options=defaults();options.language_code="en-US";options.interim_results=true;options.enable_word_time_offsets=true;options.enable_automatic_punctuation=true;
  std::vector<std::string>phrases;std::vector<const char*>phrase_pointers;
  nemo_speech_asr_speech_context context={};context.size=sizeof(context);context.boost=3;
- nemo_speech_asr_stream*stream=nullptr;uint32_t received=0;std::string hypothesis;uint32_t header;
+ nemo_speech_asr_stream*stream=nullptr;uint32_t received=0;std::string hypothesis;uint32_t header;TrailingSilence silence;
  while(fread(&header,4,1,stdin)==1){
   if(header==0)break;auto command=header>>30;auto count=header&0x3fffffff;if(count>960000){reply(-2,"");break;}
   if(command==3){
@@ -46,9 +47,14 @@ int wmain(int argc,wchar_t**argv){
   }
   std::vector<float>pcm(count);if(count&&fread(pcm.data(),4,count,stdin)!=count)break;
   if(command==0){nemo_speech_asr_result*r=nullptr;code=batch(recognizer,&options,pcm.data(),count,16000,&r);std::string value=r?text(r,0):"";if(r)free_result(r);if(!reply(code,value))break;continue;}
-  if(!stream&&command==1){code=begin(recognizer,&options,&stream);received=0;hypothesis.clear();}
+  // Digital silence before an utterance needs no encoder work. Only exact zero
+  // is skipped; low-volume speech and microphone noise still reach the model.
+  // The parent advances its audio clock on this empty final, preserving offsets.
+  bool digital_silence=count>0;for(float sample:pcm)if(sample!=0.0f){digital_silence=false;break;}
+  if(command==1&&!stream&&digital_silence){if(!reply(0,"{\"text\":\"\",\"final\":true}"))break;continue;}
+  if(!stream&&command==1){code=begin(recognizer,&options,&stream);received=0;hypothesis.clear();silence.samples=0;}
   if(code!=0){reply(code,"");break;}
-  bool quiet=true;for(uint32_t i=count>8000?count-8000:0;i<count;i++)if(pcm[i]>.004f||pcm[i]<-.004f){quiet=false;break;}
+  silence.observe(pcm.data(),count);bool quiet=silence.qualifies();
   bool is_final=false;
   if(stream&&count){
    // Drive cache-aware decoding in the engine's documented 160 ms ingress blocks.

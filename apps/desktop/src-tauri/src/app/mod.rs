@@ -82,9 +82,15 @@ pub fn run() {
             .visible(false)
             .data_directory(paths.data.join("state").join("webview2"))
             .build()?;
-            #[cfg(debug_assertions)]
-            if std::env::var_os("LECTURERELAY_TEST_ROOT").is_some() {
-                window.set_title("LectureRelay — Isolated Test")?;
+            // Installed acceptance may request placement, never a data-root override.
+            // Release storage still always uses the user's Windows Known Folders.
+            if std::env::var("LECTURERELAY_TEST_PORTRAIT").as_deref() == Ok("1")
+                || cfg!(debug_assertions) && std::env::var_os("LECTURERELAY_TEST_ROOT").is_some()
+            {
+                #[cfg(debug_assertions)]
+                if std::env::var_os("LECTURERELAY_TEST_ROOT").is_some() {
+                    window.set_title("LectureRelay — Isolated Test")?;
+                }
                 // Keep automated test windows on the user's portrait display before showing.
                 if let Some(monitor) = window
                     .available_monitors()?

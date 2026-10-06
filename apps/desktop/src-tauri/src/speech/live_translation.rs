@@ -61,7 +61,10 @@ impl StablePrefix {
             .take_while(|(a, b)| a == b)
             .count();
         self.previous = words.clone();
-        let count = common.saturating_sub(2).min(32);
+        // Twenty seconds of continuous speech can exceed 32 words. Capping the
+        // prefix there froze the last half of an utterance until finalization.
+        // Bound work by bytes, but keep advancing through the agreed hypothesis.
+        let count = common.saturating_sub(2).min(80);
         if count < 6
             || self
                 .proposed_at_ms
@@ -70,7 +73,7 @@ impl StablePrefix {
             return None;
         }
         let candidate = words[..count].join(" ");
-        if candidate.len() > 512 || candidate == self.proposed {
+        if candidate.len() > 1024 || candidate == self.proposed {
             return None;
         }
         if prefix_matches(&candidate, &self.proposed)
@@ -166,6 +169,28 @@ impl TranslationQueue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn stable_preview_keeps_progressing_after_thirty_two_words() {
+        let mut stable = StablePrefix::default();
+        let first = (0..40)
+            .map(|i| format!("word{i}"))
+            .collect::<Vec<_>>()
+            .join(" ");
+        assert!(stable.observe(&first, 0).is_none());
+        assert_eq!(
+            stable
+                .observe(&first, 1000)
+                .unwrap()
+                .0
+                .split_whitespace()
+                .count(),
+            38
+        );
+        let longer = format!("{first} more stable words with continuing explanation today");
+        stable.observe(&longer, 2000);
+        let next = stable.observe(&longer, 4000).unwrap().0;
+        assert!(next.split_whitespace().count() > 40);
+    }
     fn segment(text: &str) -> TranscriptSegment {
         TranscriptSegment {
             source_text: text.into(),

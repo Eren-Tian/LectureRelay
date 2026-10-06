@@ -6,16 +6,16 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 
 ## 下载与安装
 
-**[下载最新预览版：LectureRelay 0.3.10 · Windows x64 安装包](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.10/LectureRelay_0.3.10_x64-setup.exe)**
+**[下载最新预览版：LectureRelay 0.3.11 · Windows x64 安装包](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.11/LectureRelay_0.3.11_x64-setup.exe)**
 
-[更新说明与下载列表](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.10) · [SHA-256 校验文件](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.10/LectureRelay_0.3.10_x64-setup.exe.sha256)
+[更新说明与下载列表](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.11) · [SHA-256 校验文件](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.11/LectureRelay_0.3.11_x64-setup.exe.sha256)
 
-当前已发布安装版为 **0.3.10**，包含可选实时分段总结，已停用本地 Qwen 实时总结，并精简了课堂界面的常驻说明。运行新安装包即可升级，课堂资料和已下载模型会保留。Release 附件来自 GitHub 干净 Windows 构建；源码版本、资源校验和安装包哈希记录在随附的 `build-metadata.json` 中。
+当前已发布安装版为 **0.3.11**，整理了设置分类与布局，相关功能可直接跳到对应设置，并改善了偏好保存、声音设备切换和存储错误提示。可选云端实时总结继续保留，本地 Qwen 实时总结仍停用。运行新安装包即可升级，课堂资料和已下载模型会保留。Release 附件来自 GitHub 干净 Windows 构建；源码版本、资源校验和安装包哈希记录在随附的 `build-metadata.json` 中。
 
-1. 在 Release 页面的 **Assets** 中下载 **`LectureRelay_0.3.10_x64-setup.exe`**。普通用户无需下载 **Source code** 源码压缩包。
+1. 在 Release 页面的 **Assets** 中下载 **`LectureRelay_0.3.11_x64-setup.exe`**。普通用户无需下载 **Source code** 源码压缩包。
 2. 运行安装程序，按提示完成安装。若电脑缺少 Microsoft WebView2，安装器会联网下载。
 3. 从开始菜单或桌面快捷方式打开 **LectureRelay**。
-4. 进入 **设置 → 首次使用**，按清单完成配置。到 **本地 AI** 下载 **Nemotron**，用于英文字幕；需要本地翻译时再下载 **Hy-MT2**，返回首次设置启用相应字幕。模型只需下载一次，所有课程共用。
+4. 进入 **设置 → 首次设置**，按清单完成配置。到 **AI 与模型 → 本地模型** 下载 **Nemotron**，用于英文字幕；需要本地翻译时再下载 **Hy-MT2**，返回首次设置启用相应字幕。模型只需下载一次，所有课程共用。
 5. **新建课程**，选择中文、日语或韩语作为辅助语言，补充课程背景和专业术语。
 6. 线下上课选择 **麦克风**；电脑播放课程时选择 **系统声音**。确认设备能够接收到声音，再开始录音。
 
@@ -32,6 +32,8 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 - **外观与存储：** 切换浅色／深色主题，使用全局 **安静模式（Quiet Mode）**。支持单独删除一节课堂记录、恢复回收站中的课程，以及确认后永久删除或清空课堂数据与模型。
 
 详细操作见 [开始使用](docs/user-guide/getting-started.md) 和 [本地 AI 配置](docs/user-guide/local-ai.md)。
+
+设置现在分为六类：**通用** 管理外观和安静模式，修改后自动保存；**声音与字幕** 管理声音设备和字幕样式；**AI 与模型** 集中功能设置、本地模型与实时总结。API Key 位于折叠的 **功能设置 → 云端 API Key** 中。其他偏好有改动时才显示保存栏。
 
 ## AI 如何工作
 
@@ -54,6 +56,8 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 
 **获取 Groq API Key → 粘贴并保存 → 测试总结连接 → 确认文字上传 → 启用实时总结**
 
+入口为 **设置 → AI 与模型 → 实时总结**。
+
 实时总结默认关闭，启用后默认每 **4 分钟**整理一段，也可选择 **2 分钟或 5 分钟**，或手动整理当前内容。只有点击 **加入我的笔记**，才会将卡片要点追加到笔记草稿。录音保存独立于总结任务；失败或未完成的片段会显示状态，供稍后重试。
 
 **0.3.10 已停用本地 Qwen 实时总结，以降低课堂资源占用。** 旧的本地实时总结设置升级后自动关闭，并清除该功能的文字上传同意。已有卡片和已下载模型保留；课后手动复习与问答仍可使用本地 Qwen。云端总结需要明确完成设置后才能启用。
@@ -68,7 +72,7 @@ LectureRelay 仍处于开发预览阶段。英文转录可能漏词，翻译可�
 
 0.3.8 的安装版短时测试使用了真实 MIT 讲师音频、本地模型与安静模式。此前 0.3.3 使用合成探针完成了超过 90 分钟的录音连续性测试；结果只适用于对应版本与测试素材，不能替代自然语音准确率或新版长时验收。普通笔记本的功耗、噪音以及实际设备断开场景仍待验证。
 
-0.3.10 发布源码已通过原生回归、中文界面与实时总结 React 组件测试，以及干净 Windows 安装包和资源完整性检查。界面测试使用隔离的原生响应，不代表真实音频或模型推理验收。此前 0.3.9 已用真实 Groq 请求验证过课堂总结；本次更新没有新增 API 请求或播放音频，也没有重新进行 90 分钟测试。具体证据见 [实时总结验收](docs/testing/live-summaries-v0.3.9.md)、[本地 AI 评测](docs/testing/local-ai-v0.3.md) 和 [录音连续性记录](docs/testing/audio-continuity-v0.3.3.md)。
+0.3.11 发布源码已通过 **八组 React 组件回归、81 个桌面 Rust 测试和 1 个环境检查测试**，以及类型检查、格式、Clippy 和仓库检查。独立的 GitHub 干净 Windows 构建通过了 NSIS 安装及运行资源、图标、许可和安装内容校验。界面测试使用隔离的原生响应，不代表安装版完整课堂流程、真实音频或模型推理验收。本次没有新增 API 请求、播放音频或重跑 90 分钟测试。详见 [设置与工程审查](docs/testing/settings-review-2026-10-06.md) 和 [0.3.11 发布记录](docs/releases/v0.3.11.md)。此前真实 Groq、本地模型和录音连续性结果分别见 [实时总结验收](docs/testing/live-summaries-v0.3.9.md)、[本地 AI 评测](docs/testing/local-ai-v0.3.md) 和 [录音连续性记录](docs/testing/audio-continuity-v0.3.3.md)。
 
 ## 数据与隐私
 
@@ -80,7 +84,7 @@ LectureRelay 仍处于开发预览阶段。英文转录可能漏词，翻译可�
 
 ## 参与开发
 
-以下内容仅供开发者使用，**普通用户安装 EXE 无需执行这些步骤**。如需复现已发布安装版，请检出对应 tag，例如 `v0.3.10`；默认分支和功能分支可能与 Release 不同。
+以下内容仅供开发者使用，**普通用户安装 EXE 无需执行这些步骤**。如需复现已发布安装版，请检出对应 tag，例如 `v0.3.11`；默认分支和功能分支可能与 Release 不同。
 
 项目使用 Tauri 2、React、TypeScript、Rust、SQLite 和原生语音 worker。开发环境需要 Windows x64、Node 24.15.x、pnpm 11.25.0、Rust 1.98.1 MSVC、C++ Build Tools／Windows SDK 与 WebView2。
 

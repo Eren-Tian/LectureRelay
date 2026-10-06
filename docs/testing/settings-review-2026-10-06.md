@@ -38,4 +38,12 @@
 
 项目源码许可证仍未确定，`SECURITY.md` 也注明尚未建立私下报告漏洞的渠道；这些需要负责人决定。本轮没有选择许可证或建立对外联系地址。
 
-本轮没有执行安装后 WebView2 的完整课堂流程、音频硬件、模型推理、免费额度请求、普通笔记本功耗或 90 分钟测试。0.3.11 由本机打包；GitHub 已发布的 0.3.10 安装包保持其发布时内容。构建和安装版交互测试属于不同层次，不能把资源校验当作完整 GUI 验收。
+本轮没有执行安装后 WebView2 的完整课堂流程、音频硬件、模型推理、免费额度请求、普通笔记本功耗或 90 分钟测试。先完成本机回归与打包，发布附件随后由 GitHub 的独立干净 Windows 构建产生。构建和安装版交互测试属于不同层次，不能把资源校验当作完整 GUI 验收。
+
+## GitHub 发布核对
+
+- 产品源码为 [`4575dc5894281c70048205afbd569abd8fea2152`](https://github.com/Eren-Tian/LectureRelay/commit/4575dc5894281c70048205afbd569abd8fea2152)，发布的 `v0.3.11` 标签已核对为同一提交。
+- [Windows checks](https://github.com/Eren-Tian/LectureRelay/actions/runs/37493274561) 全部通过，包括八组 React 回归、81 个桌面 Rust 测试和 1 个环境检查测试。需要硬件、模型及真实凭据的测试仍为忽略项。
+- [干净 Windows 构建](https://github.com/Eren-Tian/LectureRelay/actions/runs/37493274640) 全部通过，在 GitHub runner 上完成 NSIS 安装、安装内容和资源/图标/许可校验，不操作用户电脑或课堂库。没有下载推理模型。
+- [Release](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.11) 包含 CI 生成的 EXE、SHA-256 和 `build-metadata.json`。安装包为 **16,318,339 bytes**，SHA-256 为 `9b350ae44054ad79031f5d2031d584644f0bfce9a30960bb6bfcf7737d643977`；下载的 CI 文件和上传后 GitHub 的三个附件 digest 与大小一致。
+- 中英文 README、当前用户/服务商指南、发布说明与仓库简介同步更新。文档提交可以晚于发布源码；历史 Release、版本标签及历史测试记录保留原内容。

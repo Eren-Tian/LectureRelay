@@ -9,10 +9,10 @@ In the 0.3.6 candidate, local translation can show a stable-prefix preview befor
 Install the Windows EXE. No LectureRelay login, API key, Python, Ollama or developer tools are needed for the local path. Internet is needed for the first model downloads; inference then runs on your computer. Model storage and electricity are yours; LectureRelay does not pay for hosted inference.
 
 1. Open **设置 → AI 与模型 → 本地模型** and download the models you need. Downloads show progress, can be cancelled, and are checked against pinned SHA-256 hashes.
-2. In **AI 与模型 → 功能设置**, select **本地英文** for speech and **本地** for translation and postclass study. Save changes. Fresh text settings use Local; an existing explicit cloud selection is preserved on upgrade.
+2. In **AI 与模型 → 功能设置**, select **本地英文识别** for speech and **本地** for translation and postclass study. Save changes. Fresh text settings use Local; an existing explicit cloud selection is preserved on upgrade.
 3. Add course background and a glossary in the course's target language. Record microphone or system audio. English captions are saved before translations. A missing or failed translation never stops the audio recorder.
-4. Stop recording. **Recording saved** appears while remaining captions/translations finish. You can play the audio or cancel processing. Deferred translations can be filled with **Translate missing** later.
-5. Open the saved lecture. **Generate AI draft** summarizes it. **Notes → Review the whole class** accepts your review instructions and processes every transcript section. Results appear under **Saved versions**, preserving manual notes. Q&A retrieves selected excerpts and includes source links; it is not the same as full-class review.
+4. Stop recording. **录音已保存** appears while remaining captions/translations finish. You can play the audio or cancel processing. Deferred translations can be filled with **补全翻译** later.
+5. Open the saved lecture. **生成 AI 草稿** summarizes it. **笔记 → 整堂复习** accepts your review instructions and processes every transcript section. Results appear under **历史版本**, preserving manual notes. Q&A retrieves selected excerpts and includes source links; it is not the same as full-class review.
 
 | Function                                   | Model                                  | Download  |
 | ------------------------------------------ | -------------------------------------- | --------- |

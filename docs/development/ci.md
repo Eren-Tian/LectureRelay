@@ -2,7 +2,7 @@
 
 `Checks / Windows checks` runs on pull requests targeting `main` and pushes to `main`: frozen pnpm installation, frontend typecheck/build, real React component regressions, ordinary Rust tests, Clippy with warnings denied, both formatters and repository import/link/structure checks. Failures fail the job. Hardware/model tests remain explicitly opt-in, as identified by the Rust test runner's ignored-test output; they are not passed by CI.
 
-Run the browser regressions locally with **`pnpm test:components`** on Windows with Microsoft Edge installed. The command obtains an exact matching official EdgeDriver, starts a private Vite/driver pair on free localhost ports, runs real Settings/model-control, note/action, caption-reader and contrast fixtures, then closes its processes. It needs neither Tauri nor model weights or credentials. The component tests are distinct from installed WebView2 acceptance. Output stays under `target/model-controls`, `target/engineering-audit` and `target/product-iteration`.
+Run the browser regressions locally with **`pnpm test:components`** on Windows with Microsoft Edge installed. The command obtains an exact matching official EdgeDriver, starts a private Vite/driver pair on free localhost ports, runs eight suites for classroom summaries, model controls, note/actions, caption reading, contrast, Chinese UI, settings state and live summaries, then closes its processes. It needs neither Tauri nor model weights or credentials. The component tests are distinct from installed WebView2 acceptance. Output stays under `target/classroom-summary`, `target/model-controls`, `target/engineering-audit`, `target/product-iteration`, `target/localization`, `target/settings-review` and `target/live-summaries`.
 
 ## Cold installer
 
@@ -17,6 +17,12 @@ The artifact `windows-x64-<source-sha>-cold` contains only the installer, its SH
 Metadata also includes SHA-256 values for the installed app and native runtime/license files. To validate a downloaded candidate, close the app and run `scripts/verification/installer.ps1 -InstallerPath "<downloaded EXE>" -BuildMetadata "<downloaded build-metadata.json>"`. This first checks the installer hash/size, then installs to the stable current-user directory and compares its file set and hashes with that hosted build's payload. It does not compare a hosted binary against a different local compiler's output. Without `-BuildMetadata`, it checks the local Release EXE and that build's allowed runtime payload files; subsequent debug builds may change shared staging files and are not the expected installer payload.
 
 A single cold build establishes clean buildability, **not byte-for-byte reproducibility**. Compiler/runner/NSIS differences must not be normalized away to claim binary identity.
+
+## Publishing a preview
+
+After the exact source revision passes both checks and packaging, download its `windows-x64-<source-sha>-cold` artifact. Match `build-metadata.json` to the source SHA, version, installer size and SHA-256 before publishing. Create the versioned GitHub Release with the installer, checksum and metadata, and target the same source commit. Preserve earlier version tags and assets. Release notes should link both CI runs and distinguish packaging checks from installed classroom acceptance.
+
+Update both READMEs, current user/provider guides and the release evidence after publication. Verify the published tag and asset hashes, then confirm that README download links name that version. Documentation-only commits may follow the tagged product source; they do not change its installer. Publishing uses an authenticated CLI session and does not require browser or desktop automation. The workflows themselves do not publish releases.
 
 ## Test tiers and rollout
 

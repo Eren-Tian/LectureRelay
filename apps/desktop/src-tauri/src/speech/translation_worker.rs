@@ -14,7 +14,6 @@ use std::{
     sync::{Arc, Mutex, atomic::Ordering},
     time::{Duration, Instant},
 };
-use tauri::Emitter;
 
 pub(super) struct TranslationWorker {
     pub session: LiveSession,
@@ -144,7 +143,7 @@ impl TranslationWorker {
             }
             s.translation_queue = self.session.queue.load(Ordering::Relaxed);
             s.sequence += 1;
-            let _ = self.session.app.emit("live-status", &*s);
+            (self.session.emit)(&s);
         }
     }
 
@@ -249,7 +248,7 @@ impl TranslationWorker {
                 .retain(|p| !batch.iter().any(|s| s.id == p.id));
             s.translation_queue = session.queue.load(Ordering::Relaxed);
             s.sequence += 1;
-            let _ = session.app.emit("live-status", &*s);
+            (session.emit)(&s);
             self.stage("translation_published", batch);
         }
     }
@@ -265,7 +264,7 @@ impl TranslationWorker {
                 .retain(|p| !batch.iter().any(|s| s.id == p.id));
             s.translation_queue = self.session.queue.load(Ordering::Relaxed);
             s.sequence += 1;
-            let _ = self.session.app.emit("live-status", &*s);
+            (self.session.emit)(&s);
         }
     }
 
@@ -277,7 +276,7 @@ impl TranslationWorker {
     fn show(&self, segment: &TranscriptSegment, text: &str, preview: bool) -> bool {
         show_translation_preview(
             &self.session.state,
-            &self.session.app,
+            &self.session.emit,
             segment,
             &self.language,
             text,
@@ -360,7 +359,7 @@ pub(super) fn request_valid(
 
 fn show_translation_preview(
     state: &AppState,
-    app: &tauri::AppHandle,
+    emit: &super::streaming::Emit,
     segment: &TranscriptSegment,
     language: &str,
     text: &str,
@@ -397,7 +396,7 @@ fn show_translation_preview(
         status.translation_previews.remove(0);
     }
     status.sequence += 1;
-    let _ = app.emit("live-status", &*status);
+    emit(&status);
     true
 }
 

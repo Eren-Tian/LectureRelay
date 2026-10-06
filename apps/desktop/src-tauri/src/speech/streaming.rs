@@ -116,6 +116,13 @@ impl Live {
             .user_error("Live caption status unavailable.")
     }
     pub fn start(state: Arc<AppState>, app: tauri::AppHandle, id: String) {
+        let emit: Emit = Arc::new(move |status| {
+            let _ = app.emit("live-status", status);
+        });
+        Self::start_with(state, emit, id);
+    }
+    /// Start a live session that reports every status change through `emit`.
+    pub(crate) fn start_with(state: Arc<AppState>, emit: Emit, id: String) {
         state.live.running.store(true, Ordering::Relaxed);
         state.live.finish.store(false, Ordering::Relaxed);
         state.live.cancel.store(false, Ordering::Relaxed);
@@ -132,11 +139,11 @@ impl Live {
                 state: "loading".into(),
                 ..Default::default()
             };
-            let _ = app.emit("live-status", &*status);
+            emit(&status);
         }
         std::thread::spawn(move || {
             let task = state.storage.create_task(&id, "live-captions");
-            let result = run(&state, &app, &id);
+            let result = run(&state, &emit, &id);
             if let Ok(task) = task {
                 let _ = state.storage.finish_task(
                     &task,
@@ -167,7 +174,7 @@ impl Live {
                 status.message = result.err();
                 status.sequence += 1;
                 state.live.running.store(false, Ordering::Relaxed);
-                let _ = app.emit("live-status", &*status);
+                emit(&status);
             } else {
                 state.live.running.store(false, Ordering::Relaxed);
             }
@@ -175,12 +182,15 @@ impl Live {
     }
 }
 
+/// Delivers a live status to the interface (the `live-status` event).
+pub(crate) type Emit = Arc<dyn Fn(&LiveStatus) + Send + Sync>;
+
 /// Handles shared by the recognition loop, the translation worker and
 /// publications for one live session.
 #[derive(Clone)]
 pub(super) struct LiveSession {
     pub state: Arc<AppState>,
-    pub app: tauri::AppHandle,
+    pub emit: Emit,
     pub id: String,
     pub monitor: Arc<Mutex<Monitor>>,
     /// Final translation batches queued or in flight.
@@ -245,7 +255,7 @@ impl LiveSession {
             measurements,
         };
         *status = value.clone();
-        let _ = self.app.emit("live-status", value);
+        (self.emit)(&value);
         Ok(())
     }
 
@@ -269,7 +279,7 @@ impl LiveSession {
     }
 }
 
-fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()> {
+fn run(state: &Arc<AppState>, emit: &Emit, id: &str) -> AppResult<()> {
     let lecture = state.storage.lecture(id)?;
     let course = state.storage.course(&lecture.course_id)?;
     let context = ai::course_context(state, &course)?;
@@ -295,7 +305,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
     let pid = recognizer.process_id();
     let session = LiveSession {
         state: state.clone(),
-        app: app.clone(),
+        emit: emit.clone(),
         id: id.to_owned(),
         monitor: Arc::new(Mutex::new(Monitor::new(pid))),
         queue: Arc::new(AtomicUsize::new(0)),
@@ -341,7 +351,7 @@ fn run(state: &Arc<AppState>, app: &tauri::AppHandle, id: &str) -> AppResult<()>
             .translation_previews
             .retain(|p| preview_valid(p, &segments, None));
         status.sequence += 1;
-        let _ = app.emit("live-status", &*status);
+        emit(&status);
     }
     if let Some(translator) = translator {
         let _ = translator.join();

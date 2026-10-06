@@ -353,3 +353,199 @@ fn classroom_translation_comparison() {
     }
     assert!(rows.iter().all(|row| row["result"].get("Ok").is_some()));
 }
+
+#[test]
+#[ignore = "requires pinned speech/text weights and a documented real lecturer WAV; runs the full live session"]
+fn live_session_transcribes_and_translates_a_real_lecture() {
+    let project = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+    let audio = std::env::var_os("LECTURERELAY_LIVE_AUDIO")
+        .map(std::path::PathBuf::from)
+        .unwrap_or_else(|| {
+            project.join("target/local-latency/audio/MIT9_00F04_lec01-60s-150s.wav")
+        });
+    let fixture = Fixture::new();
+    let state = Arc::new(state(&fixture));
+    let speech = crate::models::manager::path(&state);
+    std::fs::hard_link(
+        project
+            .join("target/asr-evaluation/models")
+            .join(crate::models::manager::MODEL_FILE),
+        &speech,
+    )
+    .unwrap();
+    std::fs::write(
+        speech.with_file_name(format!("{}.json", crate::models::manager::MODEL_ID)),
+        serde_json::json!({"id":crate::models::manager::MODEL_ID,"revision":crate::models::manager::REVISION,"sha256":crate::models::manager::HASH,"runtimeVersion":"NeMo-Speech.cpp 0.1.0"}).to_string(),
+    )
+    .unwrap();
+    state
+        .storage
+        .install_model(
+            crate::models::manager::MODEL_ID,
+            crate::models::manager::REVISION,
+            crate::models::manager::HASH,
+            crate::models::manager::SIZE,
+        )
+        .unwrap();
+    assert!(crate::models::manager::status(&state).unwrap().installed);
+    state
+        .storage
+        .save_settings(AppSettings {
+            speech_provider: SpeechEngine::Local,
+            translation_mode: if std::env::var_os("LECTURERELAY_LIVE_ENGLISH_ONLY").is_some() {
+                ProcessingMode::None
+            } else {
+                ProcessingMode::Local
+            },
+            live_translation: true,
+            ..Default::default()
+        })
+        .unwrap();
+    let course = fixture.course(&state.storage);
+    let lecture = state
+        .storage
+        .create_lecture(&state.paths, &course.id, "Live session acceptance")
+        .unwrap();
+    let (duration, recorder) = record_in_real_time(
+        &audio,
+        &state.paths.recording(&course.id, &lecture.id).unwrap(),
+    );
+    let events = Arc::new(Mutex::new(Vec::<String>::new()));
+    let seen = events.clone();
+    let started = Instant::now();
+    crate::speech::streaming::Live::start_with(
+        state.clone(),
+        Arc::new(move |status| seen.lock().unwrap().push(status.state.clone())),
+        lecture.id.clone(),
+    );
+    recorder.join().unwrap();
+    while state.live.backlog(duration) > 0.4 {
+        assert!(
+            state.live.active(),
+            "{:?}",
+            state.live.snapshot().unwrap().message
+        );
+        assert!(started.elapsed().as_secs() < 900, "recognition stalled");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+    let recognized = started.elapsed();
+    state.live.finish();
+    while state.live.active() {
+        assert!(started.elapsed().as_secs() < 1200, "finalization stalled");
+        std::thread::sleep(std::time::Duration::from_millis(200));
+    }
+    let status = state.live.snapshot().unwrap();
+    assert_eq!(status.state, "ended", "{:?}", status.message);
+    assert!(status.draft.is_none());
+    let events = events.lock().unwrap().clone();
+    assert_eq!(events.first().map(String::as_str), Some("loading"));
+    assert_eq!(events.last().map(String::as_str), Some("ended"));
+    assert!(events.iter().any(|state| state == "listening"));
+    let detail = state.storage.detail(&lecture.id).unwrap();
+    assert!(detail.lecture.transcribed_until >= duration - 0.4);
+    let segments = &detail.segments;
+    let words = segments
+        .iter()
+        .map(|s| s.source_text.split_whitespace().count())
+        .sum::<usize>();
+    assert!(
+        segments.len() >= 5 && words >= 120,
+        "{} segments, {words} words",
+        segments.len()
+    );
+    for pair in segments.windows(2) {
+        assert!(pair[0].end_seconds <= pair[1].start_seconds + 1e-6);
+    }
+    assert!(segments.iter().all(|s| s.origin == SegmentOrigin::Local
+        && s.provider == "local"
+        && s.transcript_version == "live"
+        && s.end_seconds <= duration + 0.01));
+    let translated = segments
+        .iter()
+        .filter(|s| {
+            s.translated_text
+                .chars()
+                .any(|c| ('\u{4e00}'..='\u{9fff}').contains(&c))
+        })
+        .count();
+    if std::env::var_os("LECTURERELAY_LIVE_ENGLISH_ONLY").is_none() {
+        assert!(
+            translated * 2 >= segments.len(),
+            "{translated} of {} translated",
+            segments.len()
+        );
+    }
+    assert!(
+        state
+            .paths
+            .data
+            .join("logs")
+            .join(format!("{}-performance.json", lecture.id))
+            .exists()
+    );
+    let english = segments
+        .iter()
+        .map(|s| {
+            format!(
+                "[{:.2}-{:.2}] {}",
+                s.start_seconds, s.end_seconds, s.source_text
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n");
+    let out = project.join("target/live-session-acceptance");
+    std::fs::create_dir_all(&out).unwrap();
+    let label = std::env::var("LECTURERELAY_LIVE_LABEL").unwrap_or_else(|_| "current".into());
+    std::fs::write(out.join(format!("{label}-english.txt")), &english).unwrap();
+    std::fs::write(
+        out.join(format!("{label}-result.json")),
+        serde_json::to_string_pretty(&serde_json::json!({
+            "audioSeconds": duration,
+            "recognitionSeconds": recognized.as_secs_f64(),
+            "totalSeconds": started.elapsed().as_secs_f64(),
+            "segments": segments.len(),
+            "words": words,
+            "translatedSegments": translated,
+            "events": events.len(),
+            "segmentsDetail": segments,
+        }))
+        .unwrap(),
+    )
+    .unwrap();
+    println!("{english}");
+}
+
+/// Write `source` to `target` at real-time pace, refreshing the WAV header
+/// about every second like the recorder's checkpoints. Returns its duration.
+fn record_in_real_time(
+    source: &std::path::Path,
+    target: &std::path::Path,
+) -> (f64, std::thread::JoinHandle<()>) {
+    let reader = hound::WavReader::open(source).unwrap();
+    let spec = reader.spec();
+    let samples = reader
+        .into_samples::<i16>()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+    let duration = samples.len() as f64 / f64::from(spec.sample_rate);
+    let mut writer = hound::WavWriter::create(target, spec).unwrap();
+    writer.flush().unwrap();
+    let thread = std::thread::spawn(move || {
+        let step = spec.sample_rate as usize / 10;
+        let started = Instant::now();
+        for (index, chunk) in samples.chunks(step).enumerate() {
+            for sample in chunk {
+                writer.write_sample(*sample).unwrap();
+            }
+            if index % 10 == 9 {
+                writer.flush().unwrap();
+            }
+            let due = started + std::time::Duration::from_millis(100 * (index as u64 + 1));
+            if let Some(wait) = due.checked_duration_since(Instant::now()) {
+                std::thread::sleep(wait);
+            }
+        }
+        writer.finalize().unwrap();
+    });
+    (duration, thread)
+}

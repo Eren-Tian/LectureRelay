@@ -23,6 +23,16 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test/native-smoke.ps
 
 Authenticated cloud acceptance is separate and requires an explicitly supplied valid key. Do not infer success from connection metadata, mock results or missing-key checks.
 
+## Live session with real lecture audio
+
+`live_session_transcribes_and_translates_a_real_lecture` runs the complete live session in an isolated library: the recognition loop with the real Nemotron worker and live translation with the real Hy-MT2 runtime. It writes the documented 90-second MIT OCW clip (see [audio sources](audio-sources.md)) into the lecture recording at real-time pace, refreshing the WAV header every second like the recorder, then stops and checks saved finals, translations, timeline order, provenance, emitted states and the performance file. It needs the pinned speech model in `target/asr-evaluation/models`, the text models in `target/local-ai-evaluation/models` and `pnpm build:asr`/`pnpm build:text` staging. It does not capture from an audio device.
+
+```powershell
+node scripts/dev/run-native.mjs cargo test --locked --lib live_session_transcribes_and_translates_a_real_lecture -- --ignored --nocapture
+```
+
+Set `LECTURERELAY_LIVE_AUDIO` for another documented clip and `LECTURERELAY_LIVE_ENGLISH_ONLY=1` to skip translation. The English transcript and a JSON summary are written to `target/live-session-acceptance/`.
+
 ## Local text AI preview
 
 Opt-in commands and model prerequisites are in [local AI experiments](../../experiments/local-ai/README.md). These are separate from installed-release and endurance acceptance.

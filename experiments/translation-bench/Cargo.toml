@@ -1,0 +1,15 @@
+[package]
+name = "lecturerelay-translation-bench"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+fxtranslate = { version = "=0.5.0", features = ["icu-segmenter"] }
+serde_json = "1"
+
+[[bin]]
+name = "translation-bench"
+path = "main.rs"

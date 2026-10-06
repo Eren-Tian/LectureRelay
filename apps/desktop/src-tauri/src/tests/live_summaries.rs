@@ -244,6 +244,48 @@ fn edits_invalidate_actual_inputs_but_not_translation_changes() {
     assert_eq!(db.summary_cards(&l.id).unwrap()[0].state, "stale");
 }
 #[test]
+fn fractional_audio_times_survive_saved_snapshot_roundtrips() {
+    let f = Fixture::new();
+    let db = f.db();
+    let l = lecture(&f, &db);
+    db.save_segment(
+        &l.id,
+        None,
+        SegmentInput {
+            start_seconds: 82.23999999999965,
+            end_seconds: 97.27999999999933,
+            source_text: "The limit is 2 mg, not 3 mg.".into(),
+            translated_text: String::new(),
+        },
+    )
+    .unwrap();
+    let source = SummarySource::from(&db.segments(&l.id).unwrap()[0]);
+    let card = db
+        .reserve_summary(&l.id, &Default::default(), vec![source.clone()])
+        .unwrap();
+    // Real capture timestamps contain fractional f64 seconds. Saving the JSON
+    // snapshot must not turn an unchanged input into a source edit.
+    assert_eq!(db.summary_cards(&l.id).unwrap()[0].state, "running");
+    db.translate_segment(&l.id, &source.id, "译文已完成")
+        .unwrap();
+    assert!(
+        db.finish_summary(&card, "剂量上限", &points(&card))
+            .unwrap()
+    );
+    drop(db);
+    let db = f.db();
+    assert_eq!(db.summary_cards(&l.id).unwrap()[0].state, "completed");
+    // A real time correction remains detectable even without a text revision.
+    rusqlite::Connection::open(f.paths.data.join("app.db"))
+        .unwrap()
+        .execute(
+            "UPDATE transcript_segments SET end_seconds=end_seconds+0.001 WHERE id=?1",
+            [&source.id],
+        )
+        .unwrap();
+    assert_eq!(db.summary_cards(&l.id).unwrap()[0].state, "stale");
+}
+#[test]
 fn parser_rejects_untraceable_or_incomplete_results_and_maps_real_refs() {
     let f = Fixture::new();
     let db = f.db();

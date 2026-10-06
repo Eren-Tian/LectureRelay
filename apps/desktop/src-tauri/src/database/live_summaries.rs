@@ -55,7 +55,10 @@ fn current(db: &Connection, card: &SummaryCard) -> AppResult<bool> {
         return Ok(false);
     }
     for source in &card.sources {
-        let matches: bool = db.query_row("SELECT EXISTS(SELECT 1 FROM transcript_segments WHERE id=?1 AND lecture_id=?2 AND source_text=?3 AND revision=?4 AND start_seconds=?5 AND end_seconds=?6 AND status='final')", params![source.id,card.lecture_id,source.text,source.revision,source.start_seconds,source.end_seconds], |r|r.get(0)).user_error("Cannot check summary references.")?;
+        // JSON f64 decoding may shift a timestamp by one ULP. A microsecond is
+        // below one audio sample; text/revision still match exactly and actual
+        // time corrections remain detectable.
+        let matches: bool = db.query_row("SELECT EXISTS(SELECT 1 FROM transcript_segments WHERE id=?1 AND lecture_id=?2 AND source_text=?3 AND revision=?4 AND abs(start_seconds-?5)<=0.000001 AND abs(end_seconds-?6)<=0.000001 AND status='final')", params![source.id,card.lecture_id,source.text,source.revision,source.start_seconds,source.end_seconds], |r|r.get(0)).user_error("Cannot check summary references.")?;
         if !matches {
             return Ok(false);
         }

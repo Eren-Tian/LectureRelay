@@ -104,6 +104,7 @@ export interface ProviderStatus {
 }
 export interface LiveSummaryPreferences {
   enabled: boolean;
+  // 'local' is retained only to read old preferences; it cannot be enabled.
   provider: 'groq' | 'openai' | 'local' | 'none';
   model: string;
   intervalMinutes: 2 | 4 | 5;

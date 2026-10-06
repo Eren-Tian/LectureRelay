@@ -61,6 +61,12 @@ try {
     'return !!window.liveSummaryFixture && !!document.querySelector(".live-summary-panel");',
   );
   assert.equal(await disabled('启用实时总结'), true);
+  assert.deepEqual(
+    await read(
+      'return [...document.querySelector(".live-summary-setup select").options].map(o=>o.value);',
+    ),
+    ['groq', 'openai', 'none'],
+  );
   await click('获取 Groq API Key');
   assert.deepEqual(await read('return window.liveSummaryFixture.calls;'), [
     'open:groq:keys',
@@ -149,6 +155,45 @@ try {
     ),
     [1, 1],
   );
+  const previousCalls = await read(
+    'return window.liveSummaryFixture.calls.length;',
+  );
+  await read('window.liveSummaryFixture.legacy();');
+  await until(
+    'return document.querySelector(".live-summary-setup select").value==="none";',
+  );
+  assert.equal(await disabled('启用实时总结'), true);
+  assert.equal(
+    await read(
+      'return document.querySelectorAll("input[type=password]").length;',
+    ),
+    0,
+  );
+  assert.match(
+    await read(
+      'return document.querySelector(".live-summary-heading").innerText;',
+    ),
+    /尚未启用/,
+  );
+  assert.equal(
+    await read('return document.querySelectorAll(".summary-card").length;'),
+    1,
+  );
+  assert.equal(
+    await read('return window.liveSummaryFixture.calls.length;'),
+    previousCalls,
+  );
+  await click('保存设置，暂不启用');
+  assert.deepEqual(
+    await read('return window.liveSummaryFixture.preferences();'),
+    {
+      enabled: false,
+      provider: 'none',
+      model: 'openai/gpt-oss-120b',
+      intervalMinutes: 2,
+      uploadConsent: false,
+    },
+  );
   const out = new URL('../../target/live-summaries/', import.meta.url);
   await fs.mkdir(out, { recursive: true });
   await fs.writeFile(
@@ -168,6 +213,8 @@ try {
         manualNotesPreserved: true,
         staleBlocked: true,
         disablePreservesCards: true,
+        localOptionRemoved: true,
+        legacyLocalDisabledWithoutRequests: true,
       },
       null,
       2,

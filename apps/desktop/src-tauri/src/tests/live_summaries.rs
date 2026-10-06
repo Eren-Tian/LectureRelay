@@ -122,6 +122,126 @@ fn summaries_upgrade_opt_in_and_validate_independently() {
         assert!(p.validate().is_err());
     }
 }
+
+#[test]
+fn legacy_local_summary_settings_become_off_without_changing_saved_content() {
+    let f = Fixture::new();
+    let db = f.db();
+    let l = lecture(&f, &db);
+    let old_preferences = LiveSummaryPreferences {
+        enabled: true,
+        provider: "local".into(),
+        model: "qwen3.5-4b".into(),
+        interval_minutes: 2,
+        upload_consent: true,
+    };
+    // Represent a card created by 0.3.9, before local live summaries were removed.
+    let card = db
+        .reserve_summary(&l.id, &old_preferences, vec![add(&db, &l, 0)])
+        .unwrap();
+    db.finish_summary(&card, "旧本地总结", &points(&card))
+        .unwrap();
+    db.save_note(&l.id, "手写笔记保留", "manual").unwrap();
+    let mut saved = serde_json::to_value(AppSettings {
+        theme: "dark".into(),
+        speech_provider: "local".into(),
+        live_summaries: old_preferences,
+        ..Default::default()
+    })
+    .unwrap();
+    saved["futurePreference"] = serde_json::json!({"preserve": true});
+    drop(db);
+    let raw = rusqlite::Connection::open(f.paths.data.join("app.db")).unwrap();
+    raw.execute(
+        "INSERT OR REPLACE INTO app_settings(key,value) VALUES('preferences',?1)",
+        [saved.to_string()],
+    )
+    .unwrap();
+    drop(raw);
+
+    let db = f.db();
+    let settings = db.settings().unwrap();
+    assert!(!settings.live_summaries.enabled);
+    assert_eq!(settings.live_summaries.provider, "none");
+    assert!(!settings.live_summaries.upload_consent);
+    assert_eq!(settings.live_summaries.interval_minutes, 2);
+    assert_eq!(settings.speech_provider, "local");
+    assert_eq!(settings.translation_mode, "local");
+    assert_eq!(settings.study_mode, "local");
+    assert_eq!(settings.theme, "dark");
+    let cards = db.summary_cards(&l.id).unwrap();
+    assert_eq!(cards.len(), 1);
+    assert_eq!(cards[0].provider, "local");
+    assert_eq!(cards[0].state, "completed");
+    assert_eq!(
+        serde_json::to_value(&cards[0].sources).unwrap(),
+        serde_json::to_value(&card.sources).unwrap()
+    );
+    assert_eq!(db.note(&l.id).unwrap().unwrap().body, "手写笔记保留");
+    drop(db);
+    let raw = rusqlite::Connection::open(f.paths.data.join("app.db")).unwrap();
+    let text: String = raw
+        .query_row(
+            "SELECT value FROM app_settings WHERE key='preferences'",
+            [],
+            |r| r.get(0),
+        )
+        .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&text).unwrap();
+    assert_eq!(value["liveSummaries"]["provider"], "none");
+    assert_eq!(value["futurePreference"]["preserve"], true);
+    drop(raw);
+    assert!(f.db().settings().unwrap().live_summaries == settings.live_summaries);
+}
+
+#[test]
+fn obsolete_clients_cannot_reenable_local_live_summaries() {
+    let f = Fixture::new();
+    let db = f.db();
+    let original = db.settings().unwrap();
+    for enabled in [false, true] {
+        let mut requested = original.clone();
+        requested.live_summaries.provider = "local".into();
+        requested.live_summaries.enabled = enabled;
+        assert!(
+            requested
+                .live_summaries
+                .validate()
+                .unwrap_err()
+                .contains("已停用")
+        );
+        assert!(db.save_settings(requested).is_err());
+        assert!(db.settings().unwrap().live_summaries == original.live_summaries);
+    }
+    // A legacy settings row written after startup is also exposed as Off.
+    let raw = rusqlite::Connection::open(f.paths.data.join("app.db")).unwrap();
+    raw.execute(
+        "INSERT OR REPLACE INTO app_settings(key,value) VALUES('preferences',?1)",
+        [r#"{"liveSummaries":{"provider":"local","enabled":true}}"#],
+    )
+    .unwrap();
+    let effective = db.settings().unwrap().live_summaries;
+    assert!(!effective.enabled);
+    assert_eq!(effective.provider, "none");
+    assert!(effective.validate().is_ok());
+}
+
+#[test]
+fn disabling_local_does_not_reset_an_explicit_cloud_summary_selection() {
+    let f = Fixture::new();
+    let db = f.db();
+    let settings = AppSettings {
+        live_summaries: LiveSummaryPreferences {
+            enabled: true,
+            upload_consent: true,
+            ..Default::default()
+        },
+        ..Default::default()
+    };
+    db.save_settings(settings.clone()).unwrap();
+    drop(db);
+    assert!(f.db().settings().unwrap().live_summaries == settings.live_summaries);
+}
 #[test]
 fn windows_use_final_whole_segments_and_do_not_repeat_coverage() {
     let mut segments: Vec<_> = (0..11).map(segment).collect();
@@ -151,13 +271,12 @@ fn windows_use_final_whole_segments_and_do_not_repeat_coverage() {
         1
     );
     assert!(engine::select_sources(&[], &[], &Default::default(), true).is_empty());
-    let p = LiveSummaryPreferences {
-        provider: "local".into(),
-        ..Default::default()
-    };
-    segments[0].source_text = "a".repeat(4000);
-    segments[3].source_text = "b".repeat(4000);
-    assert_eq!(engine::select_sources(&segments, &[], &p, false).len(), 1);
+    segments[0].source_text = "a".repeat(8000);
+    segments[3].source_text = "b".repeat(8000);
+    assert_eq!(
+        engine::select_sources(&segments, &[], &Default::default(), false).len(),
+        1
+    );
 }
 #[test]
 fn cards_preserve_manual_notes_restart_and_later_appends() {
@@ -340,7 +459,6 @@ fn single_flight_and_provider_cooldowns_do_not_spill_between_providers() {
     engine.rate_limited("groq", 30);
     assert!(engine.check_cooldown("groq").is_err());
     assert!(engine.check_cooldown("openai").is_ok());
-    assert!(engine.check_cooldown("local").is_ok());
     let generation = engine.generation();
     engine.cancel();
     assert!(!engine.matches_generation(generation));

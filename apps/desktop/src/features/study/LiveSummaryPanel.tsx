@@ -7,7 +7,7 @@ import { clock } from '../../lib/presentation';
 import type { SummaryState } from '../../types/domain';
 import {
   LiveSummarySetup,
-  defaultSummaryPreferences,
+  availableSummaryPreferences,
 } from './LiveSummarySetup';
 
 export function LiveSummaryPanel({
@@ -22,8 +22,9 @@ export function LiveSummaryPanel({
   onAppend: (body: string) => void;
 }) {
   const workspace = useWorkspace();
-  const preferences =
-    workspace.data.settings.liveSummaries ?? defaultSummaryPreferences;
+  const preferences = availableSummaryPreferences(
+    workspace.data.settings.liveSummaries,
+  );
   const [state, setState] = useState<SummaryState>();
   const [setup, setSetup] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -103,7 +104,7 @@ export function LiveSummaryPanel({
           <h2>实时课堂要点</h2>
           <p className="field-hint">
             {preferences.enabled
-              ? `${preferences.provider === 'local' ? '本地 Qwen' : preferences.provider === 'groq' ? 'Groq' : 'OpenAI'} · 每 ${preferences.intervalMinutes} 分钟整理新英文`
+              ? `${preferences.provider === 'groq' ? 'Groq' : 'OpenAI'} · 每 ${preferences.intervalMinutes} 分钟整理新英文`
               : '尚未启用自动总结'}
           </p>
         </div>

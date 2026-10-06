@@ -212,8 +212,21 @@ impl Default for LiveSummaryPreferences {
     }
 }
 impl LiveSummaryPreferences {
+    pub fn disable_legacy_local(&mut self) {
+        if self.provider == "local" {
+            self.enabled = false;
+            self.provider = "none".into();
+            self.model = Self::default().model;
+            self.upload_consent = false;
+        }
+    }
     pub fn validate(&self) -> crate::error::AppResult<()> {
-        if !matches!(self.provider.as_str(), "groq" | "openai" | "local" | "none")
+        if self.provider == "local" {
+            return Err(
+                "本地 Qwen 实时总结已停用，以降低课堂功耗。请选择 Groq、OpenAI 或关闭总结。".into(),
+            );
+        }
+        if !matches!(self.provider.as_str(), "groq" | "openai" | "none")
             || !matches!(self.interval_minutes, 2 | 4 | 5)
             || self.model.is_empty()
             || self.model.len() > 120

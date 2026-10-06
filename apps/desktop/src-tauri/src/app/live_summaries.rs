@@ -98,12 +98,7 @@ impl LiveSummaries {
             .get(provider)
             .is_some_and(|until| *until > now() as u64)
         {
-            return Err(if provider == "local" {
-                "本地总结已暂缓，让字幕先跟上。稍后重试，或下课后继续整理。"
-            } else {
-                "总结服务仍在限流等待期。录音和字幕继续保存，请稍后重试。"
-            }
-            .into());
+            return Err("总结服务仍在限流等待期。录音和字幕继续保存，请稍后重试。".into());
         }
         Ok(())
     }
@@ -122,26 +117,6 @@ impl LiveSummaries {
             *slot = (lecture.into(), message.into());
         }
     }
-    pub fn local_checkpoint(&self, state: &AppState) -> AppResult<()> {
-        if !state.storage.settings()?.live_summaries.enabled {
-            return Err("总结已关闭，原文保留。".into());
-        }
-        if local_pressure(state)? {
-            return Err("本地总结暂缓，让英文字幕和翻译先跟上。原文已保存。".into());
-        }
-        Ok(())
-    }
-}
-pub fn local_pressure(state: &AppState) -> AppResult<bool> {
-    if state.jobs.status()?.is_some() || crate::models::manager::downloading(state)? {
-        return Ok(true);
-    }
-    let live = state.live.snapshot()?;
-    Ok(state.recorder.status()?.is_some_and(|r| {
-        r.failed
-            || (live.active
-                && (state.live.backlog(r.duration_seconds) > 2.0 || live.translation_queue > 1))
-    }))
 }
 
 pub(crate) fn select_sources(
@@ -166,11 +141,7 @@ pub(crate) fn select_sources(
         return vec![];
     };
     let boundary = first.start_seconds + f64::from(preferences.interval_minutes * 60);
-    let cap = if preferences.provider == "local" {
-        5000
-    } else {
-        14000
-    };
+    let cap = 14000;
     let mut bytes = 0;
     let mut selected = Vec::new();
     let mut full = false;
@@ -312,20 +283,10 @@ pub async fn run(
         .iter()
         .find(|c| matches!(c.state.as_str(), "failed" | "deferred" | "stale"));
     // At most one unresolved automatic window. A failure cannot create a retry storm.
-    if !force
-        && retry.is_none()
-        && waiting.is_some()
-        && !(preferences.provider == "local" && waiting.is_some_and(|c| c.state == "deferred"))
-    {
+    if !force && retry.is_none() && waiting.is_some() {
         return Err("有一段总结尚未完成，请在卡片上重试；新原文继续保存。".into());
     }
-    if preferences.provider == "local" && local_pressure(state)? {
-        return Err("本地总结暂缓，让英文字幕和翻译先跟上。原文继续收集。".into());
-    }
-    let local_retry = waiting
-        .filter(|c| preferences.provider == "local" && c.state == "deferred")
-        .map(|c| c.id.as_str());
-    let card = if let Some(id) = retry.or(local_retry) {
+    let card = if let Some(id) = retry {
         state.storage.retry_summary(lecture, id, &preferences)?
     } else {
         let sources = select_sources(
@@ -368,21 +329,10 @@ pub async fn run(
             super::assistance::course_context(state, &course).map_err(SummaryFailure::from)?;
         trace(state, lecture, "context_ready");
         let (system, user) = prompt(&card, &context);
-        if preferences.provider == "local" {
-            trace(state, lecture, "local_start");
-            crate::providers::local::classroom_summary(
-                state,
-                format!("{system}\n\n{user}"),
-                generation,
-            )
-            .await
-            .map_err(Into::into)
-        } else {
-            let provider = OfficialProvider::new(&preferences.provider, &preferences.model)
-                .map_err(SummaryFailure::from)?;
-            trace(state, lecture, "cloud_start");
-            provider.classroom_summary(&system, &user).await
-        }
+        let provider = OfficialProvider::new(&preferences.provider, &preferences.model)
+            .map_err(SummaryFailure::from)?;
+        trace(state, lecture, "cloud_start");
+        provider.classroom_summary(&system, &user).await
     };
     let mut request = Box::pin(request);
     let started = std::time::Instant::now();
@@ -428,21 +378,9 @@ pub async fn run(
             state
                 .summaries
                 .rate_limited(&preferences.provider, error.retry_after);
-            // Only CPU pressure may resume automatically. Missing models, network,
-            // malformed output and timeouts require an explicit retry.
-            let kind = if preferences.provider == "local"
-                && error.message.starts_with("本地总结暂缓")
-            {
-                "deferred"
-            } else {
-                "failed"
-            };
-            if kind == "deferred" {
-                state.summaries.rate_limited("local", 30);
-            }
             state
                 .storage
-                .summary_failed(&card.id, kind, &error.message)?;
+                .summary_failed(&card.id, "failed", &error.message)?;
             Err(error.message)
         }
     };

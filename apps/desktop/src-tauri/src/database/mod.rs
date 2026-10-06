@@ -112,6 +112,7 @@ impl Storage {
                 .user_error("Cannot commit live summary migration.")?;
         }
         connection.execute("UPDATE live_summary_cards SET state='deferred',message='应用退出前总结未完成。原文已保存，可点击重试。' WHERE state='running'", []).user_error("Cannot recover live summaries.")?;
+        preferences::disable_local_live_summaries(&connection)?;
         Ok(Self {
             connection: Mutex::new(connection),
             snapshots: Mutex::new(()),

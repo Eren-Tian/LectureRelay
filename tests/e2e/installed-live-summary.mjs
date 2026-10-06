@@ -4,6 +4,18 @@ import fs from 'node:fs/promises';
 import { WebDriver } from './webdriver.mjs';
 
 const [action, course, title] = process.argv.slice(2);
+const expectedVersion =
+  process.env.LECTURERELAY_ACCEPTANCE_VERSION ||
+  JSON.parse(
+    await fs.readFile(new URL('../../package.json', import.meta.url), 'utf8'),
+  ).version;
+if (['configure-local', 'local-tail', 'local-finish'].includes(action)) {
+  assert.equal(
+    expectedVersion,
+    '0.3.9',
+    'Local live summaries were removed in 0.3.10; these historical acceptance actions require 0.3.9.',
+  );
+}
 assert.ok(course?.startsWith('[ACCEPTANCE '));
 assert.ok(title?.startsWith('[ACCEPTANCE]'));
 assert.ok(
@@ -33,7 +45,7 @@ async function until(read, check, timeout = 30000) {
 }
 await until(
   () => d.native('bootstrap'),
-  (b) => b.storage.version === '0.3.9',
+  (b) => b.storage.version === expectedVersion,
 );
 assert.equal(await d.native('recording_status'), null);
 await d.click(`aside button[aria-label="${course}"]`);
@@ -76,7 +88,7 @@ if (action === 'verify-restart') {
   const reopened = await WebDriver.start(application);
   await until(
     () => reopened.native('bootstrap'),
-    (b) => b.storage.version === '0.3.9',
+    (b) => b.storage.version === expectedVersion,
   );
   const after = await reopened.native('live_summary_state', { id });
   const saved = await reopened.native('lecture_detail', { id });

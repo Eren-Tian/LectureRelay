@@ -13,16 +13,28 @@ export const defaultSummaryPreferences: LiveSummaryPreferences = {
   intervalMinutes: 4,
   uploadConsent: false,
 };
+export function availableSummaryPreferences(
+  preferences: LiveSummaryPreferences = defaultSummaryPreferences,
+): LiveSummaryPreferences {
+  return preferences.provider === 'local'
+    ? {
+        ...preferences,
+        enabled: false,
+        provider: 'none',
+        model: defaultSummaryPreferences.model,
+        uploadConsent: false,
+      }
+    : preferences;
+}
 const models = {
   groq: 'openai/gpt-oss-120b',
   openai: 'gpt-4o-mini',
-  local: 'qwen3.5-4b',
   none: 'openai/gpt-oss-120b',
 };
 export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
   const workspace = useWorkspace();
   const [preferences, setPreferences] = useState(
-    workspace.data.settings.liveSummaries ?? defaultSummaryPreferences,
+    availableSummaryPreferences(workspace.data.settings.liveSummaries),
   );
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [key, setKey] = useState('');
@@ -88,14 +100,17 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
       <p>
         每隔几分钟，将新定稿的英文整理成简短要点。总结单独配置，不改变语音识别、翻译或课后学习设置。
       </p>
+      <p className="field-hint">
+        为降低课堂功耗，已停用本地 Qwen 实时总结。可按需启用 Groq 或
+        OpenAI；已有总结卡片会保留。
+      </p>
       <label>
         总结方式
         <select
           disabled={busy}
           value={preferences.provider}
           onChange={(e) => {
-            const provider = e.target
-              .value as LiveSummaryPreferences['provider'];
+            const provider = e.target.value as keyof typeof models;
             setKey('');
             setMessage('');
             setPreferences({
@@ -109,7 +124,6 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
         >
           <option value="groq">Groq · 推荐云端入口</option>
           <option value="openai">OpenAI</option>
-          <option value="local">本地 · Qwen3.5-4B</option>
           <option value="none">关闭</option>
         </select>
       </label>
@@ -313,18 +327,12 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
           </p>
         </>
       )}
-      {preferences.provider === 'local' && (
-        <p className="notice">
-          需要已下载
-          Qwen3.5-4B。最多使用两个总结线程，沿用全局安静模式预算；字幕落后时暂缓。尚未完成的原文可以课后继续整理。
-        </p>
-      )}
       <div className="button-row">
         <button
           className="button primary"
           disabled={
             busy ||
-            preferences.provider === 'none' ||
+            !cloud ||
             (cloud &&
               (!selected?.hasKey ||
                 tested !== identity ||

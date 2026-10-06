@@ -13,7 +13,9 @@ const applicationSha256 = createHash('sha256')
 const checkFloating = process.env.LECTURERELAY_LATENCY_FLOATING === '1';
 const audio = process.env.LECTURERELAY_LATENCY_AUDIO;
 const source = process.env.LECTURERELAY_LATENCY_SOURCE || 'system';
+const targetLanguage = process.env.LECTURERELAY_LATENCY_LANGUAGE || 'zh';
 assert.ok(['system', 'microphone'].includes(source));
+assert.ok(['zh', 'ja', 'ko'].includes(targetLanguage));
 assert.ok(
   audio,
   'Provide a documented real lecturer audio fixture; no synthetic speech',
@@ -43,9 +45,10 @@ let playerError;
 let lectureId;
 let mainHandle;
 let floating;
+let boot;
 const samples = [];
 try {
-  const boot = await d.native('bootstrap');
+  boot = await d.native('bootstrap');
   mainHandle = await d.command('GET', '/window');
   assert.equal(boot.storage.version, process.env.LECTURERELAY_LATENCY_VERSION);
   assert.ok(boot.storage.database.endsWith('LectureRelay\\app.db'));
@@ -91,6 +94,10 @@ try {
       process.env.LECTURERELAY_LATENCY_CONTEXT ||
         'MIT OpenCourseWare 9.00 Introduction to Psychology. Brain and cognitive sciences; reference context only.',
     );
+    await d.read(
+      "const e=document.querySelector('.modal select'); e.value=arguments[0]; e.dispatchEvent(new Event('change',{bubbles:true}));",
+      [targetLanguage],
+    );
     await d.click('.modal form button.primary');
     course = await until(
       () => d.native('bootstrap'),
@@ -98,6 +105,7 @@ try {
     ).then((b) => b.courses.find((c) => c.name === courseName));
   }
   assert.ok(course);
+  assert.equal(course.assistanceLanguage, targetLanguage);
   await d.click(`aside button[aria-label="${courseName}"]`);
   await d.clickText('开始录音');
   await d.fill(
@@ -273,12 +281,13 @@ try {
   await d.read("document.querySelector('audio').pause();");
   const record = {
     label,
-    scope: `Installed EXE and real WebView2, ${source}, fixed real lecturer audio, local Nemotron + Hy-MT2, Quiet Mode; instrumented short run`,
+    scope: `Installed EXE and real WebView2, ${source}, fixed real lecturer audio, local Nemotron + Hy-MT2, Quiet Mode; instrumented ${durationMs >= 3600000 ? 'long' : 'short'} run`,
     audio: path.resolve(audio),
     application: path.resolve(application),
     applicationSha256,
     floating,
     settings: boot.settings,
+    targetLanguage,
     startupNotice: liveAtStart,
     readySilenceSeconds,
     pollMs,
@@ -311,6 +320,33 @@ try {
       segments: detail.segments.length,
     }),
   );
+} catch (error) {
+  // Keep the last observed state and on-disk stages even if the recording ends
+  // early. A failed run must not silently disappear from acceptance evidence.
+  const detail = lectureId
+    ? await d.native('lecture_detail', { id: lectureId }).catch(() => null)
+    : null;
+  await fs.writeFile(
+    `${out}/failure.json`,
+    JSON.stringify(
+      { label, error: String(error), lectureId, detail, samples },
+      null,
+      2,
+    ),
+  );
+  if (boot && lectureId) {
+    await fs
+      .copyFile(
+        path.join(
+          boot.storage.state,
+          'logs',
+          `${lectureId}-caption-stages.jsonl`,
+        ),
+        `${out}/stages.jsonl`,
+      )
+      .catch(() => {});
+  }
+  throw error;
 } finally {
   player?.kill();
   if (mainHandle)

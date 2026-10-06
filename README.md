@@ -1,71 +1,88 @@
 # LectureRelay
 
-LectureRelay is a **Windows desktop app** for recording classes, reading English captions and reviewing what you learned. **Download the EXE, install it, and open the app. You do not need to build the project or install developer tools.**
+**English** · [简体中文](README.zh-CN.md)
+
+LectureRelay is a **Windows desktop app** that records classes, displays English captions and translations, and helps you revisit the lesson through recordings, timestamps and notes. **Install the EXE and start using it. No LectureRelay account or developer tools are required.**
 
 ## Download and install
 
-**[Download LectureRelay 0.3.8 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe)**
+**[Download the latest published preview: 0.3.8 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe)**
 
-[Release notes and all downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.8) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe.sha256)
+[Release notes and downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.8) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe.sha256)
 
-1. Download **`LectureRelay_0.3.8_x64-setup.exe`** from the release's **Assets** section. The automatically generated **Source code** archives are for developers.
-2. Run the installer and follow the setup wizard. It installs for your Windows user and downloads Microsoft WebView2 if it is missing; that step needs an internet connection.
-3. Open **LectureRelay** from the Start menu or desktop shortcut. No LectureRelay account is required.
-4. Open **设置 → 首次使用** for the setup checklist. Download **Nemotron** once (about 667 MiB) in **本地 AI**, then select **本地英文识别** in **AI 服务**.
-5. For offline translation, download **Hy-MT2**, select local translation and enable **上课时自动翻译**. **Qwen** is optional for summaries and deep review; it can be downloaded later. Qwen is also an alternative translator.
-6. Create a course, add its background and terminology, select your microphone or system audio, and start a class.
+The latest published installer is **0.3.8**. The [`main` source branch](https://github.com/Eren-Tian/LectureRelay/tree/main) is now **0.3.10**, with optional live summary cards and local Qwen live summaries disabled; [PR #5](https://github.com/Eren-Tian/LectureRelay/pull/5) has been merged. Version 0.3.10 has not been published as a GitHub Release; the download above does not include those changes.
 
-This package targets **64-bit Intel/AMD Windows PCs**. A GPU is not required. The speech model is downloaded separately. You do not need Node.js, pnpm, Rust or Python to use the installed app.
+1. Download **`LectureRelay_0.3.8_x64-setup.exe`** from the release's **Assets**. The **Source code** archives are for developers.
+2. Run the installer. It installs for your Windows user and downloads Microsoft WebView2 if needed, which requires internet access.
+3. Open **LectureRelay** from the Start menu or desktop shortcut.
+4. Open **设置 → 首次使用**. In **本地 AI**, download **Nemotron** for English captions. Add **Hy-MT2** if you want local translation, then enable the corresponding captions in the setup checklist. Models are downloaded once and shared across courses.
+5. Create a course, choose Chinese, Japanese or Korean for assistance, and add course background and terminology.
+6. Select **麦克风** for an in-person class or **系统声音** for a course playing on your PC. Check the input, then start recording.
 
-This is an **unsigned development preview**; Windows may display an unknown-publisher warning. GitHub downloads currently require access to this private repository; that is separate from using the app, which has no mandatory login.
+This installer is for **64-bit Intel/AMD Windows PCs**. A GPU is not required. You do not need Node.js, pnpm, Rust, Python, Ollama or FFmpeg to use the installed app. Model weights are downloaded separately; local inference can then work offline.
 
-## What you can do
+The preview is currently unsigned, so Windows may display an unknown-publisher warning. This GitHub repository is currently private: access is needed to download its releases. The installed app itself has no mandatory login.
 
-- Organize courses with background information and a terminology glossary.
-- Record a microphone or system audio, with local English speech recognition.
-- Read live captions, scroll back, jump to live, pause and resume.
-- Replay recordings, follow timestamps, search and correct transcripts.
-- Import supported media, attach PDF slides, and keep timestamped notes, bookmarks and chapters.
-- Review note versions and unfinished processing tasks, and export transcripts, subtitles and notes.
-- Choose Light or Dark appearance and a global Quiet Mode for all local AI.
-- Restore courses from Trash and keep your library between app sessions.
-- Delete a single lecture, or collect timestamped classroom source sections and summarize them after recording.
-- Opt into short live summary cards every 2, 4 or 5 minutes using Groq (preferred) or OpenAI independently of speech/translation. In 0.3.10, local Qwen live summaries are disabled to reduce classroom power use; previous local selections become Off without uploading anything. Cards retain English evidence and replay references, and append to manual notes only when requested. See [live summary setup](docs/user-guide/live-summaries.md).
-- Permanently delete trashed courses or free class/model storage with explicit typed confirmation.
+## Classroom workflow
 
-See the [getting-started guide](docs/user-guide/getting-started.md), [local AI guide](docs/user-guide/local-ai.md) and [0.3.8 changes](docs/releases/v0.3.8.md).
+- **Before class:** organize courses, add background and a terminology glossary, and choose your audio device and caption settings.
+- **During class:** read English and translated captions, scroll back, return to the latest captions, and pause or resume recording. An independent caption window can be closed without stopping the class.
+- **After class:** replay recordings, jump to timestamps, search and correct transcripts, fill missing translations, and export text, subtitles or notes.
+- **Study:** import supported media, attach PDF slides, and keep timestamped notes, bookmarks and chapters. Generate postclass outlines, AI drafts, whole-class review guides or answers with source references. Manual notes and saved AI versions remain separate.
+- **Preferences and storage:** choose Light or Dark appearance and Quiet Mode. Delete a single lecture, restore trashed courses, or permanently delete content and free class/model storage after explicit confirmation.
 
-## Local and optional cloud AI
+For a walkthrough, see [getting started](docs/user-guide/getting-started.md) and [local AI setup](docs/user-guide/local-ai.md).
 
-English transcription, translation, summaries and full-class review can run on your computer after model downloads. No LectureRelay login or hosted inference bill. Quiet Mode gives local AI a shared CPU budget.
+## AI options
 
-- **Speech:** Nemotron Streaming EN 0.6B.
-- **Translation:** Hy-MT2-1.8B Q4_K_M; optional Qwen3.5-4B alternative.
-- **Summary, deep review and Q&A:** the same Qwen3.5-4B Q4_K_M download (Unsloth conversion).
+Speech, translation, postclass study and live summaries have separate settings. LectureRelay does not run a hosted inference service or supply a shared API key.
 
-Download only the models you need; all three use about 4.3 GiB of disk space. During class, speech and translation run. Study generation starts after live processing ends. Models are released when work finishes or is cancelled. See [local AI setup](docs/user-guide/local-ai.md).
+| Task                                                | Local model                             | When it runs                          |
+| --------------------------------------------------- | --------------------------------------- | ------------------------------------- |
+| English transcription                               | Nemotron Streaming EN 0.6B              | During recording                      |
+| Translation                                         | Hy-MT2-1.8B Q4_K_M; optional Qwen3.5-4B | During class or on request afterward  |
+| Postclass summary, deep review and Q&A              | Qwen3.5-4B Q4_K_M (Unsloth conversion)  | On request after live processing ends |
+| Live summary cards, in the 0.3.10 development build | Groq or OpenAI, using your own key      | Optional, every 2, 4 or 5 minutes     |
 
-These are **preview candidates**. Small classroom samples revealed terminology and negation errors; they are not certified as the best or uniformly accurate models. [Evaluation and limitations](docs/testing/local-ai-v0.3.md) distinguish real model tests from full-app and laptop acceptance.
+Download only what you need: Nemotron is about **667 MiB**, Hy-MT2 **1,081 MiB**, and Qwen **2,614 MiB**; all three total about **4.3 GiB**, before recordings and app files. Local inference has no per-request API charge, but uses your computer's memory, electricity and storage.
 
-OpenAI/Groq remain optional, with your own API key and provider charges. Local mode never automatically falls back to cloud. Read [provider setup](docs/providers/setup.md) before enabling uploads.
+**Quiet Mode** gives local AI a shared CPU budget. Turning it off allows use of all CPUs available to the app; practical latency, fan noise and power use depend on the computer. Local AI errors do not automatically switch processing to cloud services.
 
-## Preview status
+### Optional live summaries: 0.3.10 development build
 
-The downloadable preview is **0.3.8**, with Chinese UI, model setup feedback, caption-window close/reopen fixes, single-lecture deletion and resumable classroom outlines. During class, finalized captions are collected into timestamped source sections. After recording, local Qwen can summarize each section; generated content does not replace your manual notes. Provisional translations are never exported as completed results. See [release changes](docs/releases/v0.3.8.md), [summary validation](docs/testing/classroom-summary-v0.3.7.md) and [installed natural-speech comparisons](docs/testing/local-caption-research-v0.3.8.md).
+The right-hand classroom panel can turn newly finalized English into short, timestamped cards with source references. **Groq is the preferred optional provider**, with `openai/gpt-oss-120b` as the initial model; OpenAI remains available. Summary selection does not change speech or translation settings.
 
-0.3.8 short installed tests use real MIT lecturers with local models and Quiet Mode. Stable translation prefixes advance beyond 32 words, local speech updates every 320 ms, and exact digital silence avoids unnecessary encoder work. The same five-minute system-audio comparison showed an earlier Chinese course topic and reduced backlog; first English did not improve. The actual microphone fixture had substantial omissions, and translation still made meaning errors. The new 90-minute acceptance was deferred at the user's request; ordinary-laptop power/noise remains unverified.
+**获取 Groq API Key → 粘贴并保存 → 测试总结连接 → 确认文字上传 → 启用实时总结**
 
-Earlier **0.3.3** continuity acceptance completed **90m05.11s** of local speech/translation capture with synthetic probes, followed by source-audio comparison, timestamp replay, restart and original-data/preference checks. All 21,600 regular probes matched; application queue loss was zero. That evidence applies to its stated build and fixture, not to natural-speech accuracy or 0.3.8 long-session acceptance. See the [audio investigation](docs/testing/audio-continuity-v0.3.3.md) and [CI guide](docs/development/ci.md).
+Live summaries start disabled, default to every **4 minutes**, and can be set to **2 or 5 minutes**. You can also summarize the collected text manually. Cards preserve evidence and replay references; **加入我的笔记** appends them only when you choose to. Recording is saved independently of summary completion, and failed work remains visible and recoverable.
 
-Authenticated cloud workflows, physical device unplug and ordinary-laptop power/noise behavior remain unverified. Device flags cannot reveal an exact upstream loss count, probe comparisons have finite resolution, and WebView memory growth and AI meaning/factual errors remain limitations. Reports apply to their stated builds and scenarios rather than certifying every feature.
+**Local Qwen live summaries are disabled in 0.3.10 to reduce classroom resource use.** Old local live-summary preferences become **Off**, with upload consent cleared. Existing cards and downloaded models remain; manually requested postclass review/Q&A still supports local Qwen. Cloud processing is enabled only through explicit setup.
 
-## For developers
+Cloud summaries send selected English transcript sections and bounded course background/terms, not recordings. API keys are entered in the app and stored in Windows Credential Manager. Groq's free account allowance has request/token limits; OpenAI API usage is billed separately from ChatGPT subscriptions. Any charges or quotas belong to the user's provider account.
 
-The instructions below are only for contributing or building from source. **They are not part of installing or using LectureRelay.**
+See [live summary setup](docs/user-guide/live-summaries.md) and [provider configuration](docs/providers/setup.md).
 
-To build the downloadable version, check out tag **`v0.3.8`** first; the default development branch can differ from a release.
+## Preview quality and validation
 
-The app uses Tauri 2, React, TypeScript, Rust, SQLite and a native Nemotron speech worker. Development requires Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2.
+LectureRelay is a development preview. Transcription can omit words, translation can misread terminology or negation, and AI summaries can misrepresent the lesson. **A valid source citation is not proof that a conclusion is correct.** Keep the original text and recording available when reviewing important material.
+
+Installed 0.3.8 tests used real MIT lectures with local models and Quiet Mode. Earlier 0.3.3 audio continuity tests ran for more than 90 minutes with synthetic probes; those results apply to that specific build and fixture. They do not establish natural-speech accuracy or long-session behavior for a newer version. Ordinary-laptop power/noise and physical device-unplug behavior remain unverified.
+
+For the 0.3.10 development build, native regressions, the summary React component suite and silent installed-app settings/payload checks passed. Earlier 0.3.9 tests exercised actual Groq summaries; disabling local live summaries was checked without additional API requests or audio playback. No new 90-minute test was run. See [live-summary acceptance](docs/testing/live-summaries-v0.3.9.md), [local AI evaluation](docs/testing/local-ai-v0.3.md) and [audio continuity evidence](docs/testing/audio-continuity-v0.3.3.md).
+
+## Data and privacy
+
+- Database, model weights, checkpoints and app state: `%LOCALAPPDATA%/LectureRelay/`.
+- Recordings and classroom files: the Windows Documents Known Folder, under `LectureRelay/Courses/`; exports under `LectureRelay/Exports/`.
+- API keys: the application's password field and Windows Credential Manager; never put keys in chat, `.env`, test scripts, logs or exports.
+
+Uninstalling the app preserves classroom data. Exit the app before backing up the database and library together. Local classroom files do not have application-level encryption. See [security](SECURITY.md) and [runtime licenses and provenance](docs/licenses/native-runtime.md). Windows signing and a project-wide source license remain release tasks.
+
+## Contributing and building
+
+These instructions are for developers. **Installing the EXE does not require them.** To reproduce a published installer, check out its release tag, such as `v0.3.8`; the default and feature branches may differ from a release.
+
+The app uses Tauri 2, React, TypeScript, Rust, SQLite and a native speech worker. Development requires Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2.
 
 ```powershell
 pnpm run setup
@@ -73,39 +90,17 @@ pnpm run doctor
 pnpm dev
 ```
 
-The first build downloads hash-pinned CPU speech and text runtimes; model weights are downloaded separately in the app. Python is only for opt-in experiments/soak tests. Details: [environment](docs/development/environment.md), [contributing](CONTRIBUTING.md).
+| Command                                       | Purpose                                     |
+| --------------------------------------------- | ------------------------------------------- |
+| `pnpm dev:web`                                | Frontend preview; native APIs need Tauri    |
+| `pnpm check:web`, `pnpm build:web`            | Type checking and production frontend build |
+| `pnpm test:rust`, `pnpm lint:rust`            | Ordinary native tests and Clippy            |
+| `pnpm test:components`                        | Isolated real React component regressions   |
+| `pnpm format:check`, `pnpm format:rust:check` | Formatting                                  |
+| `pnpm verify:repo`, `pnpm verify:resources`   | Repository and runtime checks               |
+| `pnpm build:debug`                            | Native debug executable                     |
+| `pnpm release`                                | Windows installer and checksum              |
 
-| Command                                       | Purpose                                            |
-| --------------------------------------------- | -------------------------------------------------- |
-| `pnpm dev:web`                                | Frontend preview; native APIs need Tauri           |
-| `pnpm check:web`, `pnpm build:web`            | Type check and frontend production build           |
-| `pnpm test:rust`, `pnpm lint:rust`            | Normal tests and Clippy with warnings denied       |
-| `pnpm format:check`, `pnpm format:rust:check` | Formatting checks                                  |
-| `pnpm verify:repo`, `pnpm verify:resources`   | Imports/links/secret hygiene and runtime staging   |
-| `pnpm build:debug`                            | Native debug executable                            |
-| `pnpm release`                                | Release EXE + current-user Chinese NSIS + checksum |
+The first build fetches pinned CPU runtimes; model weights are downloaded separately in the app. Installer output follows the configured version under `target/x86_64-pc-windows-msvc/release/bundle/nsis/`. Build output is excluded from Git and distributed through Release assets.
 
-Build output: `target/x86_64-pc-windows-msvc/release/bundle/nsis/LectureRelay_0.3.8_x64-setup.exe`. Publish the installer, checksum and build metadata as GitHub Release assets; build output is excluded from Git.
-
-## Repository
-
-```text
-apps/desktop/src/             app shell, feature UI, shared UI/hooks/types
-apps/desktop/src-tauri/src/   native app, audio, database, speech, providers, security
-apps/desktop/native/         production C++ speech-worker source and runtime manifest
-assets/branding/             canonical phoenix SVG
-scripts/                    dev, build, test, release and verification
-experiments/local-stt/       development-only model comparisons and preserved reports
-experiments/local-ai/        local translation/study comparisons and preserved reports
-tests/                      fixture policy and opt-in long soak
-docs/                       architecture, providers, security, user guides and releases
-target/                     ignored builds, SDKs, fixtures, experiment downloads and installers
-```
-
-The [repository map](docs/architecture/repository-structure.md) explains boundaries. Start with [classroom use](docs/user-guide/getting-started.md), [local speech](docs/user-guide/local-speech.md), [provider setup](docs/providers/setup.md), [architecture](docs/architecture/overview.md) and [tests](docs/testing/validation.md).
-
-## Data and security
-
-SQLite, models, checkpoints and app state live in `%LOCALAPPDATA%/LectureRelay/`. Recordings and sidecars live in the Windows Documents Known Folder under `LectureRelay/Courses/`; exports under `LectureRelay/Exports/`. These locations are independent of source/build/install directories. Schema 1→2 migration, Trash/restore and uninstall preserve user content. Back up database and library together after exiting.
-
-API keys belong only in the app password field and Windows Credential Manager (`LectureRelay/provider/{openai,groq}`), never `.env`, SQLite, logs or exports. Read [security](SECURITY.md) and [native licenses/provenance](docs/licenses/native-runtime.md). Signing, a project-wide source license and a private security contact remain release tasks.
+See [development environment](docs/development/environment.md), [contributing](CONTRIBUTING.md), [repository map](docs/architecture/repository-structure.md), [architecture](docs/architecture/overview.md) and [CI](docs/development/ci.md).

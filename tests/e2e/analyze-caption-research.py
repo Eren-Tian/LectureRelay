@@ -5,6 +5,7 @@ verified audio onset correction is supplied. Stage-to-stage samples use the
 same segment ID/start/end/hash/revision (legacy traces omit hash/revision).
 """
 import argparse
+import hashlib
 import json
 import statistics
 from pathlib import Path
@@ -85,6 +86,48 @@ for seg in segments:
         published_to_dom.append({'id': seg['id'], 'seconds': (seen['utcMs']-pubs[0]['utcMs'])/1000})
 matched['finalSourceToDom'] = final_to_dom
 matched['finalPublishToDom'] = published_to_dom
+# Each provisional observation must retain the exact source revision/hash.
+# Eight characters is a visibility threshold, not a semantic-quality claim.
+preview_to_dom = []
+preview_meaning_to_dom = []
+meaning_checks = [
+    ('folk psychology', lambda en: 'folk psychology' in en,
+     lambda zh: '民间心理学' in zh),
+    ('memory and learning', lambda en: 'memory' in en and 'learning' in en,
+     lambda zh: '记忆' in zh and '学习' in zh),
+    ('Mark and Laura', lambda en: 'mark' in en and 'laura' in en,
+     lambda zh: '马克' in zh and '劳拉' in zh),
+    ('efficient comparison', lambda en: 'efficient' in en and 'compar' in en,
+     lambda zh: ('高效' in zh or '效率' in zh) and '比较' in zh),
+]
+for event in trace:
+    if event['stage'] != 'preview_eligible':
+        continue
+    for unit in event['segments']:
+        if 'sourceSha256' not in unit or 'revision' not in unit:
+            continue  # Legacy diagnostics cannot match an immutable revision.
+        observations = []
+        for sample in samples:
+            if sample['utcMs'] < event['utcMs']:
+                continue
+            for p in sample.get('previews', []):
+                if (p['kind'] == 'draft' and p['id'] == unit['id'] and
+                    p['sourceRevision'] == unit['revision'] and
+                    hashlib.sha256(p['sourceText'].encode()).hexdigest() == unit['sourceSha256'] and
+                    any(row['id'] == p['id'] and row['translated'] == p['translatedText']
+                        for row in sample.get('rows', []))):
+                    observations.append((sample, p))
+        visible = next(((s, p) for s, p in observations if len(p['translatedText'].strip()) >= 8), None)
+        if visible:
+            preview_to_dom.append({'unit': key(event), 'seconds': (visible[0]['utcMs']-event['utcMs'])/1000})
+        for name, source_check, translation_check in meaning_checks:
+            meaning = next(((s, p) for s, p in observations if
+                            source_check(p['sourceText'].lower()) and translation_check(p['translatedText'])), None)
+            if meaning:
+                preview_meaning_to_dom.append({'unit': key(event), 'meaning': name,
+                    'seconds': (meaning[0]['utcMs']-event['utcMs'])/1000})
+matched['previewEligibleToDom8Chars'] = preview_to_dom
+matched['previewEligibleToDomCheckedConcept'] = preview_meaning_to_dom
 preparations = {}
 for model in ['speech', 'translation']:
     starts = [e for e in trace if e['stage'] == model + '_prepare_start']
@@ -107,21 +150,41 @@ for phase, condition in [
         'privateMiB': dist([v['privateBytesSum']/1048576 for v in m]),
         'cpuSeconds': sum(v.get('cpuSecondsDelta', 0) for v in m) if m and 'cpuSecondsDelta' in m[0] else None}
 revisions = {}
+last_visible = {}
+append_updates = replacements = disappearing_rows = 0
 for s in samples:
     for p in s.get('previews', []):
         if p['kind'] == 'draft':
             revisions.setdefault(p['id'], {}).setdefault(p['sourceRevision'], p['sourceText'])
+    current = {row['id']: row['translated'] for row in s.get('rows', []) if row['translated']}
+    for id_, text in current.items():
+        old = last_visible.get(id_)
+        if old and text != old:
+            if text.startswith(old):
+                append_updates += 1
+            else:
+                replacements += 1
+    disappearing_rows += sum(id_ not in current for id_ in last_visible)
+    last_visible = current
 result = {'label': args.label, 'clock': 'player audio-start, not yet phoneme-onset aligned',
+    'targetLanguage': o.get('targetLanguage', 'zh'),
     'malformedTraceLinesExcluded': malformed_trace_lines,
     'firstUsefulEnglishSeconds': first(lambda s: any(len(t.split()) >= 4 for t in s['english'])),
-    'firstChinese8CharsSeconds': first(lambda s: any(len(t.strip()) >= 8 for t in s['chinese'])),
+    'firstTarget8CharsSeconds': first(lambda s: any(len(t.strip()) >= 8 for t in s['chinese'])),
+    'firstChinese8CharsSeconds': first(lambda s: any(len(t.strip()) >= 8 for t in s['chinese'])) if o.get('targetLanguage', 'zh') == 'zh' else None,
     'firstIntroPsychMeaningSeconds': first(lambda s: any('心理' in t and ('入门' in t or '导论' in t) for t in s['chinese'])),
-    'firstFinalChineseSeconds': first(lambda s: any(v.get('translatedText') for v in s['segments'])),
+    'firstIntroPsychContrastEnglishSeconds': first(lambda s: 'psych' in ' '.join(s['english'][:2]).lower() and 'different' in ' '.join(s['english'][:2]).lower()),
+    'firstIntroPsychContrastChineseSeconds': first(lambda s: '心理' in ' '.join(s['chinese'][:2]) and any(w in ' '.join(s['chinese'][:2]) for w in ['不同','不一样','区别'])),
+    'firstFinalTargetSeconds': first(lambda s: any(v.get('translatedText') for v in s['segments'])),
+    'firstFinalChineseSeconds': first(lambda s: any(v.get('translatedText') for v in s['segments'])) if o.get('targetLanguage', 'zh') == 'zh' else None,
     'preparationSeconds': preparations, 'backlogSeconds': dist([s['backlog'] for s in samples]),
     'maxQueue': max(s['queue'] for s in samples), 'maxDeferred': max(s['deferred'] for s in samples),
     'translatedSegments': sum(bool(s['translatedText']) for s in segments), 'segments': len(segments),
     'sourceRevisionsObserved': sum(len(v) for v in revisions.values()),
     'previewMaxWords': max((len(t.split()) for v in revisions.values() for t in v.values()), default=0),
+    'observedTranslationChanges': {'appended': append_updates, 'nonPrefixReplacements': replacements,
+        'disappearingRows': disappearing_rows, 'pollMs': o['pollMs'],
+        'scope': 'Observed DOM changes; normal streaming appends excluded from replacements; does not prove perceptual flicker'},
     'matched': {k: dist([v['seconds'] for v in rows]) for k, rows in matched.items()},
     'resources': resources, 'playback': o['playback'], 'floating': o.get('floating')}
 (root/'analysis.json').write_text(json.dumps({'summary': result, 'matchedUnits': matched}, indent=2), encoding='utf-8')

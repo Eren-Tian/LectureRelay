@@ -52,6 +52,7 @@ try:
                    *map(str, [find('model.'), find('srcvocab.'), find('trgvocab.'), find('lex.')])]
         worker = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                   stderr=subprocess.DEVNULL, text=True, encoding='utf-8', creationflags=0x08000000)
+        psutil.Process(worker.pid).cpu_affinity([0, 2, 4, 6])
     else:
         assert args.runtime and args.model
         with socket.socket() as listener:

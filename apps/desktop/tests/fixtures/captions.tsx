@@ -31,6 +31,13 @@ const settings: AppSettings = {
   autoScroll: true,
   theme: 'light',
   quietMode: true,
+  liveSummaries: {
+    enabled: false,
+    provider: 'groq',
+    model: 'openai/gpt-oss-120b',
+    intervalMinutes: 4,
+    uploadConsent: false,
+  },
 };
 const translations = {
   zh: '把新知识与已知的事物联系起来，会让学习更轻松。',

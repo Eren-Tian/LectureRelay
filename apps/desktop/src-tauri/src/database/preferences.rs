@@ -34,6 +34,7 @@ impl Storage {
     }
 
     pub fn save_settings(&self, settings: AppSettings) -> AppResult<()> {
+        settings.live_summaries.validate()?;
         if !matches!(
             settings.translation_model.as_str(),
             "hy-mt2-1.8b" | "qwen3.5-4b"

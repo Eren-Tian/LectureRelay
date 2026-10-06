@@ -1,6 +1,7 @@
 pub(crate) mod assistance;
 pub(crate) mod exports;
 pub(crate) mod jobs;
+pub(crate) mod live_summaries;
 pub(crate) mod media;
 pub(crate) mod review;
 
@@ -18,6 +19,7 @@ pub struct AppState {
     pub(crate) recorder: audio::Recorder,
     pub(crate) jobs: jobs::Jobs,
     pub(crate) live: live::Live,
+    pub(crate) summaries: live_summaries::LiveSummaries,
     pub(crate) models: model_manager::ModelManager,
     pub(crate) runtime: std::path::PathBuf,
     pub(crate) gate: Mutex<()>,
@@ -49,6 +51,7 @@ pub fn run() {
                 recorder: Default::default(),
                 jobs: jobs::Jobs::persistent(storage.clone()),
                 live: Default::default(),
+                summaries: Default::default(),
                 models: Default::default(),
                 runtime: {
                     #[cfg(debug_assertions)]
@@ -65,7 +68,8 @@ pub fn run() {
                 recovered_count,
                 _instance_lock: instance_lock,
             });
-            app.manage(state);
+            app.manage(state.clone());
+            live_summaries::start(state, app.handle().clone());
             let window = tauri::WebviewWindowBuilder::new(
                 app,
                 "main",
@@ -127,10 +131,18 @@ pub fn run() {
                 } else {
                     state.jobs.cancel();
                     state.live.cancel();
+                    state.summaries.cancel();
                 }
             }
         })
         .invoke_handler(tauri::generate_handler![
+            commands::live_summaries::live_summary_state,
+            commands::live_summaries::summary_audio,
+            commands::live_summaries::live_summary_setup,
+            commands::live_summaries::save_live_summary_settings,
+            commands::live_summaries::summarize_now,
+            commands::live_summaries::test_summary_provider,
+            commands::live_summaries::open_summary_provider_page,
             commands::study::open_caption_window,
             commands::study::close_caption_window,
             commands::study::caption_state,

@@ -1,4 +1,5 @@
 use tauri::Emitter;
+pub(crate) mod live_summaries;
 pub(crate) mod study;
 use crate::{
     AppState,
@@ -84,6 +85,9 @@ pub fn delete_course(state: App<'_>, id: String) -> AppResult<()> {
         .user_error("The app is busy. Try again.")?;
     if state.live.active() {
         return Err("Wait for live caption processing to finish.".into());
+    }
+    if state.summaries.busy() {
+        return Err("实时总结正在处理，请等待完成，或关闭总结后再移入回收站。".into());
     }
     if let Some(recording) = state.recorder.status()?
         && state.storage.lecture(&recording.lecture_id)?.course_id == id
@@ -255,6 +259,9 @@ pub async fn start_lecture(
             return Err(error);
         }
         if settings.speech_provider != "none" {
+            if settings.live_summaries.provider == "local" && state.summaries.busy() {
+                state.summaries.cancel();
+            }
             crate::speech::streaming::Live::start(state.clone(), app, lecture.id.clone());
         }
         Ok(lecture)
@@ -393,6 +400,7 @@ pub fn save_settings(state: App<'_>, mut settings: AppSettings) -> AppResult<()>
     let current = state.storage.settings()?;
     settings.theme = current.theme;
     settings.quiet_mode = current.quiet_mode;
+    settings.live_summaries = current.live_summaries;
     state.storage.save_settings(settings)
 }
 
@@ -426,13 +434,21 @@ pub fn save_runtime_preferences(
 }
 
 #[tauri::command]
-pub fn save_provider_key(provider: String, key: String) -> AppResult<()> {
-    credentials::save(&provider, key)
+pub fn save_provider_key(state: App<'_>, provider: String, key: String) -> AppResult<()> {
+    let _gate = state.gate.lock().user_error("应用正忙，请稍后重试。")?;
+    credentials::save(&provider, key)?;
+    state.storage.summary_tested(&provider, None)?;
+    state.summaries.cancel();
+    Ok(())
 }
 
 #[tauri::command]
-pub fn remove_provider_key(provider: String) -> AppResult<()> {
-    credentials::remove(&provider)
+pub fn remove_provider_key(state: App<'_>, provider: String) -> AppResult<()> {
+    let _gate = state.gate.lock().user_error("应用正忙，请稍后重试。")?;
+    credentials::remove(&provider)?;
+    state.storage.summary_tested(&provider, None)?;
+    state.summaries.cancel();
+    Ok(())
 }
 
 #[tauri::command]
@@ -705,7 +721,10 @@ pub fn restore_course(state: App<'_>, id: String) -> AppResult<()> {
     state.storage.restore_course(&id)
 }
 
-fn ensure_cleanup_idle(state: &AppState) -> AppResult<()> {
+pub(crate) fn ensure_cleanup_idle(state: &AppState) -> AppResult<()> {
+    if state.summaries.busy() {
+        return Err("实时总结正在处理，请等待完成，或关闭总结后再删除数据。".into());
+    }
     if state.recorder.status()?.is_some()
         || state.jobs.status()?.is_some()
         || state.live.active()

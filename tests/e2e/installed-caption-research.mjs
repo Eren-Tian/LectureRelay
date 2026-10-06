@@ -47,6 +47,11 @@ let mainHandle;
 let floating;
 let boot;
 const samples = [];
+const summarySamples = [];
+const summaryAcceptance =
+  process.env.LECTURERELAY_LIVE_SUMMARY_ACCEPTANCE === '1';
+const summariesEnabled = process.env.LECTURERELAY_LIVE_SUMMARY_ENABLED === '1';
+let nextSummarySample = 0;
 try {
   boot = await d.native('bootstrap');
   mainHandle = await d.command('GET', '/window');
@@ -77,6 +82,19 @@ try {
   assert.equal(boot.settings.speechProvider, 'local');
   assert.equal(boot.settings.translationMode, 'local');
   assert.equal(boot.settings.quietMode, true);
+  if (summaryAcceptance) {
+    assert.equal(boot.settings.liveSummaries.enabled, summariesEnabled);
+    if (summariesEnabled) {
+      assert.equal(
+        boot.settings.liveSummaries.provider,
+        process.env.LECTURERELAY_LIVE_SUMMARY_PROVIDER || 'groq',
+      );
+      assert.equal(
+        boot.settings.liveSummaries.intervalMinutes,
+        Number(process.env.LECTURERELAY_LIVE_SUMMARY_INTERVAL || 4),
+      );
+    }
+  }
   const courseName =
     process.env.LECTURERELAY_LATENCY_COURSE ||
     '[ACCEPTANCE 2026-10-05] Natural lecture latency';
@@ -130,6 +148,22 @@ try {
   const readySilenceSeconds = Number(
     process.env.LECTURERELAY_LATENCY_READY_SILENCE || 0,
   );
+  const lifecyclePauseSeconds = Number(
+    process.env.LECTURERELAY_LATENCY_PAUSE_SECONDS || 0,
+  );
+  if (lifecyclePauseSeconds > 0) {
+    await d.clickText('暂停');
+    await until(
+      () => d.native('recording_status'),
+      (r) => r?.paused === true,
+    );
+    await pause(lifecyclePauseSeconds * 1000);
+    await d.clickText('继续');
+    await until(
+      () => d.native('recording_status'),
+      (r) => r?.paused === false,
+    );
+  }
   if (readySilenceSeconds > 0) await pause(readySilenceSeconds * 1000);
   player = spawn(
     'python',
@@ -163,6 +197,15 @@ try {
       "return [...document.querySelectorAll('[data-caption-id]')].map(e=>({id:e.dataset.captionId,english:e.querySelector('.caption-english')?.textContent??'',translated:e.querySelector('.caption-translation')?.textContent??'',kind:e.querySelector('[data-translation-kind]')?.dataset.translationKind??'saved'}));",
     );
     assert.ok(dom.stopEnabled, 'Stop must remain usable');
+    if (summaryAcceptance && Date.now() >= nextSummarySample) {
+      const summary = await d.native('live_summary_state', { id: lectureId });
+      summarySamples.push({ utcMs: Date.now(), ...summary });
+      // This acceptance is authorized for exactly two MIT windows. Stop on an
+      // unexpected extra request; never turn a failure into a cloud retry.
+      if (summary.cards.some((card) => card.provider !== 'local'))
+        assert.ok(summary.cards.length <= 2, 'Cloud window budget exceeded');
+      nextSummarySample = Date.now() + 2000;
+    }
     samples.push({
       utcMs: Date.now(),
       elapsed: (Date.now() - started) / 1000,
@@ -247,11 +290,13 @@ try {
     await pause(pollMs);
   }
   player.kill();
+  const stopStarted = Date.now();
   await d.clickText('结束并保存');
   await until(
     () => d.native('recording_status'),
     (r) => r === null,
   );
+  const stopSaveMs = Date.now() - stopStarted;
   await until(
     () => d.native('live_status'),
     (l) => !l.active,
@@ -279,6 +324,16 @@ try {
     (a) => a.playing && a.time > 1 && a.error === null,
   );
   await d.read("document.querySelector('audio').pause();");
+  if (
+    summaryAcceptance &&
+    summariesEnabled &&
+    boot.settings.liveSummaries.provider === 'local'
+  )
+    await until(
+      () => d.native('live_summary_state', { id: lectureId }),
+      (s) => !s.busy,
+      100000,
+    );
   const record = {
     label,
     scope: `Installed EXE and real WebView2, ${source}, fixed real lecturer audio, local Nemotron + Hy-MT2, Quiet Mode; instrumented ${durationMs >= 3600000 ? 'long' : 'short'} run`,
@@ -290,11 +345,19 @@ try {
     targetLanguage,
     startupNotice: liveAtStart,
     readySilenceSeconds,
+    lifecyclePauseSeconds,
     pollMs,
     playback: { ...playback, timestampPlayPassed: true },
     lectureId,
     detail,
     samples,
+    ...(summaryAcceptance
+      ? {
+          summarySamples,
+          stopSaveMs,
+          summaryFinal: await d.native('live_summary_state', { id: lectureId }),
+        }
+      : {}),
   };
   const trace = path.join(
     boot.storage.state,
@@ -329,7 +392,14 @@ try {
   await fs.writeFile(
     `${out}/failure.json`,
     JSON.stringify(
-      { label, error: String(error), lectureId, detail, samples },
+      {
+        label,
+        error: String(error),
+        lectureId,
+        detail,
+        samples,
+        summarySamples,
+      },
       null,
       2,
     ),
@@ -355,6 +425,14 @@ try {
     lectureId &&
     (await d.native('recording_status'))?.lectureId === lectureId
   ) {
+    // The operator may have navigated to Settings while recording. Recover
+    // through the actual UI before saving; retain the original failed result.
+    if (
+      !(await d.read(
+        "return [...document.querySelectorAll('button')].some(b=>b.innerText.trim()==='结束并保存' && b.getClientRects().length && !b.disabled);",
+      ))
+    )
+      await d.clickText('正在录音\n返回当前课堂');
     await d.clickText('结束并保存');
     await until(
       () => d.native('recording_status'),

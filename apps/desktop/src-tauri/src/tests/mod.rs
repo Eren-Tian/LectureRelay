@@ -1,5 +1,6 @@
 mod acceptance;
 mod audit;
+mod live_summaries;
 mod local_ai;
 mod reliability;
 mod study_workspace;
@@ -130,7 +131,7 @@ fn migrations_reopen_and_preserve_full_learning_data() {
         connection
             .query_row("PRAGMA user_version", [], |row| row.get::<_, i32>(0))
             .unwrap(),
-        4
+        5
     );
     let preferences: String = connection
         .query_row(

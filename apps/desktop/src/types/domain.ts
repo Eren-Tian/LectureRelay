@@ -95,11 +95,51 @@ export interface AppSettings {
   showEnglish: boolean;
   showTranslation: boolean;
   autoScroll: boolean;
+  liveSummaries: LiveSummaryPreferences;
 }
 export interface ProviderStatus {
   provider: ProviderName;
   hasKey: boolean;
   maskedKey: string;
+}
+export interface LiveSummaryPreferences {
+  enabled: boolean;
+  provider: 'groq' | 'openai' | 'local' | 'none';
+  model: string;
+  intervalMinutes: 2 | 4 | 5;
+  uploadConsent: boolean;
+}
+export interface SummarySource {
+  id: string;
+  startSeconds: number;
+  endSeconds: number;
+  text: string;
+  revision: number;
+}
+export interface SummaryCard {
+  id: string;
+  lectureId: string;
+  provider: string;
+  model: string;
+  language: string;
+  sources: SummarySource[];
+  state: 'running' | 'completed' | 'failed' | 'deferred' | 'stale';
+  title: string;
+  points: { text: string; sourceIds: string[] }[];
+  message: string;
+  createdAt: number;
+}
+export interface SummaryState {
+  cards: SummaryCard[];
+  busy: boolean;
+  message: string;
+  remaining: number;
+  collectingSeconds: number;
+}
+export interface SummarySetup {
+  preferences: LiveSummaryPreferences;
+  providers: ProviderStatus[];
+  connectionTested: boolean;
 }
 export interface RecordingStatus {
   source: string;

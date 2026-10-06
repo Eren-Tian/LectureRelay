@@ -17,3 +17,13 @@ Cloud speech sends audio; cloud text sends transcript text and course context. E
 Translation saves English first and associates results with source revision and course language. Missing results can be retried after class. Full-class summaries/reviews process bounded sections and retain section notes when reducing long input. Q&A uses keyword retrieval with source snapshots; retrieval is not semantic search or guaranteed full coverage. Cancel local inference to terminate its helper. Stop recording saves audio independently of the translation queue.
 
 Authenticated cloud workflows remain untested because paid cloud tests were excluded. Local evaluation is not a cloud acceptance test or an independent security audit.
+
+## Independent live summaries (0.3.9)
+
+Live summaries have a separate provider, model, interval and explicit transcript-upload consent. Groq is the preferred optional entry, defaulting to `openai/gpt-oss-120b`; OpenAI defaults to `gpt-4o-mini`; local summaries reuse the installed Qwen model. Existing speech, translation and postclass study settings are preserved. Gemini is deferred.
+
+Use **设置 → 实时总结 → 获取 Groq API Key → 保存 Key → 测试总结连接 → 启用实时总结**. The key button opens <https://console.groq.com/keys>. The test performs real short generation and validates JSON and supplied reference IDs, rather than relying on `/models` access alone. Replacing the key or model invalidates the saved test status. Key storage and native HTTP handling reuse the existing Credential Manager and official provider adapter.
+
+Groq GPT OSS requests use non-streaming strict JSON Schema, `max_completion_tokens`, `reasoning_effort: low` and `include_reasoning: false`; they do not also set `reasoning_format`. These capabilities are documented in [the model guide](https://console.groq.com/docs/model/openai/gpt-oss-120b), [structured outputs](https://console.groq.com/docs/structured-outputs) and [reasoning parameters](https://console.groq.com/docs/reasoning). Availability and factual quality must still be verified with the actual account and classroom evidence. Free account limits are shared at organization level; consult [rate limits](https://console.groq.com/docs/rate-limits) and your account. Do not describe it as unlimited free inference.
+
+Only new finalized English and bounded course context/terms are uploaded for summaries, never the recording. Service retention exceptions and controls are described in [Groq's data policy](https://console.groq.com/docs/your-data); local default operation does not imply cloud data is never retained. See [the user guide](../user-guide/live-summaries.md) for cards, failure states and local resource behavior, and the current acceptance report for which real requests were actually executed.

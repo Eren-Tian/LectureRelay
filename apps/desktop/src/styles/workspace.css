@@ -829,3 +829,94 @@ h2 {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+.live-summary-panel {
+  display: grid;
+  gap: 14px;
+}
+.live-summary-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.live-summary-heading h2 {
+  margin: 0 0 6px;
+  font-size: 17px;
+}
+.summary-live-status,
+.summary-empty {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.65;
+}
+.summary-live-status .button-row {
+  margin-top: 10px;
+}
+.summary-points {
+  padding-left: 20px;
+  margin: 12px 0;
+  font-size: 14px;
+  line-height: 1.8;
+}
+.summary-points li + li {
+  margin-top: 12px;
+}
+.summary-references {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.summary-references .text-button {
+  font-size: 12px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.summary-archive {
+  margin-top: 22px;
+  border-top: 1px solid var(--line);
+  padding-top: 16px;
+}
+.summary-archive > summary {
+  margin-bottom: 16px;
+}
+.live-summary-setup {
+  display: grid;
+  gap: 14px;
+}
+.live-summary-setup > h2,
+.live-summary-setup > p {
+  margin: 0;
+}
+.live-summary-setup label {
+  display: grid;
+  gap: 8px;
+}
+.live-summary-setup form {
+  display: grid;
+  gap: 12px;
+}
+.live-summary-setup .toggle-row {
+  display: flex;
+  align-items: flex-start;
+}
+.live-summary-setup .toggle-row input {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin-top: 3px;
+}
+.summary-setup-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 28px;
+  margin: 0;
+  padding-left: 20px;
+  font-size: 13px;
+}
+.summary-audio audio {
+  width: 100%;
+}

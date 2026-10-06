@@ -44,6 +44,25 @@ pub fn configured(settings: &AppSettings) -> AppResult<OfficialProvider> {
 }
 
 impl OfficialProvider {
+    pub async fn classroom_summary(
+        &self,
+        system: &str,
+        user: &str,
+    ) -> Result<String, super::SummaryFailure> {
+        let body = summary_payload(&self.provider, &self.model, system, user);
+        let response = self
+            .client
+            .post(format!("{}/chat/completions", self.base))
+            .json(&body)
+            .send()
+            .await
+            .map_err(|_| super::SummaryFailure {
+                message: "无法连接总结服务或请求超时，请检查网络后重试；录音继续保存。".into(),
+                retry_after: 0,
+            })?;
+        let value = super::http::read_summary_response(response).await?;
+        chat_text(&value).map_err(Into::into)
+    }
     pub fn new(provider: &str, model: &str) -> AppResult<Self> {
         use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
         let base = crate::security::endpoints::provider_base(provider)?;
@@ -106,6 +125,24 @@ impl OfficialProvider {
         let value = read_response(response).await?;
         chat_text(&value)
     }
+}
+
+pub(crate) fn summary_payload(
+    provider: &str,
+    model: &str,
+    system: &str,
+    user: &str,
+) -> serde_json::Value {
+    let mut body = serde_json::json!({"model":model,"messages":[{"role":"system","content":system},{"role":"user","content":user}],"max_completion_tokens":2048,"stream":false,
+        "response_format":{"type":"json_schema","json_schema":{"name":"classroom_summary","strict":true,"schema":{"type":"object","properties":{"title":{"type":"string"},"points":{"type":"array","items":{"type":"object","properties":{"text":{"type":"string"},"sourceIds":{"type":"array","items":{"type":"string"}}},"required":["text","sourceIds"],"additionalProperties":false}}},"required":["title","points"],"additionalProperties":false}}}});
+    if provider == "groq" && model.starts_with("openai/gpt-oss-") {
+        body["reasoning_effort"] = serde_json::json!("low");
+        body["include_reasoning"] = serde_json::json!(false);
+    }
+    if provider == "openai" {
+        body["store"] = serde_json::json!(false);
+    }
+    body
 }
 
 #[async_trait]

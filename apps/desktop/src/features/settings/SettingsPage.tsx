@@ -13,6 +13,7 @@ import { ModelManagerCard } from '../model-manager/ModelManagerCard';
 import { TrashCard } from '../trash/TrashCard';
 import { StorageUsage } from './StorageUsage';
 import { SetupGuide } from './SetupGuide';
+import { LiveSummarySetup } from '../study/LiveSummarySetup';
 import {
   AudioSettings,
   CaptionSettings,
@@ -26,6 +27,7 @@ const categories = [
   ['声音', 'mic'],
   ['字幕显示', 'books'],
   ['AI 服务', 'cloud'],
+  ['实时总结', 'spark'],
   ['本地 AI', 'spark'],
   ['数据与存储', 'folder'],
   ['安全与隐私', 'shield'],
@@ -61,8 +63,9 @@ export function SettingsPage() {
         Object.fromEntries(
           Object.entries(next).map(([key, value]) => [
             key,
+            key === 'liveSummaries' ||
             draft[key as keyof AppSettings] ===
-            previous[key as keyof AppSettings]
+              previous[key as keyof AppSettings]
               ? value
               : draft[key as keyof AppSettings],
           ]),
@@ -182,6 +185,7 @@ export function SettingsPage() {
             />
           )}
           {category === '通用' && <GeneralSettings {...props} />}
+          {category === '实时总结' && <LiveSummarySetup />}
           {category === '声音' && <AudioSettings {...props} />}
           {category === '字幕显示' && (
             <CaptionSettings {...props} onProviders={() => select('AI 服务')} />
@@ -424,39 +428,43 @@ export function SettingsPage() {
               </dl>
             </section>
           )}
-          <div className="settings-savebar">
-            <span role="status">
-              {blocked
-                ? '录音或处理期间仍可调整外观和安静模式。其他设置请在任务结束后保存。'
-                : dirty
-                  ? '有尚未保存的修改。'
-                  : '设置已保存。'}
-            </span>
-            <div className="button-row">
-              {dirty && (
+          {category !== '实时总结' && (
+            <div className="settings-savebar">
+              <span role="status">
+                {blocked
+                  ? '录音或处理期间仍可调整外观和安静模式。其他设置请在任务结束后保存。'
+                  : dirty
+                    ? '有尚未保存的修改。'
+                    : '设置已保存。'}
+              </span>
+              <div className="button-row">
+                {dirty && (
+                  <button
+                    className="button text"
+                    disabled={blocked}
+                    onClick={() =>
+                      setSettings(JSON.parse(saved) as AppSettings)
+                    }
+                  >
+                    {'撤销修改'}
+                  </button>
+                )}
                 <button
-                  className="button text"
-                  disabled={blocked}
-                  onClick={() => setSettings(JSON.parse(saved) as AppSettings)}
+                  className="button primary"
+                  disabled={blocked || !dirty}
+                  onClick={() =>
+                    void run(async () => {
+                      await api.saveSettings(settings);
+                      await workspace.refresh();
+                    }, '设置已保存。')
+                  }
                 >
-                  {'撤销修改'}
+                  <Icon name="check" size={16} />
+                  {'保存修改'}
                 </button>
-              )}
-              <button
-                className="button primary"
-                disabled={blocked || !dirty}
-                onClick={() =>
-                  void run(async () => {
-                    await api.saveSettings(settings);
-                    await workspace.refresh();
-                  }, '设置已保存。')
-                }
-              >
-                <Icon name="check" size={16} />
-                {'保存修改'}
-              </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -14,6 +14,7 @@ fn state(fixture: &Fixture) -> crate::AppState {
         recorder: Default::default(),
         jobs: Default::default(),
         live: Default::default(),
+        summaries: Default::default(),
         models: Default::default(),
         runtime: std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/local-asr"),
         gate: Mutex::new(()),

@@ -1,11 +1,15 @@
 pub(crate) mod contracts;
 mod http;
+pub(crate) use http::SummaryFailure;
 pub(crate) mod local;
 mod official;
+#[cfg(test)]
+pub(crate) use official::summary_payload;
 mod sse;
 pub(crate) use local::{Role, configured_text};
 
 pub(crate) use contracts::*;
+pub(crate) use official::language_name as official_language;
 pub(crate) use official::{OfficialProvider, configured};
 
 #[cfg(test)]

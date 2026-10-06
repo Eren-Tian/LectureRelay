@@ -61,6 +61,8 @@ async function click(text) {
 await fs.mkdir(output, { recursive: true });
 try {
   await d.startBrowser(base + '/tests/fixtures/summary.html');
+  await until('return !!document.querySelector(".summary-archive");');
+  await d.read('document.querySelector(".summary-archive").open = true;');
   await until('return !!document.querySelector(".summary-card");');
   assert.equal(
     await d.read(
@@ -119,7 +121,7 @@ try {
   );
   await d.read('window.summaryFixture.live(true);');
   await until(
-    'return document.querySelector(".summary-card").innerText.includes("第 17 段");',
+    'return !document.querySelector(".summary-archive") && !!document.querySelector(".live-summary-panel");',
   );
   assert.equal(
     await d.read('return !!document.querySelector(".summary-heading button");'),
@@ -129,7 +131,7 @@ try {
     await d.read(
       'return document.querySelector(".classroom-summary").innerText;',
     ),
-    /尚未经过 AI 总结/,
+    /尚未启用自动总结/,
   );
   await d.read('document.documentElement.dataset.theme="dark";');
   await fs.writeFile(

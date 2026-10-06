@@ -46,6 +46,8 @@ export class WebDriver {
         'provider_status',
         'trash_courses',
         'existing_lecture_ids',
+        'live_summary_state',
+        'live_summary_setup',
       ].includes(command)
     ) {
       throw new Error(

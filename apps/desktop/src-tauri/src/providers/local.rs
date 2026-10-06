@@ -73,6 +73,7 @@ pub fn configured_text(
                 state,
                 model: model.id,
                 live,
+                summary_generation: None,
                 worker: Mutex::new(None),
             }))
         }
@@ -85,10 +86,34 @@ struct LocalProvider<'a> {
     state: &'a AppState,
     model: &'static str,
     live: bool,
+    summary_generation: Option<u64>,
     worker: Mutex<Option<Worker>>,
+}
+pub(crate) async fn classroom_summary(
+    state: &AppState,
+    prompt: String,
+    generation: u64,
+) -> AppResult<String> {
+    if !manager::status_for(state, catalog::STUDY)?.installed {
+        return Err("请先下载 Qwen3.5-4B 总结模型，或选择 Groq 云端总结。".into());
+    }
+    let provider = LocalProvider {
+        state,
+        model: catalog::STUDY,
+        live: false,
+        summary_generation: Some(generation),
+        worker: Mutex::new(None),
+    };
+    provider.chat(prompt, 768).await
 }
 impl LocalProvider<'_> {
     fn checkpoint(&self) -> AppResult<()> {
+        if let Some(generation) = self.summary_generation {
+            if !self.state.summaries.matches_generation(generation) {
+                return Err("总结设置已更改，原文已保存。".into());
+            }
+            return self.state.summaries.local_checkpoint(self.state);
+        }
         if self.live {
             if self.state.live.cancelled() {
                 return Err("Local translation cancelled. Recording is preserved.".into());
@@ -110,7 +135,7 @@ impl LocalProvider<'_> {
         }
     }
     fn phase(&self, text: &str) {
-        if !self.live {
+        if !self.live && self.summary_generation.is_none() {
             self.state.jobs.message(text);
         }
     }
@@ -139,7 +164,12 @@ impl LocalProvider<'_> {
                     &self.state.runtime.with_file_name("local-text"),
                     &path,
                     &self.state.performance,
-                    if self.live { 4096 } else { 8192 },
+                    if self.live || self.summary_generation.is_some() {
+                        4096
+                    } else {
+                        8192
+                    },
+                    self.summary_generation.is_some(),
                 )
             }
         }
@@ -348,6 +378,7 @@ impl Worker {
         model: &Path,
         performance: &crate::speech::local::performance::Performance,
         context_size: usize,
+        summary_mode: bool,
     ) -> AppResult<Self> {
         let manifest: serde_json::Value = serde_json::from_slice(
             &std::fs::read(runtime.join("runtime-manifest.json"))
@@ -389,7 +420,11 @@ impl Worker {
             .build()
             .user_error("Cannot initialize local AI client.")?;
         let mut command = Command::new(runtime.join("llama-server.exe"));
-        let threads = performance.threads();
+        let threads = if summary_mode {
+            performance.threads().min(2)
+        } else {
+            performance.threads()
+        };
         for (name, _) in std::env::vars_os() {
             if name.to_string_lossy().starts_with("LLAMA_") {
                 command.env_remove(name);
@@ -431,7 +466,7 @@ impl Worker {
             .stdin(Stdio::null())
             .stdout(Stdio::null())
             .stderr(Stdio::null())
-            .creation_flags(0x08000000);
+            .creation_flags(0x08000000 | if summary_mode { 0x00004000 } else { 0 });
         drop(listener);
         let mut child = command
             .spawn()
@@ -641,6 +676,7 @@ mod tests {
             &model,
             &performance,
             4096,
+            false,
         )
         .unwrap();
         let mask = |child: &Child| {

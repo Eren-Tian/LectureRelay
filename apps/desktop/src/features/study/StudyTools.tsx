@@ -42,6 +42,9 @@ export function StudyTools({
   const { job, live, recording } = useWorkspace(),
     { busy, run } = useAction();
   const id = detail.lecture.id;
+  const untranslatedCount = detail.segments.filter(
+    (segment) => !segment.translatedText,
+  ).length;
   const load = useCallback(() => api.study(id), [id]);
   const { data, error, reload } = useResource(load);
   const [tab, setTab] = useState('summary'),
@@ -185,9 +188,6 @@ export function StudyTools({
                     {'添加'}
                   </button>
                 </form>
-                <p className="field-hint">
-                  {'用章节为课堂片段命名，方便之后回顾。'}
-                </p>
                 <div className="study-mark-list">
                   {data.marks.map((mark) => (
                     <div className="study-mark" key={mark.id}>
@@ -254,10 +254,9 @@ export function StudyTools({
                     {clock(detail.lecture.durationSeconds)}
                   </p>
                 )}
-                <p className="field-hint">
-                  {detail.segments.filter((s) => !s.translatedText).length}{' '}
-                  {'段尚未翻译。重启应用不会自动发起付费请求。'}
-                </p>
+                {untranslatedCount > 0 && (
+                  <p className="field-hint">待翻译：{untranslatedCount} 段</p>
+                )}
                 {data.tasks.length ? (
                   data.tasks.map((task) => (
                     <article className="task-row" key={task.id}>

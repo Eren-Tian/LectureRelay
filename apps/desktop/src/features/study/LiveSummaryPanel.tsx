@@ -102,11 +102,6 @@ export function LiveSummaryPanel({
       <header className="live-summary-heading">
         <div>
           <h2>实时课堂要点</h2>
-          <p className="field-hint">
-            {preferences.enabled
-              ? `${preferences.provider === 'groq' ? 'Groq' : 'OpenAI'} · 每 ${preferences.intervalMinutes} 分钟整理新英文`
-              : '尚未启用自动总结'}
-          </p>
         </div>
         <button className="text-button" onClick={() => setSetup(true)}>
           设置总结
@@ -116,9 +111,9 @@ export function LiveSummaryPanel({
         <div className="summary-live-status" role="status">
           <span>
             {state?.busy || busy
-              ? '正在整理，录音与字幕继续…'
+              ? '正在整理…'
               : !live && (state?.remaining ?? 0) > 0
-                ? '录音已保存，还有末尾英文可以整理。'
+                ? '剩余片段待整理'
                 : `正在收集新英文 · ${Math.floor(state?.collectingSeconds ?? 0)} 秒`}
           </span>
           <div className="button-row">
@@ -144,7 +139,6 @@ export function LiveSummaryPanel({
         </div>
       ) : (
         <div className="summary-empty">
-          <p>把刚讲过的内容整理成短卡片，保留对应原文和回听入口。</p>
           <button className="button primary" onClick={() => setSetup(true)}>
             设置实时总结
           </button>
@@ -271,12 +265,6 @@ export function LiveSummaryPanel({
           <p className="field-hint">回听所选原文，最多 60 秒</p>
           <audio controls autoPlay src={clip} />
         </div>
-      )}
-      {!!cards.length && (
-        <p className="field-hint">
-          AI
-          要点可能有误，可展开原文核对。仅点击“加入我的笔记”才会写入你的笔记草稿。
-        </p>
       )}
       {setup && (
         <Modal title="设置实时总结" onClose={() => setSetup(false)}>

@@ -105,7 +105,6 @@ export function CourseForm({
             placeholder={ui.s044}
           />
         </label>
-        <p className="field-hint">{ui.s045}</p>
         <div className="form-actions">
           <button
             type="button"

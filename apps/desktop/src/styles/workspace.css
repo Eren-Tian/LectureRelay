@@ -724,9 +724,6 @@ h2 {
   .classroom-controls {
     padding: 10px;
   }
-  .classroom-controls > p {
-    display: none;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .sidebar {

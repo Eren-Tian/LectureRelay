@@ -143,7 +143,7 @@ try {
   assert.equal(await disabled('加入我的笔记'), true);
   await click('关闭自动总结');
   await until(
-    'return document.querySelector(".live-summary-heading").innerText.includes("尚未启用");',
+    'return !!document.querySelector(".summary-empty button") && !document.querySelector(".summary-live-status");',
   );
   assert.equal(
     await read('return document.querySelectorAll(".summary-card").length;'),
@@ -169,11 +169,11 @@ try {
     ),
     0,
   );
-  assert.match(
+  assert.equal(
     await read(
-      'return document.querySelector(".live-summary-heading").innerText;',
+      'return !!document.querySelector(".summary-empty button") && !document.querySelector(".summary-live-status");',
     ),
-    /尚未启用/,
+    true,
   );
   assert.equal(
     await read('return document.querySelectorAll(".summary-card").length;'),

@@ -2175,19 +2175,11 @@ progress {
 }
 .classroom-controls {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   gap: 15px;
   flex-shrink: 0;
   padding: 1px 0;
-}
-.classroom-controls > p {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 10px;
-  color: var(--muted);
-  margin: 0;
 }
 .classroom-controls .button {
   padding: 11px 18px;

@@ -239,20 +239,11 @@ export function LivePage({ id }: { id: string }) {
                 {messageText(live?.message || translation.message)}
               </p>
             )}
-            <div className="caption-footer">
-              <span>
-                {settings.speechProvider === 'local'
-                  ? '英文在本机识别'
-                  : settings.speechProvider === 'none'
-                    ? '仅录音'
-                    : '云端英文识别'}
-              </span>
-              <span>
-                {translation.pendingIds.length
-                  ? `${translation.pendingIds.length} 段译文待处理`
-                  : '此处显示近期字幕，完整转录请到回放页查看'}
-              </span>
-            </div>
+            {translation.pendingIds.length > 0 && (
+              <div className="caption-footer" role="status">
+                <span>{translation.pendingIds.length} 段译文待处理</span>
+              </div>
+            )}
           </section>
         }
         secondary={
@@ -264,10 +255,6 @@ export function LivePage({ id }: { id: string }) {
         }
       />
       <footer className="classroom-controls">
-        <p>
-          <Icon name="shield" size={16} />
-          {'录音会持续保存。'}
-        </p>
         <div className="button-row">
           <button
             className="button secondary"

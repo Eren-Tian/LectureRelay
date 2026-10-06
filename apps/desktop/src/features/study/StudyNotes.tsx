@@ -283,11 +283,6 @@ export function StudyNotes({
           ) : (
             <div className="empty-state">
               <h3>{'我的笔记'}</h3>
-              <p>
-                {
-                  '记录想法，用时间戳关联课堂片段。AI 草稿会单独保存，由你决定是否采用。'
-                }
-              </p>
             </div>
           )}
         </>

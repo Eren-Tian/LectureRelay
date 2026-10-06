@@ -18,7 +18,6 @@ export const en = {
   recordingInProgress: 'Recording',
   cancelEdit: 'Cancel edit',
   saveChanges: 'Save Changes',
-  generateNotes: 'Generate Notes',
   transcript: 'Transcript',
   notes: 'Notes',
   askThisLecture: 'Ask This Lecture',
@@ -290,64 +289,9 @@ export const en = {
   libraryEmpty: 'Record or import a lecture to start building your library.',
   // Lecture replay and transcript
   noTranslationSaved: 'No translation yet',
-  remainingTranslations: (count: number) =>
-    `Remaining translations are processing (${count} batches)…`,
-  processingHint:
-    'You can play the saved recording now. Start another class or edit after processing finishes.',
-  savedAudioHint:
-    'The saved recording is available. Retry recognition after class.',
-  localSpeech: 'Local · No paid API',
-  localPrivacy:
-    'Local recognition keeps audio on this PC. Cloud speech uploads audio chunks; cloud translation, notes and Q&A send the relevant text and course context directly to your chosen provider. Keys stay in Windows Credential Manager.',
-  chooseAiProviderFirst: 'Choose an AI provider and add a key in Settings.',
-  transcribeAndTranslate: 'Transcribe and translate',
-  translateTranscript: 'Translate Transcript',
-  cloudTranscriptionConsent: (provider: string) =>
-    `Audio chunks are sent directly to ${provider} for transcription and English text for translation. Your provider account covers usage. Completed segments are saved locally.`,
-  cloudNotesConsent: (provider: string, outcome: string) =>
-    `Transcript and course context are sent to ${provider}. ${outcome}`,
-  cloudTranslationConsent: (provider: string) =>
-    `Untranslated English segments and context are sent to ${provider}. Existing translations are preserved.`,
-  actionCompleted: (action: string) => `${action} completed`,
-  pressPlayInPlayer: 'Press Play in the audio player.',
-  fileExported: 'File exported to the local Exports folder',
-  notesSaved: 'Notes saved',
-  configureAiProviderFirst: 'Configure an AI provider in Settings first.',
-  answerSaved: 'Answer saved locally',
-  recordingRecovered: 'Recording recovered',
-  savedLocally: 'Saved locally',
-  interruptedLectureWarning:
-    'This lecture was interrupted. Saved audio can be replayed and transcribed. Check whether the ending is complete.',
-  replayPlayerHint: 'Click a transcript timestamp to hear the explanation.',
-  audioPlaybackFailed:
-    'Audio cannot be played. Check whether the file was moved or deleted.',
-  noPlayableAudio: 'No playable audio',
-  lectureReview: 'Lecture review',
-  aiOnDemand: 'Choose when to use AI',
-  jobTranscribingAndTranslating: 'Transcribing and translating',
-  jobTranslatingTranscript: 'Translating transcript',
-  jobGeneratingNotes: 'Generating notes',
-  jobFindingEvidence: 'Finding lecture evidence',
-  jobProgress: (completed: number, total: number) =>
-    `${completed} / ${total} completed · `,
-  jobCancelling: 'Cancelling; waiting for the current request.',
-  jobSavedContentPreserved: 'Saved content will be preserved.',
-  cancelTask: 'Cancel Task',
   addSegment: 'Add Segment',
-  translate: 'Translate',
-  transcriptionComplete: 'Transcription complete',
   continueTranscription: 'Continue Transcription',
   transcribeRecording: 'Transcribe Recording',
-  playSegmentAt: (time: string) => `Play segment at ${time}`,
-  translationPending: 'Translation pending',
-  segmentCorrected: 'Corrected by you',
-  segmentNumber: (index: number) => `Segment ${index}`,
-  correctSegmentAt: (time: string) => `Correct transcript at ${time}`,
-  emptyTranscriptTitle: 'Turn audio into a transcript',
-  emptyTranscriptBody:
-    'Configure speech recognition to transcribe. You can also add timestamped segments manually and work offline.',
-  cloudProcessingNotice:
-    'Cloud processing sends content directly to your selected provider.',
   transcriptSaved: 'Transcript saved',
   correctTranscript: 'Correct Transcript',
   startSecondsLabel: 'Start (seconds)',
@@ -407,16 +351,6 @@ export const en = {
   exportAction: 'Export',
   printOrSavePdf: 'Print / Save as PDF',
   localQaModelLabel: 'Qwen3.5 · Local',
-  notesReplaceWarning:
-    'This replaces the current notes. Save or export any version you want to keep first.',
-  generatedNotesStayLocal: 'Generated notes are saved on this PC.',
-  lectureReplay: 'Lecture Replay',
-  englishDot: 'English ·',
-  transcriptMatchCount: (visible: number, total: number) =>
-    `${visible} / ${total} segments`,
-  transcriptSegmentCount: (count: number) => `${count} segments`,
-  clearSearch: 'Clear Search',
-  noMatchingCaptions: 'No matching captions found.',
   deleteLectureLabel: (title: string) => `Delete lecture: ${title}`,
   deleteLectureBlockedHint:
     'Finish recording and AI processing before deleting a lecture.',
@@ -427,20 +361,6 @@ export const en = {
   deleteLecture: 'Delete Lecture',
   lectureDeleted: 'Lecture deleted.',
   deleting: 'Deleting…',
-  // Notes panel
-  notesMeta: (origin: string, updated: string) => `${origin} · ${updated}`,
-  notesDescription: 'Definitions, methods, examples and key points',
-  markdownNotes: 'Markdown notes',
-  discardNoteChangesTitle: 'Discard unsaved note changes?',
-  discardNoteChangesBody: 'Your saved notes will be preserved.',
-  discardChanges: 'Discard Changes',
-  noNotesTitle: 'No notes yet',
-  noNotesBody:
-    'Generate structured notes from a transcript, or write your thoughts at any time.',
-  notesStoredLocally: 'Notes stay on this PC and remain editable.',
-  exportMarkdown: 'Export Markdown',
-  notesOriginAi: 'Organized by AI; check against the lecture',
-  notesOriginManual: 'Your own notes',
   // Lecture Q&A
   questionsTitle: 'Questions & Answers',
   questionsDescription:

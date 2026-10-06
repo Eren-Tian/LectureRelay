@@ -88,11 +88,18 @@ try {
     ready(vite, env.LECTURERELAY_COMPONENT_URL),
     ready(driver, `http://127.0.0.1:${driverPort}/status`),
   ]);
-  for (const script of [
+  const suites = [
+    'classroom-summary.mjs',
+    'model-controls.mjs',
     'audit-components.mjs',
     'caption-reader.mjs',
     'theme-contrast.mjs',
-  ])
+    'localization.mjs',
+  ];
+  const requested = process.argv.slice(2);
+  if (requested.some((script) => !suites.includes(script)))
+    throw Error('Unknown component test suite');
+  for (const script of requested.length ? requested : suites)
     await run(process.execPath, [join(root, 'tests/e2e', script)], env);
 } finally {
   for (const child of children.reverse())

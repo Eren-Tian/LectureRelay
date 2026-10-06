@@ -1,3 +1,4 @@
+mod live_translation;
 pub(crate) mod local;
 pub(crate) mod streaming;
 mod translation_progress;

@@ -37,7 +37,7 @@ interface WorkspaceValue {
 const Workspace = createContext<WorkspaceValue | null>(null);
 export function useWorkspace() {
   const workspace = useContext(Workspace);
-  if (!workspace) throw new Error('Workspace unavailable');
+  if (!workspace) throw new Error('暂时无法打开工作区');
   return workspace;
 }
 export function WorkspaceProvider({
@@ -78,7 +78,9 @@ export function WorkspaceProvider({
           <p className="modal-copy">{dialog.body}</p>
           {dialog.confirmationText && (
             <label className="form-stack">
-              Type {dialog.confirmationText} to confirm
+              <span>
+                输入 <strong>{dialog.confirmationText}</strong> 以确认
+              </span>
               <input
                 value={confirmationText}
                 autoComplete="off"

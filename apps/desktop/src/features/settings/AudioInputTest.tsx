@@ -53,8 +53,8 @@ export function AudioInputTest({
         setLevel(peak);
         setResult(
           peak > 0.002
-            ? 'Audio detected. This input is ready.'
-            : 'No sound detected. Check the selected device and try again.',
+            ? '已检测到声音，当前设备可以使用。'
+            : '未检测到声音，请检查所选设备后重试。',
         );
       }
     } catch (e) {
@@ -78,17 +78,16 @@ export function AudioInputTest({
           disabled={disabled || testing}
           onClick={() => void test()}
         >
-          {testing ? 'Testing input…' : 'Test audio input'}
+          {testing ? '正在测试声音…' : '测试声音'}
         </button>
-        <meter aria-label="Audio input level" min={0} max={1} value={level} />
+        <meter aria-label="输入电平" min={0} max={1} value={level} />
       </div>
       <p className="field-hint" role={error ? 'alert' : 'status'}>
         {testing
           ? source === 'system'
-            ? 'Play audio on the selected output. The test ends after five seconds.'
-            : 'Speak into the microphone. The test ends after five seconds.'
-          : result ||
-            'Five-second device check. Audio is neither saved nor sent.'}
+            ? '请通过所选设备播放声音，测试将在 5 秒后结束。'
+            : '请对着麦克风讲话，测试将在 5 秒后结束。'
+          : result || '测试持续 5 秒，声音不会保存或上传。'}
       </p>
     </div>
   );

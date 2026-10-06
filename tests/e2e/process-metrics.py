@@ -15,10 +15,12 @@ root = roots[0]
 logical = psutil.cpu_count()
 previous = {}
 previous_time = time.monotonic()
+previous_utc = time.time()
 args.output.parent.mkdir(parents=True, exist_ok=True)
 with args.output.open('w', encoding='utf-8', buffering=1) as output:
     while root.is_running():
         now = time.monotonic()
+        utc = time.time()
         elapsed = now - previous_time
         processes = []
         cpu_seconds = 0
@@ -27,16 +29,20 @@ with args.output.open('w', encoding='utf-8', buffering=1) as output:
                 cpu = process.cpu_times()
                 total = cpu.user + cpu.system
                 key = (process.pid, process.create_time())
-                cpu_seconds += max(0, total - previous.get(key, total))
+                # Include a new child's CPU since birth. Existing processes at the
+                # first sample have no measured prior interval and start at zero.
+                prior = previous.get(key, 0 if key[1] >= previous_utc else total)
+                cpu_seconds += max(0, total - prior)
                 previous[key] = total
                 memory = process.memory_info()
-                processes.append({'pid': process.pid, 'name': process.name(), 'rssBytes': memory.rss, 'privateBytes': memory.private})
+                processes.append({'pid': process.pid, 'name': process.name(), 'cpuSecondsTotal': total, 'rssBytes': memory.rss, 'privateBytes': memory.private})
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
-        output.write(json.dumps({'utcSeconds': time.time(), 'appPid': root.pid, 'logicalCpus': logical,
+        output.write(json.dumps({'utcSeconds': utc, 'intervalSeconds': elapsed, 'cpuSecondsDelta': cpu_seconds, 'appPid': root.pid, 'logicalCpus': logical,
                                  'cpuPercentNormalized': cpu_seconds / max(elapsed, 0.001) / logical * 100,
                                  'rssBytesSum': sum(p['rssBytes'] for p in processes),
                                  'privateBytesSum': sum(p['privateBytes'] for p in processes),
                                  'processes': processes}) + '\n')
         previous_time = now
+        previous_utc = utc
         time.sleep(2)

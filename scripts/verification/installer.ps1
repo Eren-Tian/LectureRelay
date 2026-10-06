@@ -38,7 +38,9 @@ if ($metadata) {
   }
   & node.exe (Join-Path $PSScriptRoot 'windows-icons.mjs') $exe $icon
 } else {
-  & (Join-Path $PSScriptRoot 'runtime-resources.ps1') -RuntimePath (Join-Path $testRoot 'local-asr')
+  # Verify the packaged release payload. A later debug build can legitimately
+  # regenerate the shared staging worker with a different linker timestamp.
+  & (Join-Path $PSScriptRoot 'runtime-resources.ps1') -RuntimePath (Join-Path $testRoot 'local-asr') -ExpectedRuntimePath (Join-Path (Split-Path $release -Parent) 'local-asr')
   & node.exe (Join-Path $PSScriptRoot 'windows-icons.mjs') $exe $icon $release
 }
 if ($LASTEXITCODE -ne 0) { throw 'EXE/icon verification failed' }

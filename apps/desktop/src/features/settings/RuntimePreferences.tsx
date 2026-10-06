@@ -15,8 +15,8 @@ export function RuntimePreferences() {
   return (
     <>
       <section className="settings-card">
-        <h3>Appearance</h3>
-        <div className="theme-options" role="group" aria-label="Appearance">
+        <h3>{'外观'}</h3>
+        <div className="theme-options" role="group" aria-label="外观">
           {(['light', 'dark'] as const).map((value) => (
             <button
               key={value}
@@ -30,29 +30,25 @@ export function RuntimePreferences() {
                 <i />
                 <i />
               </span>
-              {value === 'light' ? 'Light' : 'Dark'}
+              {value === 'light' ? '浅色' : '深色'}
               <span className="theme-selected" aria-hidden="true">
                 {theme === value ? '✓' : ''}
               </span>
             </button>
           ))}
         </div>
-        <p className="field-hint">
-          Applies immediately across the app. Saved automatically.
-        </p>
+        <p className="field-hint">{'立即应用到整个界面，并自动保存。'}</p>
       </section>
       <section className="settings-card">
         <label className="toggle-row performance-toggle">
           <span>
-            <strong>Quiet Mode</strong>
-            <small>
-              All local AI shares a budget of up to four logical CPU cores.
-            </small>
+            <strong>{'安静模式'}</strong>
+            <small>{'所有本地 AI 共用最多 4 个逻辑 CPU 核心。'}</small>
           </span>
           <input
             type="checkbox"
             role="switch"
-            aria-label="Quiet Mode"
+            aria-label="安静模式"
             checked={quietMode}
             disabled={busy}
             onChange={(e) => save({ quietMode: e.target.checked })}
@@ -60,10 +56,9 @@ export function RuntimePreferences() {
         </label>
         <p className="field-hint" role="status">
           {quietMode
-            ? 'On · Reduced CPU budget.'
-            : 'Off · Full CPU performance. All available CPU cores are allowed.'}{' '}
-          Applies to all courses, including speech and text models already
-          running. Saved automatically.
+            ? '开启：限制 CPU 占用，减轻电脑负担。'
+            : '关闭：允许使用全部可用 CPU 核心，提高处理速度。'}{' '}
+          {'对所有课程生效，也会调整正在运行的语音和文本模型，设置自动保存。'}
         </p>
       </section>
     </>

@@ -1,5 +1,9 @@
 # Local AI (0.3 preview)
 
+In the 0.3.7 candidate, the right-hand **课堂要点** tab collects finalized classroom captions into sections. After stopping and waiting for remaining captions to finish, click **生成课堂要点** to summarize them locally with the downloaded Qwen3.5-4B study model. Click a time range to replay, expand the source to check a claim, or use **加入我的笔记** to append the section to your existing draft. Incomplete runs retain completed sections and offer **继续整理**. Live recording does not run the study model. See [summary validation](../testing/classroom-summary-v0.3.7.md).
+
+In the 0.3.6 candidate, local translation can show a stable-prefix preview before a sentence is final. **临时译文 · 将随原文调整** marks provisional text; **翻译中…** marks a final sentence whose translation is still being generated. Only completed translations enter saved records and exports. Model loading and long sentences still need time. See [real lecturer audio validation](../testing/local-caption-latency-v0.3.6.md).
+
 Install the Windows EXE. No LectureRelay login, API key, Python, Ollama or developer tools are needed for the local path. Internet is needed for the first model downloads; inference then runs on your computer. Model storage and electricity are yours; LectureRelay does not pay for hosted inference.
 
 1. Open **Settings → Local AI** and download the models you need. Downloads show progress, can be cancelled, and are checked against pinned SHA-256 hashes.

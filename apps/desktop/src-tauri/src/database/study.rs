@@ -48,6 +48,7 @@ pub struct CourseDocument {
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct StudyState {
+    pub sections: Vec<super::outline::ClassroomSection>,
     pub reviews: Vec<super::review::ReviewCheckpoint>,
     pub tasks: Vec<ProcessingTask>,
     pub marks: Vec<StudyMark>,
@@ -66,14 +67,9 @@ pub struct LibraryEntry {
 
 impl Storage {
     pub fn source_version(&self, id: &str) -> AppResult<String> {
-        let mut digest = Sha256::new();
-        for s in self.segments(id)? {
-            digest.update(s.id.as_bytes());
-            digest.update(s.revision.to_le_bytes());
-            digest.update(s.source_text.as_bytes());
-        }
-        Ok(format!("{:x}", digest.finalize()))
+        Ok(source_version_for(&self.segments(id)?))
     }
+
     pub fn create_task(&self, lecture: &str, kind: &str) -> AppResult<String> {
         let detail = self.lecture(lecture)?;
         let language = self.course(&detail.course_id)?.assistance_language;
@@ -81,6 +77,19 @@ impl Storage {
         self.lock()?.execute("INSERT INTO processing_tasks(id,lecture_id,kind,language,state,created_at,updated_at) VALUES(?1,?2,?3,?4,'running',?5,?5)",params![id,lecture,kind,language,now()]).user_error("Cannot save processing task. No request was sent.")?;
         Ok(id)
     }
+}
+
+fn source_version_for(segments: &[TranscriptSegment]) -> String {
+    let mut digest = Sha256::new();
+    for s in segments {
+        digest.update(s.id.as_bytes());
+        digest.update(s.revision.to_le_bytes());
+        digest.update(s.source_text.as_bytes());
+    }
+    format!("{:x}", digest.finalize())
+}
+
+impl Storage {
     pub fn task_progress(&self, id: &str, completed: u32, total: u32) -> AppResult<()> {
         self.lock()?.execute("UPDATE processing_tasks SET completed=?2,total=?3,updated_at=?4 WHERE id=?1 AND state='running'",params![id,completed,total,now()]).user_error("Cannot save task progress.")?;
         Ok(())
@@ -220,8 +229,10 @@ impl Storage {
     }
     pub fn study_state(&self, id: &str) -> AppResult<StudyState> {
         let lecture = self.lecture(id)?;
+        let segments = self.segments(id)?;
+        let sections = super::outline::classroom_sections(&segments);
         let tasks = self.tasks(id)?;
-        let source_version = self.source_version(id)?;
+        let source_version = source_version_for(&segments);
         let documents = self.documents(&lecture.course_id)?;
         let reviews = self.reviews(id)?;
         let db = self.lock()?;
@@ -262,6 +273,7 @@ impl Storage {
             .optional()
             .user_error("Cannot read draft.")?;
         Ok(StudyState {
+            sections,
             reviews,
             tasks,
             marks,

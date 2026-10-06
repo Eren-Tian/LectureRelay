@@ -44,11 +44,8 @@ pub async fn import_media(
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         let Some(source) = rfd::FileDialog::new()
-            .set_title("Import lecture media")
-            .add_filter(
-                "Audio and video",
-                &["wav", "mp3", "m4a", "mp4", "flac", "ogg"],
-            )
+            .set_title("导入课堂音视频")
+            .add_filter("音频与视频", &["wav", "mp3", "m4a", "mp4", "flac", "ogg"])
             .pick_file()
         else {
             return Ok(None);
@@ -67,7 +64,7 @@ pub async fn attach_document(
     tauri::async_runtime::spawn_blocking(move || {
         state.storage.course(&course_id)?;
         let Some(source) = rfd::FileDialog::new()
-            .set_title("Add local course PDF")
+            .set_title("添加课程 PDF")
             .add_filter("PDF", &["pdf"])
             .pick_file()
         else {
@@ -146,22 +143,32 @@ pub fn cancel_live_processing(state: App<'_>) -> AppResult<()> {
 }
 
 #[tauri::command]
-pub fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppResult<()> {
+pub fn pause_live_translation(state: App<'_>, paused: bool) -> AppResult<()> {
+    state.live.pause_translation(paused);
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppResult<()> {
     use tauri::Manager;
+    // Windows WebView2 creation must run outside a synchronous IPC callback.
+    // Otherwise build() blocks the event loop that must finish creating it.
     if let Some(window) = app.get_webview_window("captions") {
         window.show().user_error("Cannot show captions.")?;
         return Ok(());
     }
-    tauri::WebviewWindowBuilder::new(
+    let window = tauri::WebviewWindowBuilder::new(
         &app,
         "captions",
         tauri::WebviewUrl::App("index.html?panel=captions".into()),
     )
-    .title("LectureRelay — Captions")
+    .title("LectureRelay — 字幕")
     .inner_size(660., 340.)
     .min_inner_size(380., 220.)
     .always_on_top(true)
+    .visible(false)
     .focused(false)
+    .data_directory(state.paths.data.join("state").join("webview2"))
     .theme(Some(if state.storage.settings()?.theme == "dark" {
         tauri::Theme::Dark
     } else {
@@ -169,5 +176,41 @@ pub fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppResult<(
     }))
     .build()
     .user_error("Cannot open caption window.")?;
+    // Place it beside the main window on the same display, including portrait screens.
+    if let Some(main) = app.get_webview_window("main")
+        && let Ok(Some(monitor)) = main.current_monitor()
+    {
+        let _ = window.set_position(tauri::PhysicalPosition::new(
+            monitor.position().x + 24,
+            monitor.position().y + 48,
+        ));
+    }
+    window.show().user_error("Cannot show captions.")?;
     Ok(())
+}
+
+#[tauri::command]
+pub fn close_caption_window(app: tauri::AppHandle) -> AppResult<()> {
+    use tauri::Manager;
+    if let Some(window) = app.get_webview_window("captions") {
+        window.close().user_error("Cannot close captions.")?;
+    }
+    Ok(())
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct CaptionState {
+    live: crate::speech::streaming::LiveStatus,
+    settings: AppSettings,
+    recording: Option<crate::audio::RecordingStatus>,
+}
+
+#[tauri::command]
+pub fn caption_state(state: App<'_>) -> AppResult<CaptionState> {
+    Ok(CaptionState {
+        live: super::live_status(state.clone())?,
+        settings: state.storage.settings()?,
+        recording: state.recorder.status()?,
+    })
 }

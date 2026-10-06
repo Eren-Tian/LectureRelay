@@ -2,6 +2,124 @@ use super::*;
 use crate::database::review::{ReviewCheckpoint, ReviewPart};
 use crate::storage::cleanup;
 
+#[test]
+fn single_lecture_deletion_preserves_course_siblings_and_rolls_back_failed_commit() {
+    let f = Fixture::new();
+    let db = f.db();
+    let (course, removed) = lecture(&f, &db);
+    let sibling = db
+        .create_lecture(&f.paths, &course.id, "Keep sibling")
+        .unwrap();
+    db.finish_lecture(&sibling.id, 10.0, "completed").unwrap();
+    let (other, other_lecture) = lecture(&f, &db);
+    db.save_term(&course.id, None, "term", "术语").unwrap();
+    for item in [&removed, &sibling, &other_lecture] {
+        db.save_note(&item.id, "preserve if not selected", "manual")
+            .unwrap();
+        db.save_draft(&item.id, "draft").unwrap();
+        db.save_review_checkpoint(&checkpoint(&item.id)).unwrap();
+        db.add_note_version(&item.id, "version", "local", "zh", "v")
+            .unwrap();
+        db.create_task(&item.id, "notes").unwrap();
+        db.save_mark(&item.id, 1.0, "mark", "bookmark").unwrap();
+        db.pin_lecture(&item.id, true).unwrap();
+        db.save_segment(
+            &item.id,
+            None,
+            SegmentInput {
+                start_seconds: 0.,
+                end_seconds: 1.,
+                source_text: "one".into(),
+                translated_text: "一".into(),
+            },
+        )
+        .unwrap();
+        std::fs::write(
+            f.paths.recording(&item.course_id, &item.id).unwrap(),
+            b"owned recording",
+        )
+        .unwrap();
+    }
+    let pdf = f
+        .paths
+        .library
+        .join("Courses")
+        .join(&course.id)
+        .join("Documents");
+    std::fs::create_dir_all(&pdf).unwrap();
+    std::fs::write(pdf.join("keep.pdf"), b"pdf").unwrap();
+    let export = f
+        .paths
+        .library
+        .join("Exports")
+        .join(format!("{}-notes.md", removed.id));
+    std::fs::write(&export, b"selected export").unwrap();
+    let recording = f.paths.recording(&course.id, &removed.id).unwrap();
+    let connection = rusqlite::Connection::open(f.paths.data.join("app.db")).unwrap();
+    connection.execute_batch("CREATE TRIGGER fail_lecture_delete BEFORE DELETE ON lectures BEGIN SELECT RAISE(ABORT, 'fixture'); END;").unwrap();
+    assert!(cleanup::delete_lecture(&f.paths, &db, &removed.id).is_err());
+    assert!(db.lecture(&removed.id).is_ok());
+    assert_eq!(std::fs::read(&recording).unwrap(), b"owned recording");
+    assert!(export.exists());
+    cleanup::recover(&f.paths, &db).unwrap();
+    connection
+        .execute_batch("DROP TRIGGER fail_lecture_delete;")
+        .unwrap();
+    // A locked playback file must also restore the staged lecture before retrying.
+    use std::os::windows::fs::OpenOptionsExt;
+    let lock = std::fs::OpenOptions::new()
+        .read(true)
+        .share_mode(0)
+        .open(&recording)
+        .unwrap();
+    assert!(cleanup::delete_lecture(&f.paths, &db, &removed.id).is_err());
+    drop(lock);
+    assert!(recording.exists());
+    cleanup::delete_lecture(&f.paths, &db, &removed.id).unwrap();
+    assert!(db.lecture(&removed.id).is_err());
+    assert!(!recording.exists());
+    assert!(!export.exists());
+    assert!(pdf.join("keep.pdf").exists());
+    assert!(db.course(&course.id).is_ok());
+    assert!(db.course(&other.id).is_ok());
+    assert_eq!(db.glossary(&course.id).unwrap().len(), 1);
+    for item in [&sibling, &other_lecture] {
+        assert!(db.lecture(&item.id).is_ok());
+        assert_eq!(
+            db.note(&item.id).unwrap().unwrap().body,
+            "preserve if not selected"
+        );
+        assert!(
+            f.paths
+                .recording(&item.course_id, &item.id)
+                .unwrap()
+                .exists()
+        );
+    }
+    for table in [
+        "processing_tasks",
+        "note_versions",
+        "study_marks",
+        "note_drafts",
+        "lecture_pins",
+        "transcript_edits",
+        "review_checkpoints",
+        "transcript_segments",
+        "notes",
+        "answers",
+    ] {
+        let remaining: i64 = connection
+            .query_row(
+                &format!("SELECT COUNT(*) FROM {table} WHERE lecture_id=?1"),
+                [&removed.id],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(remaining, 0, "{table}");
+    }
+    assert!(cleanup::delete_lecture(&f.paths, &db, "../../elsewhere").is_err());
+}
+
 fn lecture(f: &Fixture, db: &Storage) -> (Course, Lecture) {
     let c = f.course(db);
     let l = db
@@ -20,6 +138,8 @@ fn checkpoint(id: &str) -> ReviewCheckpoint {
         language: "zh".into(),
         origin: "local".into(),
         parts: vec![ReviewPart {
+            start_seconds: None,
+            end_seconds: None,
             source: "[00:00] Evidence".into(),
             depth: 0,
             body: Some("Complete source notes".into()),
@@ -30,6 +150,123 @@ fn checkpoint(id: &str) -> ReviewCheckpoint {
         message: "Cancelled".into(),
         published_version: None,
     }
+}
+
+#[test]
+fn classroom_outline_covers_full_source_and_persists_summary_ranges() {
+    let f = Fixture::new();
+    let db = f.db();
+    let c = f.course(&db);
+    let l = db
+        .create_lecture(&f.paths, &c.id, "Outline coverage")
+        .unwrap();
+    db.finish_lecture(&l.id, 1950.0, "completed").unwrap();
+    // Exceeds the caption window: the outline must read the full saved transcript.
+    for n in 0..130 {
+        db.save_segment(
+            &l.id,
+            None,
+            SegmentInput {
+                start_seconds: n as f64 * 15.0 + 0.125,
+                end_seconds: n as f64 * 15.0 + 14.875,
+                source_text: format!("evidence-{n} includes a number and a negation"),
+                translated_text: format!("第 {n} 段译文"),
+            },
+        )
+        .unwrap();
+    }
+    let source = db.segments(&l.id).unwrap();
+    let study = db.study_state(&l.id).unwrap();
+    assert_eq!(study.sections.len(), 17);
+    assert_eq!(study.sections[0].start_seconds, 0.125);
+    assert_eq!(study.sections.last().unwrap().end_seconds, 1949.875);
+    let expected = source
+        .iter()
+        .map(|s| {
+            format!(
+                "[{}] {}\n",
+                crate::app::assistance::timestamp(s.start_seconds),
+                s.source_text
+            )
+        })
+        .collect::<String>();
+    assert_eq!(
+        study
+            .sections
+            .iter()
+            .map(|s| s.source.as_str())
+            .collect::<String>(),
+        expected
+    );
+    assert!(
+        study
+            .sections
+            .last()
+            .unwrap()
+            .translation
+            .contains("第 129 段译文")
+    );
+    let mut review = checkpoint(&l.id);
+    review.request.clear();
+    review.source_version = study.source_version.clone();
+    review.parts = study
+        .sections
+        .into_iter()
+        .map(|s| ReviewPart {
+            start_seconds: Some(s.start_seconds),
+            end_seconds: Some(s.end_seconds),
+            source: s.source,
+            body: Some("要点".into()),
+            depth: 0,
+        })
+        .collect();
+    db.save_note(&l.id, "My own note", "manual").unwrap();
+    db.save_review_checkpoint(&review).unwrap();
+    db.publish_review(&mut review, "Classroom summary").unwrap();
+    drop(db);
+    let db = f.db();
+    let study = db.study_state(&l.id).unwrap();
+    assert_eq!(study.reviews[0].parts[16].end_seconds, Some(1949.875));
+    assert_eq!(study.reviews[0].parts[0].body.as_deref(), Some("要点"));
+    assert_eq!(db.detail(&l.id).unwrap().note.unwrap().body, "My own note");
+    db.save_segment(
+        &l.id,
+        Some(source[0].id.clone()),
+        SegmentInput {
+            start_seconds: 0.125,
+            end_seconds: 14.875,
+            source_text: "Corrected evidence".into(),
+            translated_text: String::new(),
+        },
+    )
+    .unwrap();
+    let changed = db.study_state(&l.id).unwrap();
+    assert_ne!(changed.source_version, changed.reviews[0].source_version);
+    assert!(changed.sections[0].source.contains("Corrected evidence"));
+}
+
+#[test]
+fn old_review_payloads_and_oversized_classroom_segments_remain_readable() {
+    let old: ReviewPart =
+        serde_json::from_str(r#"{"source":"[00:00] saved","depth":0,"body":"saved"}"#).unwrap();
+    assert!(old.start_seconds.is_none());
+    let f = Fixture::new();
+    let db = f.db();
+    let (_, l) = lecture(&f, &db);
+    db.save_segment(
+        &l.id,
+        None,
+        SegmentInput {
+            start_seconds: 0.0,
+            end_seconds: 7.0,
+            source_text: "证据 evidence ".repeat(600),
+            translated_text: String::new(),
+        },
+    )
+    .unwrap();
+    let sections = db.study_state(&l.id).unwrap().sections;
+    assert_eq!(sections.len(), 1);
+    assert_eq!(sections[0].source.matches("证据 evidence").count(), 600);
 }
 #[test]
 fn fractional_times_roundtrip_and_invalid_bounds_are_rejected() {

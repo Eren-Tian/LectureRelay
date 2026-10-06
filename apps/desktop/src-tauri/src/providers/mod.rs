@@ -2,6 +2,7 @@ pub(crate) mod contracts;
 mod http;
 pub(crate) mod local;
 mod official;
+mod sse;
 pub(crate) use local::{Role, configured_text};
 
 pub(crate) use contracts::*;

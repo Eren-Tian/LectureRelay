@@ -13,6 +13,7 @@ pub fn caption_stage(
     if std::env::var("LECTURERELAY_TRACE_CAPTIONS").as_deref() != Ok("1") {
         return;
     }
+    use sha2::{Digest, Sha256};
     use std::io::Write;
     let Ok(now) = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH) else {
         return;
@@ -21,9 +22,17 @@ pub fn caption_stage(
         "utcMs": now.as_secs_f64() * 1000.0,
         "stage": stage, "audioEndSeconds": audio_end,
         "segments": segments.iter().map(|s| serde_json::json!({
-            "id": s.id, "start": s.start_seconds, "end": s.end_seconds
+            "id": s.id, "start": s.start_seconds, "end": s.end_seconds,
+            "revision": s.revision, "sourceWords": s.source_text.split_whitespace().count(),
+            "sourceSha256": format!("{:x}", Sha256::digest(s.source_text.as_bytes()))
         })).collect::<Vec<_>>()
     });
+    // ASR and translation emit concurrently. Serialize complete JSON lines so
+    // diagnostic records cannot interleave and corrupt matched-span evidence.
+    static TRACE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+    let Ok(_trace_guard) = TRACE_LOCK.lock() else {
+        return;
+    };
     if let Ok(mut file) = std::fs::OpenOptions::new().create(true).append(true).open(
         paths
             .data

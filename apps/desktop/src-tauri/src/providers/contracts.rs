@@ -29,12 +29,31 @@ pub struct SpeechCapabilities {
 
 #[async_trait]
 pub trait TranslationProvider: Send + Sync {
+    async fn prepare_live(&self) -> AppResult<()> {
+        Ok(())
+    }
     async fn translate(
         &self,
         context: &str,
         segments: &[TranscriptSegment],
         language: &str,
     ) -> AppResult<Vec<Translation>>;
+    async fn translate_live(
+        &self,
+        context: &str,
+        segments: &[TranscriptSegment],
+        language: &str,
+        _control: LiveTranslationControl<'_>,
+    ) -> AppResult<Vec<Translation>> {
+        self.translate(context, segments, language).await
+    }
+}
+
+/// Transient output only: the caller persists complete, validated translations.
+pub struct LiveTranslationControl<'a> {
+    pub progress: &'a (dyn Fn(&str, &str) + Send + Sync),
+    pub superseded: &'a (dyn Fn() -> bool + Send + Sync),
+    pub preview: bool,
 }
 
 #[async_trait]

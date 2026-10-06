@@ -25,8 +25,15 @@ $source = Join-Path $projectRoot 'apps/desktop/native/speech-worker/src/main.cpp
 $driver = Join-Path $projectRoot 'target/native/speech-worker/build-worker.cmd'
 $object = Join-Path $projectRoot 'target/native/speech-worker/asr-worker.obj'
 $worker = Join-Path $projectRoot 'target/native/speech-worker/asr-worker.exe'
+$testSource = Join-Path $projectRoot 'apps/desktop/native/speech-worker/tests/endpoint.cpp'
+$testExe = Join-Path $projectRoot 'target/native/speech-worker/endpoint-test.exe'
+$testObject = Join-Path $projectRoot 'target/native/speech-worker/endpoint-test.obj'
 $command = '@call "{0}"' -f $vcvars
 $command += "`r`n" + ('@cl /nologo /O2 /EHsc /utf-8 /std:c++17 /MT /I"{0}\include" "{1}" /Fe:"{2}" /Fo:"{3}"' -f $sdk,$source,$worker,$object)
+$command += "`r`n@if errorlevel 1 exit /b 1"
+$command += "`r`n" + ('@cl /nologo /O2 /EHsc /std:c++17 /MT "{0}" /Fe:"{1}" /Fo:"{2}"' -f $testSource,$testExe,$testObject)
+$command += "`r`n@if errorlevel 1 exit /b 1"
+$command += "`r`n" + ('@"{0}"' -f $testExe)
 Set-Content -LiteralPath $driver -Value $command -Encoding ascii
 & cmd.exe /d /c $driver
 if ($LASTEXITCODE -ne 0) { throw 'Native speech worker build failed' }

@@ -9,6 +9,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Deserialize, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ReviewPart {
+    #[serde(default)]
+    pub start_seconds: Option<f64>,
+    #[serde(default)]
+    pub end_seconds: Option<f64>,
     pub source: String,
     pub depth: u8,
     pub body: Option<String>,

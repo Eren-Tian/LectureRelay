@@ -64,6 +64,55 @@ try {
     url: base + '/tests/fixtures/captions.html',
   });
   await new Promise((r) => setTimeout(r, 1200));
+  assert.deepEqual(
+    JSON.parse(
+      await read("return document.querySelector('#ordering').textContent;"),
+    ),
+    { oldPoll: true, oldClass: true, newClass: true },
+  );
+  const control = async (id) => {
+    await read('document.getElementById(arguments[0]).click();', [id]);
+    await pause();
+  };
+  await click('#partial');
+  await control('preview');
+  assert.match(
+    await read(
+      "return document.querySelector('[data-translation-kind=draft]').textContent;",
+    ),
+    /临时译文/,
+  );
+  await control('wrong-language');
+  assert.equal(
+    await read("return !!document.querySelector('[data-translation-kind]');"),
+    false,
+  );
+  await control('preview');
+  await control('revise');
+  assert.equal(
+    await read("return !!document.querySelector('[data-translation-kind]');"),
+    false,
+    'Revised English invalidates the old provisional translation',
+  );
+  await click('#partial');
+  await control('preview');
+  await control('hide-english');
+  assert.equal(
+    await read("return !!document.querySelector('.caption-english');"),
+    false,
+  );
+  assert.equal(
+    await read(
+      "return !!document.querySelector('[data-translation-kind=draft]');",
+    ),
+    true,
+    'Translation-only mode must show draft translations',
+  );
+  // Reload to restore the ordinary bilingual reader for the existing scenarios.
+  await command('POST', '/url', {
+    url: base + '/tests/fixtures/captions.html',
+  });
+  await new Promise((r) => setTimeout(r, 1000));
   for (const lang of ['zh', 'ja', 'ko']) {
     await click(`select option[value="${lang}"]`);
     await click('#partial');
@@ -77,6 +126,13 @@ try {
       /Learning becomes/,
     );
     await click('#final');
+    await control('preview-finals');
+    assert.match(
+      await read(
+        "return document.querySelector('[data-translation-kind=final]').textContent;",
+      ),
+      /翻译中/,
+    );
     assert.equal(
       await read(
         "return window.fixtureCaption===document.querySelector('article');",
@@ -84,13 +140,12 @@ try {
       true,
       'Partial→final must preserve the article node',
     );
-    assert.match(
-      await read(
-        "return document.querySelector('.translation-placeholder').textContent;",
-      ),
-      /Translating/,
-    );
     await click('#translate');
+    assert.equal(
+      await read("return !!document.querySelector('[data-translation-kind]');"),
+      false,
+      'Saved final text must replace provisional output',
+    );
     assert.equal(
       await read("return document.querySelector('.caption-translation').lang;"),
       lang,
@@ -131,6 +186,13 @@ try {
   });
   await pause();
   const before = await anchor();
+  await control('preview-finals');
+  const streaming = await anchor();
+  assert.equal(streaming.id, before.id);
+  assert.ok(
+    Math.abs(streaming.offset - before.offset) < 2,
+    'Streamed translations must retain the reading anchor',
+  );
   await click('#translate');
   const after = await anchor();
   assert.equal(after.id, before.id);
@@ -152,11 +214,12 @@ try {
     await read(
       "return document.querySelector('.live-caption:last-child').textContent;",
     ),
-    /retried after class/,
+    /课后可以重新翻译/,
   );
   results.push({
     manualAnchor: before,
     translatedAnchor: after,
+    streamingAnchor: streaming,
     trimmedAnchor: trimmed,
     jumpToLive: true,
     failureState: true,

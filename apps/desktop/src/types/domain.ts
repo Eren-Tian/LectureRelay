@@ -135,6 +135,9 @@ export interface InputDevice {
   isDefault: boolean;
 }
 export interface LiveStatus {
+  targetLanguage?: string;
+  generation?: number;
+  sequence?: number;
   active: boolean;
   lectureId: string;
   state: string;
@@ -148,7 +151,9 @@ export interface LiveStatus {
     status: 'partial';
   } | null;
   backlogSeconds: number;
+  translationPaused?: boolean;
   translationQueue: number;
+  translationPreviews?: TranslationPreview[];
   translation: {
     enabled: boolean;
     configured: boolean;
@@ -156,6 +161,14 @@ export interface LiveStatus {
     deferredIds: string[];
     message: string | null;
   };
+}
+export interface TranslationPreview {
+  id: string;
+  sourceText: string;
+  sourceRevision: number;
+  language: string;
+  translatedText: string;
+  kind: 'draft' | 'final';
 }
 export interface ModelStatus {
   id: string;
@@ -217,6 +230,7 @@ export interface CourseDocument {
   path: string;
 }
 export interface StudyState {
+  sections: ClassroomSection[];
   reviews: ReviewCheckpoint[];
   tasks: ProcessingTask[];
   marks: StudyMark[];
@@ -227,14 +241,29 @@ export interface StudyState {
 }
 
 export interface ReviewCheckpoint {
+  sourceVersion: string;
+  language: string;
+  origin: string;
   id: string;
   request: string;
   state: string;
   message: string;
-  parts: { source: string; body: string | null; depth: number }[];
+  parts: {
+    source: string;
+    body: string | null;
+    depth: number;
+    startSeconds: number | null;
+    endSeconds: number | null;
+  }[];
   levels: string[][];
   recoveries: number;
   publishedVersion: string | null;
+}
+export interface ClassroomSection {
+  startSeconds: number;
+  endSeconds: number;
+  source: string;
+  translation: string;
 }
 export interface LibraryEntry {
   lecture: Lecture;

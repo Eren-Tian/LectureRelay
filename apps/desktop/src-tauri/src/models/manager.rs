@@ -119,6 +119,22 @@ pub(crate) async fn download_model_with(
     on_status: impl Fn(&ModelStatus),
 ) -> AppResult<()> {
     let model = catalog::get(id)?;
+    let url = format!(
+        "https://huggingface.co/{}/resolve/{}/{}",
+        model.repo, model.revision, model.file
+    );
+    download_model_from(state, id, &url, on_status).await
+}
+
+// Production callers always use the pinned catalog URL above. Keeping transport
+// separate lets regressions use a stalled loopback server, never model downloads.
+pub(crate) async fn download_model_from(
+    state: &AppState,
+    id: &str,
+    url: &str,
+    on_status: impl Fn(&ModelStatus),
+) -> AppResult<()> {
+    let model = catalog::get(id)?;
     let mut value = {
         let _gate = state.gate.lock().user_error("The app is busy.")?;
         if state.recorder.status()?.is_some()
@@ -144,6 +160,9 @@ pub(crate) async fn download_model_with(
             .user_error("Model manager unavailable.")? = Some(value.clone());
         value
     };
+    // Announce the connecting phase before waiting for headers or data. The
+    // manager is already active, so a cancellation from this event cannot be reset.
+    on_status(&value);
     let part = path_for(state, id)?.with_extension("part");
     let _ = rustls::crypto::ring::default_provider().install_default();
     let result = async {
@@ -154,7 +173,6 @@ pub(crate) async fn download_model_with(
             .build()
             .user_error("Cannot initialize model download.")?;
         std::fs::create_dir_all(state.paths.data.join("models")).user_error("Cannot create model folder.")?;
-        let url = format!("https://huggingface.co/{}/resolve/{}/{}", model.repo, model.revision, model.file);
         let mut response = cancellable(&state.models.cancel, client.get(url).send(),
             "Cannot download model. Check your connection.").await?
             .error_for_status().user_error("Model download unavailable.")?;

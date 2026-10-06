@@ -19,8 +19,8 @@ export function StartLecture({
   const [source, setSource] = useState(data.settings.audioSource);
   const [title, setTitle] = useState(
     ui.s199(
-      new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
-      course.code || 'Lecture',
+      new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }),
+      course.code || '课堂记录',
     ),
   );
   const [devices, setDevices] = useState<InputDevice[] | null>(null);
@@ -73,6 +73,32 @@ export function StartLecture({
     <Modal title={ui.s200} onClose={close}>
       <p className="modal-copy">{course.name}</p>
       <form className="form-stack" onSubmit={start}>
+        <div className="notice">
+          <div>
+            <strong>
+              {data.settings.speechProvider === 'none'
+                ? '仅保存录音'
+                : '上课时显示字幕'}
+            </strong>
+            <p>
+              {data.settings.speechProvider === 'none'
+                ? '英文字幕尚未启用。可先到“设置 → 首次使用”配置本地识别，也可以直接开始录音。'
+                : `${data.settings.speechProvider === 'local' ? '本地英文识别' : '云端英文识别'} · ${data.settings.liveTranslation && data.settings.translationMode !== 'none' ? '翻译已开启' : '翻译已关闭'} · ${data.settings.quietMode ? '安静模式' : '全速模式'}`}
+            </p>
+            {data.settings.speechProvider === 'none' && (
+              <button
+                type="button"
+                className="text-button"
+                onClick={() => {
+                  onClose();
+                  navigate({ view: 'settings' });
+                }}
+              >
+                {'设置字幕'}
+              </button>
+            )}
+          </div>
+        </div>
         <label>
           {ui.audioSource}
           <select

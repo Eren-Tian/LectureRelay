@@ -63,6 +63,42 @@
 body {
   margin: 0;
 }
+.lecture-list-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lecture-list-item > .lecture-row {
+  flex: 1;
+  min-width: 0;
+}
+.lecture-list-item > .button {
+  flex-shrink: 0;
+}
+.setup-checklist {
+  padding-left: 22px;
+  line-height: 1.9;
+}
+.setup-welcome {
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+.setup-welcome p {
+  margin: 6px 0 0;
+}
+.replay-actions {
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+@media (max-width: 950px) {
+  .lecture-list-item {
+    flex-wrap: wrap;
+  }
+  .lecture-list-item > .lecture-row {
+    flex-basis: 100%;
+  }
+}
 button,
 input,
 select,
@@ -2294,4 +2330,11 @@ progress {
 }
 :root[data-theme='dark'] .modal {
   border-color: var(--line);
+}
+.translation-preview-label {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }

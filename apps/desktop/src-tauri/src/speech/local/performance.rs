@@ -14,6 +14,7 @@ use windows::Win32::{
 /// One shared CPU mask for all local AI, including workers already processing audio.
 pub struct Performance {
     available: usize,
+    quiet_mask: usize,
     state: Mutex<Policy>,
 }
 struct Policy {
@@ -23,7 +24,7 @@ struct Policy {
 impl Performance {
     pub fn threads(&self) -> usize {
         let quiet = self.state.lock().map(|p| p.quiet).unwrap_or(true);
-        mask(self.available, quiet).count_ones() as usize
+        self.affinity(quiet).count_ones() as usize
     }
     pub fn new(quiet: bool) -> AppResult<Self> {
         let (mut available, mut system) = (0, 0);
@@ -31,6 +32,7 @@ impl Performance {
             .user_error("Cannot read available CPU resources.")?;
         Ok(Self {
             available,
+            quiet_mask: core_budget(available, &physical_cores()),
             state: Mutex::new(Policy {
                 quiet,
                 workers: Vec::new(),
@@ -47,7 +49,7 @@ impl Performance {
             .state
             .lock()
             .user_error("Speech preferences are busy.")?;
-        apply(&handle, mask(self.available, policy.quiet))?;
+        apply(&handle, self.affinity(policy.quiet))?;
         policy.workers.retain(|worker| worker.strong_count() > 0);
         policy.workers.push(Arc::downgrade(&handle));
         Ok(handle)
@@ -60,18 +62,73 @@ impl Performance {
         let workers: Vec<_> = policy.workers.iter().filter_map(Weak::upgrade).collect();
         let result = workers
             .iter()
-            .try_for_each(|worker| apply(worker, mask(self.available, quiet)))
+            .try_for_each(|worker| apply(worker, self.affinity(quiet)))
             .and_then(|_| persist());
         if let Err(error) = result {
             // A failed save must not leave running workers on an unsaved policy.
             for worker in &workers {
-                let _ = apply(worker, mask(self.available, policy.quiet));
+                let _ = apply(worker, self.affinity(policy.quiet));
             }
             return Err(error);
         }
         policy.quiet = quiet;
         Ok(())
     }
+    fn affinity(&self, quiet: bool) -> usize {
+        if quiet {
+            self.quiet_mask
+        } else {
+            self.available
+        }
+    }
+}
+fn physical_cores() -> Vec<usize> {
+    use windows::Win32::System::SystemInformation::{
+        GetLogicalProcessorInformation, RelationProcessorCore, SYSTEM_LOGICAL_PROCESSOR_INFORMATION,
+    };
+    let mut bytes = 0;
+    unsafe {
+        let _ = GetLogicalProcessorInformation(None, &mut bytes);
+        let count = bytes as usize / std::mem::size_of::<SYSTEM_LOGICAL_PROCESSOR_INFORMATION>();
+        if count == 0 {
+            return Vec::new();
+        }
+        let mut entries = vec![SYSTEM_LOGICAL_PROCESSOR_INFORMATION::default(); count];
+        if GetLogicalProcessorInformation(Some(entries.as_mut_ptr()), &mut bytes).is_err() {
+            return Vec::new();
+        }
+        entries
+            .into_iter()
+            .filter(|p| p.Relationship == RelationProcessorCore)
+            .map(|p| p.ProcessorMask)
+            .collect()
+    }
+}
+fn core_budget(available: usize, cores: &[usize]) -> usize {
+    if cores.is_empty() {
+        return mask(available, true);
+    }
+    // Four adjacent logical CPUs can be only two physical cores on an SMT CPU.
+    // Keep the same four-logical-CPU ceiling, choosing separate cores first.
+    let mut selected = 0usize;
+    for core in cores {
+        let choices = core & available;
+        if choices != 0 {
+            selected |= 1usize << choices.trailing_zeros();
+        }
+        if selected.count_ones() == 4 {
+            return selected;
+        }
+    }
+    for bit in 0..usize::BITS {
+        if selected.count_ones() >= 4 {
+            break;
+        }
+        if available & (1usize << bit) != 0 {
+            selected |= 1usize << bit;
+        }
+    }
+    selected
 }
 fn mask(available: usize, quiet: bool) -> usize {
     if !quiet {
@@ -112,6 +169,14 @@ mod tests {
             assert_eq!(quiet.count_ones(), available.count_ones().min(4));
             assert_eq!(mask(available, false), available);
         }
+    }
+    #[test]
+    fn quiet_budget_uses_separate_physical_cores_before_smt_siblings() {
+        let cores = [0b11, 0b1100, 0b110000, 0b11000000];
+        assert_eq!(core_budget(0xff, &cores), 0b01010101);
+        assert_eq!(core_budget(0xaa, &cores), 0xaa);
+        assert_eq!(core_budget(0b1111, &cores), 0b1111);
+        assert_eq!(core_budget(0b1111, &[]), 0b1111);
     }
     #[test]
     fn failed_persistence_keeps_previous_policy() {

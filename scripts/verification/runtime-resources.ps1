@@ -1,8 +1,9 @@
-param([string]$RuntimePath)
+param([string]$RuntimePath, [string]$ExpectedRuntimePath)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../..'))
 . (Join-Path $PSScriptRoot 'file-hash.ps1')
 $staging = Join-Path $projectRoot 'apps/desktop/src-tauri/resources/local-asr'
+if ($ExpectedRuntimePath) { $staging = [IO.Path]::GetFullPath($ExpectedRuntimePath) }
 if (!$RuntimePath) { $RuntimePath=$staging }
 $RuntimePath = [IO.Path]::GetFullPath($RuntimePath)
 $runtime = Get-Content -LiteralPath (Join-Path $projectRoot 'apps/desktop/native/speech-worker/runtime.json') -Raw | ConvertFrom-Json
@@ -14,11 +15,12 @@ $expectedLicenses=@(Get-ChildItem -LiteralPath $sdkLicenses -Recurse -File | For
 $licenseRoot=Join-Path $RuntimePath 'licenses'
 $actualLicenses=@(Get-ChildItem -LiteralPath $licenseRoot -Recurse -File | ForEach-Object { $_.FullName.Substring($licenseRoot.Length+1) })
 if (Compare-Object $expectedLicenses $actualLicenses) { throw 'Runtime license set differs, or contains stale duplicate notices' }
-foreach ($file in Get-ChildItem -LiteralPath $staging -Recurse -File) {
-  $relative=$file.FullName.Substring($staging.Length+1)
+foreach ($relative in @($expected)+@($expectedLicenses | ForEach-Object { Join-Path 'licenses' $_ })) {
+  $source=Join-Path $staging $relative
   $copy=Join-Path $RuntimePath $relative
+  if (!(Test-Path -LiteralPath $source)) { throw "Missing expected runtime resource: $relative" }
   if (!(Test-Path -LiteralPath $copy)) { throw "Missing runtime resource: $relative" }
-  if ((Get-SourceSha256 $file.FullName) -ne (Get-SourceSha256 $copy)) { throw "Runtime resource differs: $relative" }
+  if ((Get-SourceSha256 $source) -ne (Get-SourceSha256 $copy)) { throw "Runtime resource differs: $relative" }
 }
 foreach ($required in @('licenses/LICENSE','licenses/NOTICE','licenses/THIRD_PARTY_NOTICES.md','licenses/third_party/ggml/LICENSE','licenses/NVIDIA-Open-Model-License.pdf','licenses/NVIDIA-Model-NOTICE.txt')) {
   if (!(Test-Path -LiteralPath (Join-Path $RuntimePath $required))) { throw "Missing notice: $required" }
@@ -27,7 +29,7 @@ $config=Get-Content -LiteralPath (Join-Path $projectRoot 'apps/desktop/src-tauri
 if ($config.bundle.resources.'resources/local-text/' -ne 'local-text/') { throw 'Local text runtime resource mapping missing' }
 $textRuntime=Join-Path (Split-Path $RuntimePath -Parent) 'local-text'
 $textManifest=Get-Content -LiteralPath (Join-Path $textRuntime 'runtime-manifest.json') -Raw | ConvertFrom-Json
-$textStaging=Join-Path $projectRoot 'apps/desktop/src-tauri/resources/local-text'
+$textStaging=Join-Path (Split-Path $staging -Parent) 'local-text'
 $expectedText=@($textManifest.files.PSObject.Properties.Name)+@('runtime-manifest.json')
 $actualText=@(Get-ChildItem -LiteralPath $textRuntime -File | Select-Object -ExpandProperty Name)
 if (Compare-Object $expectedText $actualText) { throw 'Text runtime file set differs from its manifest' }

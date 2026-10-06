@@ -82,9 +82,15 @@ pub fn run() {
             .visible(false)
             .data_directory(paths.data.join("state").join("webview2"))
             .build()?;
-            #[cfg(debug_assertions)]
-            if std::env::var_os("LECTURERELAY_TEST_ROOT").is_some() {
-                window.set_title("LectureRelay — Isolated Test")?;
+            // Installed acceptance may request placement, never a data-root override.
+            // Release storage still always uses the user's Windows Known Folders.
+            if std::env::var("LECTURERELAY_TEST_PORTRAIT").as_deref() == Ok("1")
+                || cfg!(debug_assertions) && std::env::var_os("LECTURERELAY_TEST_ROOT").is_some()
+            {
+                #[cfg(debug_assertions)]
+                if std::env::var_os("LECTURERELAY_TEST_ROOT").is_some() {
+                    window.set_title("LectureRelay — Isolated Test")?;
+                }
                 // Keep automated test windows on the user's portrait display before showing.
                 if let Some(monitor) = window
                     .available_monitors()?
@@ -126,6 +132,9 @@ pub fn run() {
         })
         .invoke_handler(tauri::generate_handler![
             commands::study::open_caption_window,
+            commands::study::close_caption_window,
+            commands::study::caption_state,
+            commands::study::pause_live_translation,
             commands::study::print_document,
             commands::study::cancel_live_processing,
             commands::study::study_state,
@@ -151,6 +160,7 @@ pub fn run() {
             commands::save_course,
             commands::delete_course,
             commands::permanently_delete_course,
+            commands::permanently_delete_lecture,
             commands::free_all_storage,
             commands::existing_lecture_ids,
             commands::save_term,
@@ -198,7 +208,7 @@ pub fn run() {
             MessageBoxW(
                 None,
                 w!(
-                    "LectureRelay could not start. Check app data and Documents permissions, WebView2 Runtime, and whether another instance is running. Existing lecture files are preserved."
+                    "LectureRelay 无法启动。请检查应用数据与文档目录权限、WebView2 Runtime，并确认应用是否已在运行。已有课堂资料会保留。"
                 ),
                 w!("LectureRelay"),
                 MB_OK | MB_ICONERROR,

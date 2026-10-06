@@ -1,4 +1,5 @@
 import { ui } from '../i18n';
+import { messageText } from '../i18n/messages';
 import { invoke, isTauri, convertFileSrc } from '@tauri-apps/api/core';
 import {
   type Answer,
@@ -28,6 +29,8 @@ function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
 }
 
 export const api = {
+  permanentlyDeleteLecture: (id: string, confirmation: string) =>
+    call<void>('permanently_delete_lecture', { id, confirmation }),
   existingLectureIds: (ids: string[]) =>
     call<string[]>('existing_lecture_ids', { ids }),
   study: (id: string) => call<StudyState>('study_state', { id }),
@@ -125,6 +128,15 @@ export const api = {
     call<Answer>('ask_lecture', { id, question }),
   job: () => call<JobStatus | null>('job_status'),
   openCaptions: () => call<void>('open_caption_window'),
+  pauseLiveTranslation: (paused: boolean) =>
+    call<void>('pause_live_translation', { paused }),
+  closeCaptions: () => call<void>('close_caption_window'),
+  captionState: () =>
+    call<{
+      live: LiveStatus;
+      settings: AppSettings;
+      recording: RecordingStatus | null;
+    }>('caption_state'),
   print: () => call<void>('print_document'),
   cancelLive: () => call<void>('cancel_live_processing'),
   cancelJob: () => call<void>('cancel_job'),
@@ -151,8 +163,10 @@ export async function pruneDeletedDrafts() {
 
 export const recordingUrl = (path: string) => convertFileSrc(path);
 export const errorText = (error: unknown) =>
-  typeof error === 'string'
-    ? error
-    : error instanceof Error
-      ? error.message
-      : ui.s001;
+  messageText(
+    typeof error === 'string'
+      ? error
+      : error instanceof Error
+        ? error.message
+        : ui.s001,
+  );

@@ -1,3 +1,4 @@
+import { messageText } from '../../i18n/messages';
 import { useState } from 'react';
 import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
@@ -21,29 +22,29 @@ export function DeepReview({
   const mode = workspace.data.settings.studyMode;
   return (
     <details className="settings-advanced">
-      <summary>Review the whole class</summary>
+      <summary>{'整堂复习'}</summary>
       <p>
-        Processes every transcript section, then saves a new study guide with
-        timestamps. Check the draft against the source. Your existing notes stay
-        available.
+        {
+          '逐段整理整节课，生成带时间戳的复习指南，并单独保存。请结合原文核对，现有笔记会保留。'
+        }
       </p>
       <label>
-        What would you like to review?
+        {'你想重点复习什么？'}
         <textarea
           rows={3}
           maxLength={2000}
           value={request}
           disabled={blocked || busy}
           onChange={(e) => setRequest(e.target.value)}
-          placeholder="Explain the key concepts and how they connect. Include common mistakes and five practice questions."
+          placeholder="梳理核心概念及其联系，说明常见误区，并给出五道练习题。"
         />
       </label>
       <p className="field-hint">
         {mode === 'local'
-          ? 'Qwen3.5-4B · on this computer · no API charges'
+          ? 'Qwen3.5-4B · 本地运行 · 无 API 费用'
           : mode === 'cloud'
-            ? 'Uses your selected cloud provider. Transcript and course context are sent; charges may apply.'
-            : 'Study AI is off. Choose a model in Settings.'}
+            ? '使用所选云端服务，需发送转录文本和课程背景，服务商可能收费。'
+            : '学习 AI 尚未启用，请在设置中选择模型。'}
       </p>
       <button
         className="button secondary"
@@ -53,15 +54,15 @@ export function DeepReview({
             if (
               mode === 'cloud' &&
               !(await workspace.confirm({
-                title: 'Generate a full-class review?',
-                body: 'The full transcript and course context will be sent to your selected cloud provider. Provider charges may apply.',
-                action: 'Generate review',
+                title: '生成整堂课的复习指南？',
+                body: '完整转录和课程背景将发送给所选云端服务商，可能产生费用。',
+                action: '生成复习指南',
               }))
             )
               return;
             try {
               await api.generateReview(id, request);
-              workspace.notify('Review saved in Saved versions.');
+              workspace.notify('复习指南已保存，可在“历史版本”中查看。');
             } finally {
               await onSaved();
               await workspace.refresh();
@@ -69,89 +70,96 @@ export function DeepReview({
           })
         }
       >
-        Generate review
+        {'生成复习指南'}
       </button>
-      {reviews.map((review) => (
-        <article className="task-row" key={review.id}>
-          <div>
-            <strong>
-              {review.publishedVersion
-                ? 'Review saved'
-                : 'Saved review progress'}
-            </strong>
-            <p>
-              {review.parts.filter((part) => part.body !== null).length} /{' '}
-              {review.parts.length} source sections saved
-              {review.levels.length > 1
-                ? ` · ${review.levels.slice(1).reduce((n, level) => n + level.length, 0)} overview steps saved`
-                : ''}
-              {review.recoveries
-                ? ` · ${review.recoveries} automatic size recoveries`
-                : ''}
-            </p>
-            <p>
-              {review.message ||
-                (review.publishedVersion
-                  ? ''
-                  : 'You can leave and resume later. Only unfinished work will run.')}
-            </p>
-            <details>
-              <summary>Saved sections (incomplete until published)</summary>
-              <p>{review.request || 'General study notes'}</p>
-              {review.parts.map((part, index) => (
-                <section key={index}>
-                  <strong>
-                    Section {index + 1}
-                    {part.body ? '' : ' · pending'}
-                  </strong>
-                  <p
-                    style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}
-                  >
-                    {part.body || 'Not generated yet.'}
-                  </p>
-                </section>
-              ))}
-            </details>
-          </div>
-          {!review.publishedVersion && review.state !== 'stale' && (
-            <button
-              className="button secondary"
-              disabled={blocked || busy || mode === 'none'}
-              onClick={() =>
-                void run(async () => {
-                  if (
-                    mode === 'cloud' &&
-                    !(await workspace.confirm({
-                      title: 'Resume cloud review?',
-                      body: 'Remaining text and course context will be sent to your selected provider. Charges may apply.',
-                      action: 'Resume review',
-                    }))
-                  )
-                    return;
-                  try {
-                    await api.resumeReview(id, review.id);
-                    workspace.notify('Review saved in Saved versions.');
-                  } finally {
-                    await onSaved();
-                    await workspace.refresh();
-                  }
-                })
-              }
-            >
-              Resume review
-            </button>
-          )}
-          {review.state === 'stale' && (
-            <button
-              className="button secondary"
-              disabled={blocked || busy}
-              onClick={() => setRequest(review.request)}
-            >
-              Use request for a new review
-            </button>
-          )}
-        </article>
-      ))}
+      {reviews
+        .filter((review) => review.request.trim())
+        .map((review) => (
+          <article className="task-row" key={review.id}>
+            <div>
+              <strong>
+                {review.publishedVersion
+                  ? '复习指南已保存'
+                  : '已保存的复习进度'}
+              </strong>
+              <p>
+                {review.parts.filter((part) => part.body !== null).length} /{' '}
+                {review.parts.length}
+                {'段原文已整理'}
+                {review.levels.length > 1
+                  ? ` · ${review.levels.slice(1).reduce((n, level) => n + level.length, 0)}步综合整理已完成`
+                  : ''}
+                {review.recoveries
+                  ? ` · ${review.recoveries}次自动分段重试`
+                  : ''}
+              </p>
+              <p>
+                {messageText(review.message) ||
+                  (review.publishedVersion
+                    ? ''
+                    : '可以先离开，稍后继续。恢复时只处理尚未完成的部分。')}
+              </p>
+              <details>
+                <summary>{'已保存的分段草稿（尚未全部完成）'}</summary>
+                <p>{review.request || '课堂知识梳理'}</p>
+                {review.parts.map((part, index) => (
+                  <section key={index}>
+                    <strong>
+                      第 {index + 1} 段{part.body ? '' : ' · 待处理'}
+                    </strong>
+                    <p
+                      style={{
+                        whiteSpace: 'pre-wrap',
+                        overflowWrap: 'anywhere',
+                      }}
+                    >
+                      {part.body || '尚未生成。'}
+                    </p>
+                  </section>
+                ))}
+              </details>
+            </div>
+            {!review.publishedVersion && review.state !== 'stale' && (
+              <button
+                className="button secondary"
+                disabled={blocked || busy || mode === 'none'}
+                onClick={() =>
+                  void run(async () => {
+                    if (
+                      mode === 'cloud' &&
+                      !(await workspace.confirm({
+                        title: '继续云端复习整理？',
+                        body: '剩余文本和课程背景将发送给所选服务商，可能产生费用。',
+                        action: '继续整理',
+                      }))
+                    )
+                      return;
+                    try {
+                      await api.resumeReview(id, review.id);
+                      workspace.notify(
+                        '复习指南已保存，可在“历史版本”中查看。',
+                      );
+                    } finally {
+                      await onSaved();
+                      await workspace.refresh();
+                    }
+                  })
+                }
+              >
+                {'继续整理'}
+              </button>
+            )}
+            {review.state === 'stale' && (
+              <button
+                className="button secondary"
+                disabled={blocked || busy}
+                onClick={() => setRequest(review.request)}
+              >
+                {'按此要求重新生成'}
+              </button>
+            )}
+          </article>
+        ))}
     </details>
   );
 }

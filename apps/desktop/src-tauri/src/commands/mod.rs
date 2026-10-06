@@ -658,7 +658,13 @@ pub async fn audio_devices(source: String) -> AppResult<Vec<InputDevice>> {
 }
 #[tauri::command]
 pub fn live_status(state: App<'_>) -> AppResult<crate::speech::streaming::LiveStatus> {
-    state.live.snapshot()
+    let mut status = state.live.snapshot()?;
+    if let Some(recording) = state.recorder.status()?
+        && recording.lecture_id == status.lecture_id
+    {
+        status.backlog_seconds = state.live.backlog(recording.duration_seconds);
+    }
+    Ok(status)
 }
 #[tauri::command]
 pub fn local_model_status(state: App<'_>) -> AppResult<crate::models::manager::ModelStatus> {
@@ -720,6 +726,35 @@ fn ensure_cleanup_idle(state: &AppState) -> AppResult<()> {
 pub fn existing_lecture_ids(state: App<'_>, ids: Vec<String>) -> AppResult<Vec<String>> {
     state.storage.existing_lecture_ids(&ids)
 }
+#[tauri::command]
+pub async fn permanently_delete_lecture(
+    state: App<'_>,
+    id: String,
+    confirmation: String,
+) -> AppResult<()> {
+    if confirmation != "DELETE" {
+        return Err("Type DELETE to confirm permanent deletion.".into());
+    }
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let _gate = state
+            .gate
+            .lock()
+            .user_error("The app is busy. Try again.")?;
+        ensure_cleanup_idle(&state)?;
+        let result = crate::storage::cleanup::delete_lecture(&state.paths, &state.storage, &id);
+        if let Ok(mut status) = state.live.status.lock()
+            && status.lecture_id == id
+            && state.storage.lecture(&id).is_err()
+        {
+            *status = Default::default();
+        }
+        result
+    })
+    .await
+    .user_error("Lecture deletion was interrupted. Restart to recover cleanup.")?
+}
+
 #[tauri::command]
 pub async fn permanently_delete_course(
     state: App<'_>,

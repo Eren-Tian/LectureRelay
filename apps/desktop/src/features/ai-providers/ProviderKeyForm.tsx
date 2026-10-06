@@ -81,7 +81,7 @@ export function ProviderKeyForm({
           <p>{ui.s233}</p>
         </div>
         <span className={`pill ${status?.hasKey ? '' : 'gold'}`}>
-          {status?.hasKey ? 'Key saved' : 'Key needed'}
+          {status?.hasKey ? 'API Key 已保存' : '尚未添加 API Key'}
         </span>
       </div>
       <label>

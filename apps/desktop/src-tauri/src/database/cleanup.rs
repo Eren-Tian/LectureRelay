@@ -72,4 +72,32 @@ impl Storage {
     pub fn compact(&self) -> AppResult<()> {
         self.lock()?.execute_batch("PRAGMA wal_checkpoint(TRUNCATE); VACUUM;").user_error("Content deleted, but database compaction failed. Restart the app and try freeing storage again.")
     }
+
+    pub fn purge_lecture_content(&self, operation: &str, id: &str) -> AppResult<()> {
+        let mut db = self.lock()?;
+        let tx = db
+            .transaction()
+            .user_error("Cannot begin lecture deletion.")?;
+        for table in [
+            "processing_tasks",
+            "note_versions",
+            "study_marks",
+            "note_drafts",
+            "lecture_pins",
+            "transcript_edits",
+        ] {
+            tx.execute(&format!("DELETE FROM {table} WHERE lecture_id=?1"), [id])
+                .user_error("Cannot delete lecture data. Files will be restored.")?;
+        }
+        let count = tx
+            .execute("DELETE FROM lectures WHERE id=?1", [id])
+            .user_error("Cannot delete lecture.")?;
+        if count != 1 {
+            return Err("Lecture not found. Files will be restored.".into());
+        }
+        tx.execute("INSERT INTO cleanup_commits VALUES(?1)", [operation])
+            .user_error("Cannot commit lecture deletion.")?;
+        tx.commit()
+            .user_error("Cannot commit lecture deletion. Files will be restored.")
+    }
 }

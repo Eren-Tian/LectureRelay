@@ -92,7 +92,7 @@ export function QuestionsPanel({
         </div>
         <p>
           {local ? (
-            'Runs on this computer. Answers use selected lecture excerpts; verify the linked sources. Use whole-class review for comprehensive revision.'
+            '问答在本机运行，依据检索到的课堂片段作答。请查看引用核对答案；系统复习整节课可使用“整堂复习”。'
           ) : (
             <>
               {ui.s168}

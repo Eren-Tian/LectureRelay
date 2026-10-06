@@ -1,7 +1,8 @@
+import { messageText } from '../../i18n/messages';
 import { StudyWorkspace } from '../../components/StudyWorkspace';
 import { StudyTools } from '../study/StudyTools';
-import { useCallback, useEffect } from 'react';
-import { api } from '../../api/client';
+import { useCallback, useEffect, useState } from 'react';
+import { api, errorText } from '../../api/client';
 import { clock, languageName } from '../../lib/presentation';
 import { Icon } from '../../components/Icon';
 import { ResourceState } from '../../components/ResourceState';
@@ -19,23 +20,24 @@ export function LivePage({ id }: { id: string }) {
     void reload();
   }, [reload]);
   const { busy, run } = useAction();
+  const [openingCaptions, setOpeningCaptions] = useState(false);
   const settings = workspace.data.settings;
   const live = workspace.live?.lectureId === id ? workspace.live : null;
   if (!data) return <ResourceState error={error} reload={reload} />;
   if (!recording || recording.lectureId !== id)
     return (
       <div className="empty-state paper">
-        <h2>Recording saved</h2>
+        <h2>{'录音已保存'}</h2>
         <p>
           {live?.active
-            ? 'Remaining captions and translations are processing. You can open the lecture now.'
-            : 'Your lecture is ready to review.'}
+            ? '剩余字幕和译文仍在处理，你可以先打开课堂记录。'
+            : '课堂记录已保存，可以开始回顾。'}
         </p>
         <button
           className="button primary"
           onClick={() => navigate({ view: 'lecture', id })}
         >
-          Open lecture
+          {'打开课堂记录'}
         </button>
       </div>
     );
@@ -59,37 +61,37 @@ export function LivePage({ id }: { id: string }) {
         await refresh();
         if (!(await api.recording())) navigate({ view: 'lecture', id });
       }
-    }, 'Recording saved.');
+    }, '录音已保存。');
   const target = languageName(data.course.assistanceLanguage);
   return (
     <div className="live-page">
       <header className="classroom-heading">
         <div>
-          <div className="eyebrow">{data.course.code || 'LIVE CLASSROOM'}</div>
+          <div className="eyebrow">{data.course.code || '正在上课'}</div>
           <h1>{data.course.name}</h1>
           <p>{data.lecture.title}</p>
         </div>
         <span className="pill">
           <span className="status-dot" />
-          {settings.quietMode ? 'Quiet Mode' : 'Full performance'}
+          {settings.quietMode ? '安静模式' : '全速模式'}
         </span>
       </header>
-      <section className="classroom-status" aria-label="Recording status">
+      <section className="classroom-status" aria-label="录音状态">
         <div className="recording-label">
           <span
             className={`record-dot ${recording.paused || recording.failed ? 'inactive' : ''}`}
           />
           {recording.failed
-            ? 'Recording needs attention'
+            ? '录音出现异常，请查看提示'
             : recording.paused
-              ? 'Paused'
-              : 'Recording'}
-          <strong aria-label="Recording duration">
+              ? '已暂停'
+              : '正在录音'}
+          <strong aria-label="录音时长">
             {clock(recording.durationSeconds)}
           </strong>
         </div>
         <span className="actual-device" title={recording.deviceName}>
-          {recording.source === 'system' ? 'System audio' : 'Microphone'} ·{' '}
+          {recording.source === 'system' ? '系统声音' : '麦克风'} ·{' '}
           {recording.deviceName}
         </span>
         <div className="audio-health">
@@ -97,7 +99,7 @@ export function LivePage({ id }: { id: string }) {
           <div
             className="level-track"
             role="meter"
-            aria-label="Audio level"
+            aria-label="声音电平"
             aria-valuenow={Math.min(100, Math.round(recording.level * 400))}
             aria-valuemin={0}
             aria-valuemax={100}
@@ -110,32 +112,89 @@ export function LivePage({ id }: { id: string }) {
       </section>
       {recording.warning && (
         <p className="classroom-notice warning" role="alert">
-          {recording.warning}
+          {messageText(recording.warning)}
         </p>
       )}
+      {live && settings.speechProvider !== 'none' && (
+        <div
+          className={`classroom-notice ${live.backlogSeconds > 6 ? 'warning' : ''}`}
+          role="status"
+        >
+          <strong>
+            {live.state === 'unavailable'
+              ? '英文字幕暂时不可用'
+              : live.state === 'loading'
+                ? '正在加载语音模型…'
+                : live.backlogSeconds > 6
+                  ? `英文识别落后 ${Math.round(live.backlogSeconds)} 秒`
+                  : '英文识别进度正常'}
+          </strong>
+          {live.backlogSeconds > 6 && (
+            <p>
+              {
+                '录音正在保存。应用会暂缓翻译，让英文识别先跟上；未完成的内容可以在课后补全。'
+              }
+            </p>
+          )}
+          <div className="button-row">
+            {settings.quietMode && live.backlogSeconds > 6 && (
+              <button
+                className="button secondary"
+                onClick={() =>
+                  void api
+                    .saveRuntimePreferences({ quietMode: false })
+                    .then(refresh)
+                    .catch((e) => workspace.notify(errorText(e), true))
+                }
+              >
+                {'切换到全速模式'}
+              </button>
+            )}
+            {translation.enabled && translation.configured && (
+              <button
+                className="text-button"
+                onClick={() =>
+                  void api
+                    .pauseLiveTranslation(!live.translationPaused)
+                    .then(async () => {
+                      await refresh();
+                    })
+                    .catch((e) => workspace.notify(errorText(e), true))
+                }
+              >
+                {live.translationPaused ? '恢复翻译' : '暂停翻译'}
+              </button>
+            )}
+            {live.translationPaused && (
+              <span>{'翻译已暂停，英文识别和录音继续'}</span>
+            )}
+          </div>
+        </div>
+      )}
       <StudyWorkspace
-        primaryLabel="Captions"
+        primaryLabel="字幕"
         primary={
           <section className="live-caption-area">
             <div className="caption-heading">
               <div>
-                <strong>Live captions</strong>
+                <strong>{'实时字幕'}</strong>
                 <span className="caption-language">
-                  English <Icon name="arrow" size={13} /> {target}
+                  {'英文'}
+                  <Icon name="arrow" size={13} /> {target}
                 </span>
               </div>
               <span className="caption-state">
                 {settings.speechProvider === 'none'
-                  ? 'Audio only'
+                  ? '仅录音'
                   : live?.state === 'unavailable'
-                    ? 'Captions unavailable'
+                    ? '字幕暂时不可用'
                     : recording.paused
-                      ? 'Paused'
+                      ? '已暂停'
                       : live?.state === 'loading'
-                        ? 'Loading speech model…'
+                        ? '正在加载语音模型…'
                         : live?.draft
-                          ? 'Listening…'
-                          : 'Ready for speech'}
+                          ? '正在识别…'
+                          : '等待讲话'}
               </span>
             </div>
             {settings.showTranslation &&
@@ -151,17 +210,17 @@ export function LivePage({ id }: { id: string }) {
                   />
                   <p>
                     {!translation.enabled
-                      ? 'Live translation is off.'
+                      ? '实时翻译已关闭。'
                       : settings.translationMode === 'local'
-                        ? `Download your selected local model for live ${target} translation.`
-                        : `Connect a text provider for live ${target} translation.`}{' '}
-                    English and audio stay saved.
+                        ? `请先下载所选本地模型，以启用${target}翻译。`
+                        : `请先配置文本 AI 服务，以启用${target}翻译。`}{' '}
+                    {'英文转录和录音都会保留。'}
                   </p>
                   <button
                     className="text-button"
                     onClick={() => navigate({ view: 'settings' })}
                   >
-                    Settings
+                    {'设置'}
                     <Icon name="arrow" size={14} />
                   </button>
                 </div>
@@ -173,24 +232,25 @@ export function LivePage({ id }: { id: string }) {
               settings={settings}
               language={data.course.assistanceLanguage}
               listening={settings.speechProvider !== 'none'}
+              previews={live?.translationPreviews}
             />
             {(live?.message || translation.message) && (
               <p className="classroom-notice warning" role="status">
-                {live?.message || translation.message}
+                {messageText(live?.message || translation.message)}
               </p>
             )}
             <div className="caption-footer">
               <span>
                 {settings.speechProvider === 'local'
-                  ? 'English on this device'
+                  ? '英文在本机识别'
                   : settings.speechProvider === 'none'
-                    ? 'Audio only'
-                    : 'Cloud English captions'}
+                    ? '仅录音'
+                    : '云端英文识别'}
               </span>
               <span>
                 {translation.pendingIds.length
-                  ? `${translation.pendingIds.length} translation${translation.pendingIds.length === 1 ? '' : 's'} pending`
-                  : 'Recent captions · full transcript in replay'}
+                  ? `${translation.pendingIds.length} 段译文待处理`
+                  : '此处显示近期字幕，完整转录请到回放页查看'}
               </span>
             </div>
           </section>
@@ -206,14 +266,21 @@ export function LivePage({ id }: { id: string }) {
       <footer className="classroom-controls">
         <p>
           <Icon name="shield" size={16} />
-          Audio is saved as you go.
+          {'录音会持续保存。'}
         </p>
         <div className="button-row">
           <button
             className="button secondary"
-            onClick={() => void run(() => api.openCaptions())}
+            disabled={openingCaptions}
+            onClick={() => {
+              setOpeningCaptions(true);
+              void api
+                .openCaptions()
+                .catch((error) => workspace.notify(errorText(error), true))
+                .finally(() => setOpeningCaptions(false));
+            }}
           >
-            Caption window
+            {openingCaptions ? '正在打开字幕窗…' : '独立字幕窗'}
           </button>
           <button
             className="button secondary"
@@ -223,11 +290,11 @@ export function LivePage({ id }: { id: string }) {
             }
           >
             <Icon name={recording.paused ? 'play' : 'pause'} size={17} />
-            {recording.paused ? 'Resume' : 'Pause'}
+            {recording.paused ? '继续' : '暂停'}
           </button>
           <button className="button primary" disabled={busy} onClick={stop}>
             <Icon name="stop" size={17} />
-            {busy ? 'Saving recording…' : 'Stop & save'}
+            {busy ? '正在保存录音…' : '结束并保存'}
           </button>
         </div>
       </footer>

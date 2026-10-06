@@ -16,7 +16,7 @@ Cloud speech sends audio; cloud text sends transcript text and course context. E
 
 Translation saves English first and associates results with source revision and course language. Missing results can be retried after class. Full-class summaries/reviews process bounded sections and retain section notes when reducing long input. Q&A uses keyword retrieval with source snapshots; retrieval is not semantic search or guaranteed full coverage. Cancel local inference to terminate its helper. Stop recording saves audio independently of the translation queue.
 
-Authenticated cloud workflows remain untested because paid cloud tests were excluded. Local evaluation is not a cloud acceptance test or an independent security audit.
+In 0.3.9, the user's saved Groq key passed the summary generation test and produced two MIT classroom cards. The second card passed a fresh-process retest in 1.1 seconds after fixing explicit TLS initialization; the earlier failed cold attempt never reached HTTP. Local Qwen also completed the same tail after restart. References and formatting passed, but some wording remained too literal or broader than the source: neither model has passed a full classroom accuracy evaluation. Other authenticated cloud speech, translation, OpenAI summary, postclass notes and Q&A workflows remain untested. See [live-summary acceptance](../testing/live-summaries-v0.3.9.md) for exact scope. Local evaluation and error-response tests are not an independent security audit.
 
 ## Independent live summaries (0.3.9)
 

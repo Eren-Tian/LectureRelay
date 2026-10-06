@@ -10,6 +10,7 @@ assert.ok(
   [
     'tail',
     'local-tail',
+    'cloud-retry',
     'persist',
     'inspect',
     'configure-off',
@@ -58,6 +59,83 @@ assert.ok(lecture, 'Exact labelled lecture required');
 const id = lecture.id;
 const before = await d.native('live_summary_state', { id });
 await fs.mkdir('target/live-summaries', { recursive: true });
+
+if (action === 'cloud-retry') {
+  assert.equal(before.cards.length, 2);
+  assert.equal(before.cards[1].sources.length, 4);
+  const source = before.cards[1].sources[0];
+  const time = `${String(Math.floor(source.startSeconds / 60)).padStart(2, '0')}:${String(Math.floor(source.startSeconds % 60)).padStart(2, '0')}`;
+  for (const text of [
+    source.text + ' [ACCEPTANCE temporary source edit]',
+    source.text,
+  ]) {
+    await d.click(`button[aria-label="编辑字幕，时间：${time}"]`);
+    await d.fill('.modal textarea[required]', text);
+    await d.click('.modal form button.primary');
+    await until(
+      () => d.native('lecture_detail', { id }),
+      (detail) =>
+        detail.segments.find((s) => s.id === source.id)?.sourceText === text,
+    );
+    await until(
+      () => d.read("return !document.querySelector('.modal');"),
+      Boolean,
+    );
+  }
+  await d.clickText('设置总结');
+  await d.read(
+    "const e=document.querySelector('.live-summary-setup select');e.value='groq';e.dispatchEvent(new Event('change',{bubbles:true}));",
+  );
+  await d.click('.live-summary-setup input[type=checkbox]');
+  await d.clickText('保存设置，暂不启用');
+  await d.clickText('启用实时总结');
+  await d.click('.modal-heading button[aria-label="关闭"]');
+  await until(
+    () => d.native('live_summary_state', { id }),
+    (s) => s.cards[1].state === 'stale',
+  );
+  const started = Date.now();
+  await d.click('.summary-card:nth-of-type(2) .button.secondary');
+  await until(
+    () => d.native('live_summary_state', { id }),
+    (s) =>
+      s.cards[1].sources[0].revision !== before.cards[1].sources[0].revision,
+  );
+  const after = await until(
+    () => d.native('live_summary_state', { id }),
+    (s) => s.cards[1].state !== 'running' && !s.busy,
+    100000,
+  );
+  const elapsedMs = Date.now() - started;
+  await d.clickText('关闭自动总结');
+  await fs.writeFile(
+    'target/live-summaries/second-real-window.json',
+    JSON.stringify(
+      {
+        id,
+        elapsedMs,
+        before,
+        after,
+        detail: await d.native('lecture_detail', { id }),
+      },
+      null,
+      2,
+    ),
+  );
+  assert.equal(after.cards[1].state, 'completed', after.cards[1].message);
+  assert.equal(after.cards[1].provider, 'groq');
+  assert.equal(after.cards[1].sources[0].text, source.text);
+  console.log(
+    JSON.stringify({
+      passed: true,
+      action,
+      elapsedMs,
+      cards: after.cards.length,
+      remaining: after.remaining,
+    }),
+  );
+  process.exit(0);
+}
 
 if (action.startsWith('configure-') || action === 'local-tail') {
   await d.clickText('设置总结');
@@ -248,17 +326,22 @@ if (action === 'tail') {
     () => d.native('live_summary_state', { id }),
     (s) => s.cards[0].state === 'stale',
   );
-  assert.equal(
-    await d.read(
-      "return [...document.querySelectorAll('.summary-stale button')].find(b=>b.innerText.trim()==='加入我的笔记')?.disabled;",
-    ),
-    true,
+  await until(
+    () =>
+      d.read(
+        "return [...document.querySelectorAll('.summary-stale button')].find(b=>b.innerText.trim()==='加入我的笔记')?.disabled;",
+      ),
+    (disabled) => disabled === true,
   );
   // Restore the test transcript content. Its revision still correctly requires
   // explicit regeneration; do not spend a cloud request to refresh this fixture.
   await d.click('button[aria-label="编辑字幕，时间：00:20"]');
   await d.fill('.modal textarea[required]', edited.sourceText);
   await d.click('.modal form button.primary');
+  await until(
+    () => d.native('lecture_detail', { id }),
+    (s) => s.segments[0].sourceText === edited.sourceText,
+  );
   await fs.writeFile(
     'target/live-summaries/installed-workflow.json',
     JSON.stringify(

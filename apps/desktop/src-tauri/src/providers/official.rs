@@ -43,6 +43,20 @@ pub fn configured(settings: &AppSettings) -> AppResult<OfficialProvider> {
     OfficialProvider::new(&settings.provider, &settings.chat_model)
 }
 
+fn secure_client(headers: reqwest::header::HeaderMap) -> AppResult<reqwest::Client> {
+    // rustls-no-provider requires explicit initialization. Cloud-only use must
+    // work before a download or local worker happens to initialize it.
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    reqwest::Client::builder()
+        .default_headers(headers)
+        .redirect(reqwest::redirect::Policy::none())
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(120))
+        .user_agent(concat!("LectureRelay/", env!("CARGO_PKG_VERSION")))
+        .build()
+        .user_error("Cannot initialize a secure connection.")
+}
+
 impl OfficialProvider {
     pub async fn classroom_summary(
         &self,
@@ -72,14 +86,7 @@ impl OfficialProvider {
         authorization.set_sensitive(true);
         let mut headers = HeaderMap::new();
         headers.insert(AUTHORIZATION, authorization);
-        let client = reqwest::Client::builder()
-            .default_headers(headers)
-            .redirect(reqwest::redirect::Policy::none())
-            .connect_timeout(std::time::Duration::from_secs(15))
-            .timeout(std::time::Duration::from_secs(120))
-            .user_agent(concat!("LectureRelay/", env!("CARGO_PKG_VERSION")))
-            .build()
-            .user_error("Cannot initialize a secure connection.")?;
+        let client = secure_client(headers)?;
         Ok(Self {
             client,
             base,
@@ -287,6 +294,31 @@ pub fn parse_translations(text: &str) -> AppResult<Vec<Translation>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn cloud_transport_is_ready_in_a_fresh_process() {
+        if std::env::var("LECTURERELAY_TEST_COLD_HTTP").as_deref() == Ok("1") {
+            assert!(rustls::crypto::CryptoProvider::get_default().is_none());
+            secure_client(Default::default()).unwrap();
+            secure_client(Default::default()).unwrap();
+            return;
+        }
+        use std::os::windows::process::CommandExt;
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "providers::official::tests::cloud_transport_is_ready_in_a_fresh_process",
+            ])
+            .env("LECTURERELAY_TEST_COLD_HTTP", "1")
+            .creation_flags(0x08000000)
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "Fresh-process transport failed: {} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
     #[test]
     fn truncated_or_filtered_cloud_text_is_never_published_as_complete() {
         for reason in ["length", "content_filter", "tool_calls", "unknown"] {

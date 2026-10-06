@@ -96,14 +96,12 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
   };
   return (
     <section className="settings-card live-summary-setup">
-      <h2>实时课堂总结</h2>
-      <p>
-        每隔几分钟，将新定稿的英文整理成简短要点。总结单独配置，不改变语音识别、翻译或课后学习设置。
-      </p>
-      <p className="field-hint">
-        为降低课堂功耗，已停用本地 Qwen 实时总结。可按需启用 Groq 或
-        OpenAI；已有总结卡片会保留。
-      </p>
+      <h3>实时课堂总结</h3>
+      <details className="settings-advanced">
+        <summary>使用说明</summary>
+        <p>整理新定稿的英文，不改变语音识别、翻译或课后学习设置。</p>
+        <p>已停用本地 Qwen 实时总结，已有卡片保留。</p>
+      </details>
       <label>
         总结方式
         <select

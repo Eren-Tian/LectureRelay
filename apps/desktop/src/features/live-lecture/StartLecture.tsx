@@ -82,7 +82,7 @@ export function StartLecture({
             </strong>
             <p>
               {data.settings.speechProvider === 'none'
-                ? '英文字幕尚未启用。可先到“设置 → 首次使用”配置本地识别，也可以直接开始录音。'
+                ? '英文字幕尚未启用。可先到“设置 → 首次设置”配置本地识别，也可以直接开始录音。'
                 : `${data.settings.speechProvider === 'local' ? '本地英文识别' : '云端英文识别'} · ${data.settings.liveTranslation && data.settings.translationMode !== 'none' ? '翻译已开启' : '翻译已关闭'} · ${data.settings.quietMode ? '安静模式' : '全速模式'}`}
             </p>
             {data.settings.speechProvider === 'none' && (
@@ -91,7 +91,7 @@ export function StartLecture({
                 className="text-button"
                 onClick={() => {
                   onClose();
-                  navigate({ view: 'settings' });
+                  navigate({ view: 'settings', entry: 'setup' });
                 }}
               >
                 {'设置字幕'}

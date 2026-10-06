@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-type IconName =
+export type IconName =
   | 'books'
   | 'settings'
   | 'info'

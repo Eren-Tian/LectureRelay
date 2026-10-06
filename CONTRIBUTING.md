@@ -9,6 +9,7 @@ Before submitting native/frontend changes run:
 ```powershell
 pnpm check:web
 pnpm build:web
+pnpm test:components
 pnpm test:rust
 pnpm lint:rust
 pnpm format:check

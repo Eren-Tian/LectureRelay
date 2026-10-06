@@ -116,7 +116,9 @@ export function ClassroomSummary({
                 分段要点使用本地 Qwen3.5-4B。
                 <button
                   className="text-button"
-                  onClick={() => workspace.navigate({ view: 'settings' })}
+                  onClick={() =>
+                    workspace.navigate({ view: 'settings', entry: 'services' })
+                  }
                 >
                   设置学习模型
                 </button>

@@ -122,7 +122,8 @@ try {
         results.push({ mode, passed: true });
         continue;
       }
-      await click('本地 AI');
+      await click('AI 与模型');
+      await click('本地模型');
       if (mode === 'trash-failure') {
         await until(`${readyDownloads} === 3;`);
       } else if (mode === 'model-retry') {

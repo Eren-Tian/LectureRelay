@@ -18,6 +18,7 @@ export function AudioInputTest({
   const [result, setResult] = useState('');
   const [error, setError] = useState(false);
   const active = useRef(true);
+  const pending = useRef(false);
   const unsubscribe = useRef<(() => void) | undefined>(undefined);
   useEffect(() => {
     active.current = true;
@@ -31,6 +32,8 @@ export function AudioInputTest({
     setLevel(0);
   }, [source, deviceId]);
   const test = async () => {
+    if (pending.current) return;
+    pending.current = true;
     setTesting(true);
     onTesting?.(true);
     setResult('');
@@ -63,6 +66,7 @@ export function AudioInputTest({
         setResult(errorText(e));
       }
     } finally {
+      pending.current = false;
       unsubscribe.current?.();
       unsubscribe.current = undefined;
       if (active.current) setTesting(false);

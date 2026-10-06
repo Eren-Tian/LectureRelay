@@ -104,7 +104,7 @@ export function LecturePage({ id }: { id: string }) {
             : workspace.data.settings.studyMode) === 'none';
     if (off || (!local && !configured)) {
       workspace.notify('请先在设置中选择 AI 服务。', true);
-      workspace.navigate({ view: 'settings' });
+      workspace.navigate({ view: 'settings', entry: 'services' });
       return;
     }
     const speechName = providerName(

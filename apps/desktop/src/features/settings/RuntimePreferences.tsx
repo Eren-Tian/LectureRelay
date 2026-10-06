@@ -15,7 +15,10 @@ export function RuntimePreferences() {
   return (
     <>
       <section className="settings-card">
-        <h3>{'外观'}</h3>
+        <div className="settings-title">
+          <h3>外观</h3>
+          <span className="pill">自动保存</span>
+        </div>
         <div className="theme-options" role="group" aria-label="外观">
           {(['light', 'dark'] as const).map((value) => (
             <button
@@ -37,13 +40,12 @@ export function RuntimePreferences() {
             </button>
           ))}
         </div>
-        <p className="field-hint">{'立即应用到整个界面，并自动保存。'}</p>
       </section>
       <section className="settings-card">
         <label className="toggle-row performance-toggle">
           <span>
             <strong>{'安静模式'}</strong>
-            <small>{'所有本地 AI 共用最多 4 个逻辑 CPU 核心。'}</small>
+            <small>{'本地 AI 共用最多 4 个 CPU 核心'}</small>
           </span>
           <input
             type="checkbox"
@@ -56,9 +58,8 @@ export function RuntimePreferences() {
         </label>
         <p className="field-hint" role="status">
           {quietMode
-            ? '开启：限制 CPU 占用，减轻电脑负担。'
-            : '关闭：允许使用全部可用 CPU 核心，提高处理速度。'}{' '}
-          {'对所有课程生效，也会调整正在运行的语音和文本模型，设置自动保存。'}
+            ? '已限制 CPU 占用 · 自动保存'
+            : '全速运行，功耗更高 · 自动保存'}
         </p>
       </section>
     </>

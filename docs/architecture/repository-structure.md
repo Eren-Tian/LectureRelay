@@ -1,4 +1,4 @@
-# Repository structure — v0.2.0
+# Repository structure
 
 ```text
 apps/desktop/
@@ -6,19 +6,20 @@ apps/desktop/
     app/                     shell, routes and workspace context
     features/                courses, glossary, live-lecture, lecture-history,
                              transcript, notes, qa, model-manager, ai-providers,
-                             trash, settings
+                             trash, library, study, settings
     api/                     typed Tauri client
     types/                   serialized domain/IPC contracts
     components/              shared Icon, Modal, Markdown and resource-state UI
     hooks/                   shared async action/resource hooks
-    lib/, i18n/, styles/      presentation helpers, English catalog, CSS
+    lib/, i18n/, styles/      presentation helpers, Chinese UI/native messages,
+                             English catalog, shared theme and layout CSS
   src-tauri/
     src/
       app/                   startup/state, exclusive jobs, post-class assistance
       commands/              IPC validation and cross-domain concurrency gates
       audio/                 capture/device callback, recording writer, WAV encoding
       database/              connection/version gate, repositories, row mappings,
-        migrations/          immutable 001/002 SQL
+        migrations/          immutable, sequential SQL migrations
       domain.rs              canonical Rust serialized learning/settings values
       speech/                engine selection and streaming coordinator
         local/               Nemotron worker IPC/containment and batch adapter
@@ -29,16 +30,20 @@ apps/desktop/
       diagnostics.rs         content-free process CPU/RAM monitoring
       tests/                 internal integration tests and ignored acceptance fixtures
     tests/                   opt-in native audio and Windows test manifest
-    resources/local-asr/     ignored generated runtime staging for Tauri/NSIS
+    resources/local-asr/,
+    resources/local-text/    ignored generated runtime staging for Tauri/NSIS
     icons/, capabilities/    required platform assets and IPC permissions
   native/speech-worker/      C++ source, audited DLL manifest and build/protocol notes
 assets/branding/phoenix/     canonical original SVG; generated copies are documented
 crates/environment-check/   bundled SQLite/toolchain smoke check
 experiments/local-stt/      isolated model comparisons, worker-policy snapshot, reports
 tests/fixtures/, soak/      fixture policy and long native/WAV/SQLite harness
+tests/e2e/                  React/browser regressions, opt-in installed acceptance
+apps/desktop/tests/fixtures/ isolated React views with synthetic native replies
 scripts/dev/                setup, activation, doctor, native command launcher
 scripts/build/              pinned SDK preparation, worker build, branding staging
-scripts/test/               explicitly requested native acceptance checks
+scripts/test/               component driver/runner and opt-in native checks
+scripts/ci/                 isolated CI capture and cold installer provenance
 scripts/release/            NSIS/release wrapper and installer checksum
 scripts/verification/       source hygiene/import/link audit and staged/installed resources
 docs/                       requirements, architecture, ADRs, providers, security,
@@ -65,3 +70,5 @@ The learning repositories keep transaction boundaries beside their queries; ther
 Generated build/cache output is under `target`: `native/speech-worker` for production SDK/archive/worker, `asr-evaluation` for preserved experimental SDKs/weights/WAV/results, and UUID test roots for fixtures. `.tools`, `.pnpm-store`, `node_modules`, Vite `dist`, Tauri `gen` and `resources/local-asr` are ignored. Source PNG/ICO/PDF and migration SQL remain versionable.
 
 Production data stays in Windows Known Folders and Credential Manager; see [storage architecture](overview.md). No unused `packages/`, empty feature folders or speculative framework abstractions are retained.
+
+Settings use stable navigation identifiers rather than translated labels. `SettingsPage` coordinates the selected section and save action; feature panels render individual settings. `useSettingsDraft` merges independently saved runtime/summary preferences while preserving unsaved edits, and `useSettingsResources` handles model/trash reads and subscription cleanup. Keys remain in the existing native credential adapter. General preference saves also preserve authoritative runtime and summary settings in the native command.

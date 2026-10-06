@@ -8,8 +8,8 @@ In the 0.3.6 candidate, local translation can show a stable-prefix preview befor
 
 Install the Windows EXE. No LectureRelay login, API key, Python, Ollama or developer tools are needed for the local path. Internet is needed for the first model downloads; inference then runs on your computer. Model storage and electricity are yours; LectureRelay does not pay for hosted inference.
 
-1. Open **Settings → Local AI** and download the models you need. Downloads show progress, can be cancelled, and are checked against pinned SHA-256 hashes.
-2. In **AI Providers**, select **Local English** for speech, **Local** for translation and **Local** for summary/review. Save changes. Fresh text settings use Local; an existing explicit cloud selection is preserved on upgrade.
+1. Open **设置 → AI 与模型 → 本地模型** and download the models you need. Downloads show progress, can be cancelled, and are checked against pinned SHA-256 hashes.
+2. In **AI 与模型 → 功能设置**, select **本地英文** for speech and **本地** for translation and postclass study. Save changes. Fresh text settings use Local; an existing explicit cloud selection is preserved on upgrade.
 3. Add course background and a glossary in the course's target language. Record microphone or system audio. English captions are saved before translations. A missing or failed translation never stops the audio recorder.
 4. Stop recording. **Recording saved** appears while remaining captions/translations finish. You can play the audio or cancel processing. Deferred translations can be filled with **Translate missing** later.
 5. Open the saved lecture. **Generate AI draft** summarizes it. **Notes → Review the whole class** accepts your review instructions and processes every transcript section. Results appear under **Saved versions**, preserving manual notes. Q&A retrieves selected excerpts and includes source links; it is not the same as full-class review.

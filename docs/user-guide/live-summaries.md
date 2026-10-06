@@ -4,7 +4,7 @@
 
 ## 用 Groq 开始
 
-1. 打开 **设置 → 实时总结**，点击 **获取 Groq API Key**，前往 <https://console.groq.com/keys>。在 Groq 创建账户并生成 Key；这与 LectureRelay 免登录使用相互独立。
+1. 打开 **设置 → AI 与模型 → 实时总结**，点击 **获取 Groq API Key**，前往 <https://console.groq.com/keys>。在 Groq 创建账户并生成 Key；这与 LectureRelay 免登录使用相互独立。
 2. 将 Key 粘贴到应用密码框，点击 **保存 Key**。完整 Key 只写入 Windows Credential Manager，输入框随后清空。
 3. 点击 **测试总结连接**。应用发送一小段固定测试文字，让选定模型生成 JSON 并校验格式及引用；仅保存 Key 不代表权限、模型或额度可用。
 4. 阅读并勾选文字上传说明，再点击 **启用实时总结**。上传范围为本段已定稿英文及课程背景、术语；这一功能不上传录音。

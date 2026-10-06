@@ -9,6 +9,7 @@ import type {
   LectureDetail,
   LiveStatus,
   ModelStatus,
+  InputDevice,
   StudyState,
 } from '../../src/types/domain';
 import '../../src/styles/app.css';
@@ -164,7 +165,19 @@ const live: LiveStatus = {
     message: null,
   },
 };
-const fixture = { calls: [] as string[], messageText, data };
+const fixture = {
+  calls: [] as string[],
+  messageText,
+  data,
+  audioSources: [] as string[],
+  failSystemDevices: false,
+  holdSystemDevices: false,
+  finishSystemDevices: (_devices: InputDevice[]) => {},
+  previewRequests: 0,
+  finishPreview: (_peak: number) => {},
+  failCleanup: false,
+  failTrash: false,
+};
 Object.assign(window, { localizationFixture: fixture, isTauri: true });
 mockIPC(
   (command, args) => {
@@ -203,13 +216,37 @@ mockIPC(
       case 'local_text_models':
         return models.slice(1);
       case 'trash_courses':
+        if (fixture.failTrash) throw Error('Cannot read Trash.');
         return [{ ...course, id: 'trash-course', name: 'Archived course' }];
       case 'storage_usage':
         return { libraryBytes: 1048576, modelBytes: 3145728 };
       case 'audio_devices':
+        fixture.audioSources.push(String(input.source));
+        if (input.source === 'system' && fixture.failSystemDevices)
+          throw Error('Cannot open the selected audio device.');
+        if (input.source === 'system' && fixture.holdSystemDevices)
+          return new Promise<InputDevice[]>((resolve) => {
+            fixture.finishSystemDevices = resolve;
+          });
         return [
           { id: 'fixture-device', name: 'USB Microphone', isDefault: true },
         ];
+      case 'test_audio_input':
+        fixture.previewRequests++;
+        return new Promise<number>((resolve) => {
+          fixture.finishPreview = resolve;
+        });
+      case 'live_summary_setup':
+        return {
+          preferences: data.settings.liveSummaries,
+          providers: data.providers,
+          connectionTested: false,
+        };
+      case 'free_all_storage':
+        if (!fixture.failCleanup)
+          throw Error('Fixture forbids deleting any data');
+        fixture.failTrash = true;
+        throw Error('Cannot finish storage cleanup.');
       case 'save_runtime_preferences':
         Object.assign(data.settings, input);
         return data.settings;

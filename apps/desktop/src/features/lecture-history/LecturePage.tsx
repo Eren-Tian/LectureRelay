@@ -106,7 +106,7 @@ export function LecturePage({ id }: { id: string }) {
       workspace.data.settings.speechProvider === 'local';
     if (!configured && !localSpeech) {
       workspace.notify(ui.s096, true);
-      workspace.navigate({ view: 'settings' });
+      workspace.navigate({ view: 'settings', entry: 'services' });
       return;
     }
     const action =

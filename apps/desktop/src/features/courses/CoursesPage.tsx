@@ -30,7 +30,7 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
           </div>
           <button
             className="button secondary"
-            onClick={() => navigate({ view: 'settings' })}
+            onClick={() => navigate({ view: 'settings', entry: 'setup' })}
           >
             {'完成首次设置'}
           </button>

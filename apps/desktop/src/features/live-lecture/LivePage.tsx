@@ -218,7 +218,15 @@ export function LivePage({ id }: { id: string }) {
                   </p>
                   <button
                     className="text-button"
-                    onClick={() => navigate({ view: 'settings' })}
+                    onClick={() =>
+                      navigate({
+                        view: 'settings',
+                        entry:
+                          settings.translationMode === 'local'
+                            ? 'models'
+                            : 'services',
+                      })
+                    }
                   >
                     {'设置'}
                     <Icon name="arrow" size={14} />

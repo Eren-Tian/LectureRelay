@@ -33,6 +33,12 @@ try {
     'Requires an idle app with summaries Off',
   );
   await d.clickText('设置');
+  if (
+    await d.read(
+      'return !![...document.querySelectorAll(".settings-nav button")].find(b=>b.textContent.trim()==="AI 与模型");',
+    )
+  )
+    await d.clickText('AI 与模型');
   await d.clickText('实时总结');
   const end = Date.now() + 15000;
   while (
@@ -55,7 +61,7 @@ try {
   );
   assert.match(
     await d.read(
-      'return document.querySelector(".live-summary-setup").innerText;',
+      'return document.querySelector(".live-summary-setup").textContent;',
     ),
     /已停用本地 Qwen 实时总结/,
   );
@@ -67,7 +73,7 @@ try {
   );
   await fs.mkdir('target/live-summaries', { recursive: true });
   await fs.writeFile(
-    'target/live-summaries/installed-settings-v0.3.10.json',
+    `target/live-summaries/installed-settings-v${version}.json`,
     JSON.stringify(
       {
         version,

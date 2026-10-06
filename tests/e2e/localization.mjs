@@ -75,14 +75,13 @@ try {
   );
   await click('取消');
   await click('设置');
+  await click('首次设置');
   await until('return !!document.querySelector(".setup-guide");');
   await screenshot('setup');
   for (const category of [
     '通用',
-    '声音',
-    '字幕显示',
-    'AI 服务',
-    '本地 AI',
+    '声音与字幕',
+    'AI 与模型',
     '数据与存储',
     '安全与隐私',
     '关于',
@@ -96,11 +95,17 @@ try {
       body,
       /Getting started|Quiet Mode|Download Model|Jump to Live|Security & Privacy|Interface language/,
     );
-    if (category === '本地 AI') {
-      assert.match(body, /Nemotron Streaming EN 0.6B/);
-      assert.match(body, /Hy-MT2-1.8B/);
-      assert.match(body, /Qwen3.5-4B/);
-      assert.match(body, /模型下载已取消/);
+    if (category === 'AI 与模型') {
+      await click('本地模型');
+      const models = await text();
+      assert.match(models, /Nemotron Streaming EN 0.6B/);
+      assert.match(models, /Hy-MT2-1.8B/);
+      assert.match(models, /Qwen3.5-4B/);
+      assert.match(models, /模型下载已取消/);
+    }
+    if (category === '声音与字幕') {
+      await click('字幕样式');
+      assert.match(await text(), /字幕预览/);
     }
     if (category === '关于') assert.match(body, /简体中文/);
     await screenshot(`settings-${category}`);

@@ -275,7 +275,7 @@ export function App() {
               onClick={() =>
                 setRoute(
                   job.kind === 'provider-test'
-                    ? { view: 'settings' }
+                    ? { view: 'settings', entry: 'services' }
                     : { view: 'lecture', id: job.lectureId },
                 )
               }
@@ -327,7 +327,9 @@ export function App() {
           {route.view === 'lecture' && (
             <LecturePage key={route.id} id={route.id} />
           )}
-          {route.view === 'settings' && <SettingsPage key="settings" />}
+          {route.view === 'settings' && (
+            <SettingsPage key="settings" initialEntry={route.entry} />
+          )}
         </main>
       </div>
       {create && <CourseForm onClose={closeCreate} />}

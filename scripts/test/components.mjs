@@ -95,6 +95,7 @@ try {
     'caption-reader.mjs',
     'theme-contrast.mjs',
     'localization.mjs',
+    'settings-components.mjs',
     'live-summary-components.mjs',
   ];
   const requested = process.argv.slice(2);

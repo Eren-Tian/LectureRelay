@@ -27,6 +27,12 @@ async function until(fn, predicate = Boolean, ms = 15000) {
 const stage = process.argv[2];
 if (stage === 'setup') {
   await d.clickText('设置');
+  if (
+    await d.read(
+      'return !![...document.querySelectorAll(".settings-nav button")].find(b=>b.textContent.trim()==="首次设置");',
+    )
+  )
+    await d.clickText('首次设置');
   await d.clickText('启用本地双语字幕');
   await until(
     () => d.native('bootstrap'),

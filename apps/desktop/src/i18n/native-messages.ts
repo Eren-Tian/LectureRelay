@@ -1,4 +1,9 @@
 // Native system messages only; never apply this catalog to classroom content.
+// The native layer reports English and this catalog shows Simplified Chinese.
+// `pnpm verify:repo` checks the first two sections against the Rust source in
+// both directions (scripts/verification/native-messages.mjs).
+
+/** Messages the native layer emits verbatim. */
 export const nativeMessages: Record<string, string> = {
   'Live translation queue unavailable.':
     '暂时无法处理翻译队列，英文与录音会保留。',
@@ -8,11 +13,6 @@ export const nativeMessages: Record<string, string> = {
     '请在确认框中输入“清空全部数据”，确认清理全部课堂资料与模型。',
   'Cannot safely start local speech worker.':
     '无法安全启动本地识别进程，请重启应用或重新安装 LectureRelay。',
-  'Failed to fetch': '网络连接失败，请检查网络后重试。',
-  'Invalid PDF structure.': 'PDF 文件结构无效，文件可能已损坏。',
-  'Missing PDF "file.pdf".': '没有找到 PDF 文件。',
-  'Incorrect Password': 'PDF 密码错误，请选择无需密码的文件。',
-  'No password given': 'PDF 需要密码，请选择无需密码的文件。',
   'Stop and save the recording before transcription.':
     '请先结束并保存录音，再进行转录。',
   'Audio cannot be read. The recording may not have completed normally.':
@@ -57,10 +57,6 @@ export const nativeMessages: Record<string, string> = {
     '所选文件没有可解码的音频。',
   'The audio track ended unexpectedly. Original media is preserved.':
     '音轨意外结束，原文件会保留。',
-  'The app is busy.': '应用正在处理其他任务，请稍候。',
-  'The app is busy. Try again.': '应用正在处理其他任务，请稍后重试。',
-  'Finish active work before importing media.':
-    '请先结束当前录音或处理任务，再导入音视频。',
   'The transcript, course context, language or model changed. Saved sections remain available; start a new review to use the current source.':
     '转录、课程背景、语言或模型已修改。已整理的段落会保留；如需使用最新内容，请重新生成复习指南。',
   'Keep review instructions under 2,000 characters.':
@@ -109,41 +105,21 @@ export const nativeMessages: Record<string, string> = {
   'A task is running for this course. Cancel it or wait for completion.':
     '这门课程有任务正在处理，请等待完成或先取消任务。',
   'Choose a valid audio source and device.': '请选择有效的声音来源和录音设备。',
-  'Finish active recording or processing before testing audio.':
-    '请先结束录音和处理任务，再测试声音。',
   'An audio test is already running. It finishes after five seconds.':
     '声音测试正在进行，5 秒后结束。',
-  'Choose Microphone or System Audio.': '请选择麦克风或系统声音。',
-  'Wait for the five-second audio test to finish before recording.':
-    '请等待 5 秒的声音测试结束，再开始录音。',
-  'Wait for caption processing or model download to finish.':
-    '请等待字幕处理或模型下载完成。',
-  'Download the local speech model in Settings → Local AI before class.':
-    '上课前请先在“设置 → 本地 AI”下载语音模型。',
+  'Download the local speech model in Settings → AI & models → Local models before class.':
+    '上课前请先在“设置 → AI 与模型 → 本地模型”下载语音模型。',
   'Add your speech provider key in Settings before class.':
     '上课前请先在设置中添加语音服务商的 API Key。',
-  'Cancel or finish the AI task before starting a lecture.':
-    '请先完成或取消当前 AI 任务，再开始录音。',
   'Another lecture is recording. Open that lecture to stop it.':
     '另一节课正在录音，请打开对应课堂，结束并保存。',
   'This recording is not active. Restart to recover its saved audio.':
     '这节课当前没有在录音，请重启应用，恢复已保存的录音。',
-  'Wait for the AI task before editing the transcript.':
-    '请等待 AI 任务结束，再编辑转录文本。',
-  'Wait for active work before changing preferences.':
-    '请等待当前录音或处理任务结束，再修改设置。',
-  'Test provider connections after active work ends.':
-    '请等待当前任务结束，再测试服务连接。',
   'Stop and save the lecture first.': '请先结束并保存录音。',
   'Stop and save the recording first.': '请先结束并保存录音。',
-  'Wait for live captions or model download to finish.':
-    '请等待实时字幕处理或模型下载完成。',
-  'Run this AI task after recording ends.': '请在录音结束后运行此 AI 任务。',
   'Describe what you want to review.': '请填写希望重点复习的内容。',
   'This lecture has no notes yet.': '这节课还没有笔记。',
   'Storage usage is unavailable.': '暂时无法统计存储占用。',
-  'Finish recording, processing, audio testing and downloads before deleting data.':
-    '请先结束录音、AI 处理、声音测试和模型下载，再删除数据。',
   'Lecture deletion was interrupted. Restart to recover cleanup.':
     '课堂记录删除中断，请重启应用，恢复清理进度。',
   'Permanent deletion was interrupted. Restart to recover cleanup.':
@@ -170,9 +146,6 @@ export const nativeMessages: Record<string, string> = {
   'Transcript data is damaged.': '转录数据已损坏。',
   'Check transcript content and timestamps.': '请检查转录内容和起止时间。',
   'Transcript segment does not exist.': '这段转录不存在。',
-  'Notes are too long. Shorten them before saving.':
-    '笔记过长，请精简后再保存。',
-  'The answer sources is damaged.': '回答的引用数据已损坏。',
   'The recovery record is damaged.': '录音恢复记录已损坏。',
   'Enter a valid lecture title.': '请输入有效的本节课标题。',
   'The lecture does not exist.': '这节课堂记录不存在。',
@@ -186,9 +159,6 @@ export const nativeMessages: Record<string, string> = {
     '升级后数据未通过完整性检查，原数据库已保留。',
   'Database unavailable. Restart the app.': '数据库暂时不可用，请重启应用。',
   'Choose a supported local translation model.': '请选择支持的本地翻译模型。',
-  'Choose Light or Dark appearance.': '请选择浅色或深色外观。',
-  'Choose local, cloud or off for translation and study tools.':
-    '请将翻译和学习工具设为本地、云端或关闭。',
   'Check your language, provider and caption preferences. Keep at least one caption language visible.':
     '请检查语言、AI 服务和字幕设置，至少保留一种字幕语言可见。',
   'Saved settings could not be read.': '无法读取已保存的设置。',
@@ -210,18 +180,11 @@ export const nativeMessages: Record<string, string> = {
   'Choose a valid timestamp and a short label.':
     '请输入有效的时间戳和简短的标记名称。',
   'Unknown local model.': '无法识别这个本地模型。',
-  'Download models after the lecture and current task finish.':
-    '请等待录音和当前任务结束，再下载模型。',
-  'Another model is downloading. Wait or cancel it.':
-    '另一个模型正在下载，请等待完成或先取消下载。',
   'Model download interrupted. Try again.': '模型下载中断，请重试。',
   'Model exceeds the expected size.': '模型文件超过预期大小，已停止下载。',
   'Model download cancelled.': '模型下载已取消。',
   'Model integrity check failed. Download again.':
     '模型未通过完整性校验，请重新下载。',
-  'Remove models after active work finishes.':
-    '请等待当前任务结束，再删除模型。',
-  'Network error.': '网络连接异常，请检查网络。',
   'Authorization rejected. Check your API key and account permissions.':
     '认证失败，请检查 API Key 和账号权限。',
   'Model or endpoint unavailable. Check the model name.':
@@ -237,8 +200,8 @@ export const nativeMessages: Record<string, string> = {
   'Provider response could not be parsed.': '无法解析服务商返回的数据。',
   'This text exceeds the local model context. Shorten the requested focus or course background.':
     '文本超过本地模型的上下文容量，请精简复习要求或课程背景。',
-  'This AI feature is off. Choose a model in Settings → AI Providers.':
-    '此 AI 功能尚未启用，请到“设置 → AI 服务”选择模型。',
+  'This AI feature is off. Choose a model in Settings → AI & models.':
+    '此 AI 功能尚未启用，请到“设置 → AI 与模型”选择模型。',
   'Local translation cancelled. Recording is preserved.':
     '本地翻译已取消，录音会保留。',
   'Live translation paused. English and audio are saved; translate missing sentences after class.':
@@ -312,9 +275,6 @@ export const nativeMessages: Record<string, string> = {
     '实时转录超时，录音仍在继续。',
   'Invalid live speech response. Audio is preserved.':
     '实时识别返回的数据无效，录音会保留。',
-  'Translation unavailable. English is preserved.':
-    '翻译暂时不可用，英文原文会保留。',
-  'English is preserved': '英文原文会保留',
   'Some translations need another try. Your English and audio are saved; retry from lecture replay.':
     '部分译文需要重试。英文转录和录音已保存，可在回放页补全翻译。',
   'Invalid cleanup path. Nothing was deleted.':
@@ -350,13 +310,6 @@ export const nativeMessages: Record<string, string> = {
   'Local recognition timed out. Recording continues; transcribe after class.':
     '本地识别超时，录音仍在继续，可在课后重新转录。',
   'Local speech stopped.': '本地识别已停止。',
-  'Complete response': '生成完成',
-  'Connection unavailable. Try again.': '连接暂时不可用，请重试。',
-  'Model status refresh unavailable': '暂时无法刷新模型状态。',
-  'Speech model status unavailable': '暂时无法读取语音模型状态。',
-  'Trash unavailable': '暂时无法读取回收站。',
-  'Controlled save failure': '保存失败，请重试。',
-  'Connection timed out. Please try again.': '连接超时，请重试。',
   'Cannot resume transcription.': '无法继续转录。',
   'Cannot read recording.': '无法读取录音。',
   'Task status unavailable.': '暂时无法获取任务状态。',
@@ -411,7 +364,6 @@ export const nativeMessages: Record<string, string> = {
   'Unsupported export format.': '暂不支持此导出格式。',
   'Invalid storage folder.': '存储目录无效。',
   'Cannot open File Explorer.': '无法打开文件资源管理器。',
-  'Invalid audio source.': '声音来源无效。',
   'Cannot list audio devices.': '无法获取录音设备。',
   'Model status unavailable.': '暂时无法获取模型状态。',
   'Cannot create course documents folder.': '无法创建课程文档目录。',
@@ -456,11 +408,6 @@ export const nativeMessages: Record<string, string> = {
   'Cannot save transcription progress.': '无法保存转录进度。',
   'Cannot commit transcript segments.': '无法保存转录段落。',
   'Cannot save translation.': '无法保存译文。',
-  'Cannot read notes.': '无法读取笔记。',
-  'Cannot save notes.': '无法保存笔记。',
-  'Cannot read answers.': '无法读取问答。',
-  'Cannot encode answer sources.': '无法生成回答引用。',
-  'Cannot save answers.': '无法保存问答。',
   'Cannot read recovery record.': '无法读取录音恢复记录。',
   'Cannot save audio source.': '无法保存声音来源。',
   'Cannot create the recording folder. Check permissions.':
@@ -557,7 +504,6 @@ export const nativeMessages: Record<string, string> = {
     '无法连接AI 服务商。请检查网络连接。',
   'Cannot encode audio upload.': '无法生成上传的录音。',
   'Cannot encode translation input.': '无法生成翻译输入。',
-  'Unsupported provider.': '暂不支持此AI 服务商。',
   'Live caption status unavailable.': '暂时无法获取实时字幕状态。',
   'Diagnostics unavailable.': '暂时无法获取诊断信息。',
   'Live status unavailable.': '暂时无法获取实时识别状态。',
@@ -622,4 +568,146 @@ export const nativeMessages: Record<string, string> = {
   'Invalid local streaming response.': '本地流式识别结果无效。',
   'Invalid local speech chunk.': '本地识别片段无效。',
   'Cannot contain local speech worker.': '无法限制本地识别进程。',
+  'A live summary is being processed. Wait for it to finish or turn summaries off.':
+    '实时总结正在处理，请等待完成，或先关闭实时总结。',
+  'Wait for the model download to finish.': '请等待模型下载完成。',
+  'Wait for the five-second audio test to finish.':
+    '请等待 5 秒的声音测试结束。',
+  'Choose a valid summary service, model and an interval of 2, 4 or 5 minutes.':
+    '请选择有效的总结服务、模型和 2、4 或 5 分钟间隔。',
+  'Before enabling cloud summaries, allow the selected provider to receive the matching English transcript and course background.':
+    '启用云端总结前，请确认允许向所选服务商发送对应英文转录与课程背景。',
+  'Cannot read live summary settings.': '无法读取实时总结设置。',
+  'Cannot save live summary settings.': '无法保存实时总结设置。',
+  'Cannot turn off the old local live summary setting.':
+    '无法停用旧的本地实时总结设置。',
+  'Summary processing was interrupted. The source text is saved; retry on this card.':
+    '总结处理已中断，原文已保存。请在这张卡片上重试。',
+  'Another summary is being processed. Please wait.':
+    '已有一段总结正在处理，请稍候。',
+  'Cannot read the summary rate-limit status.': '无法读取总结限流状态。',
+  'The summary service is still rate limited. Recording and captions continue to be saved; try again later.':
+    '总结服务仍在限流等待期。录音和字幕继续保存，请稍后重试。',
+  'The summary format is incomplete. Try again; incomplete results are not shown as key points.':
+    '总结格式不完整，请重试。未完成结果不会作为正式要点显示。',
+  'The summary length or citations are invalid. Try again.':
+    '总结长度或引用不符合要求，请重试。',
+  'The summary cites source text that does not exist. The source is preserved; try again.':
+    '总结包含不存在的原文引用，已保留原文，请重试。',
+  'Set up and enable live summaries first.': '请先设置并启用实时总结。',
+  'Save and test an API key in live summary settings first. Recording and captions are not affected.':
+    '请先在实时总结设置中保存 API Key 并测试。录音和字幕不受影响。',
+  'A summary is still unfinished. Retry it on its card; new source text continues to be saved.':
+    '有一段总结尚未完成，请在卡片上重试；新原文继续保存。',
+  'There is no newly finalized English yet. Try again later.':
+    '还没有新的已定稿英文，稍后再试。',
+  'The summary was cancelled or its settings changed. The unfinished section is kept; you can retry later.':
+    '总结已取消或设置已更改。未完成片段保留，可稍后重试。',
+  'The summary timed out. The source text is saved; you can retry later.':
+    '总结超时，原文已保存，可稍后重试。',
+  'Summary card not found.': '找不到总结卡片。',
+  'The source text was not found.': '找不到对应原文。',
+  'The recording cannot be read right now. Try again later.':
+    '暂时无法读取录音，请稍后重试。',
+  'This recording format does not support section playback.':
+    '录音格式暂不支持片段回听。',
+  'This part of the recording is not finished yet. Play it again later.':
+    '这一段录音尚未写完，请稍后再回听。',
+  'Cannot locate the recording section.': '无法定位录音片段。',
+  'Reading the recording section failed. Try again later.':
+    '读取录音片段失败，请稍后重试。',
+  'Cannot read the recording section.': '无法读取录音片段。',
+  'Save the API key, then select Test summary connection; summaries can be enabled after it succeeds.':
+    '请先保存 API Key，再点击“测试总结连接”；成功后即可启用。',
+  'The summary connection test timed out. Check your network and try again.':
+    '总结连接测试超时，请检查网络后重试。',
+  'The key or summary settings changed during the test. Test again.':
+    '测试期间 Key 或总结设置已更改，请重新测试。',
+  'Cannot open this service page.': '无法打开此服务页面。',
+  'Cannot open the system browser. Check your default browser setting.':
+    '无法打开系统浏览器，请检查默认浏览器设置。',
+  'The source text or assistance language changed. Summarize again and review it.':
+    '对应原文或辅助语言已更改，请重新整理并核对。',
+  'There is no newly finalized English yet.': '还没有新的已定稿英文。',
+  'The summary sources are duplicated. Select them again.':
+    '总结原文重复，请重新选择。',
+  'The source text changed. Try again.': '原文已更改，请重试。',
+  'This source text already has a summary. Check the existing card or retry.':
+    '这段原文已有总结任务，请查看现有卡片或重试。',
+  'This summary card was not found.': '找不到这张总结卡片。',
+  'This section is being summarized. Please wait.': '这段正在整理，请稍候。',
+  'The source text was deleted, so this summary cannot be retried.':
+    '原文已删除，无法重试这段总结。',
+  'The source text changed, so the old result was not used as the latest summary. Try again.':
+    '原文已更改，未将旧结果作为最新总结。请重试。',
+  'The API key is invalid or revoked. Replace it and test again.':
+    'API Key 无效或已撤销，请替换后重新测试。',
+  'Account balance or API billing is not ready. Check the provider account; recording continues to be saved.':
+    '账户余额或 API 计费未就绪，请检查服务商账户；录音继续保存。',
+  'The account lacks access. Check the service region, model permissions and account status.':
+    '账户没有访问权限，请检查服务地区、模型权限和账户状态。',
+  'The selected model is unavailable. Choose another model in advanced settings and test again.':
+    '所选模型不可用，请在高级设置中更换模型后测试。',
+  'The free allowance is used up or requests are limited. Check the account quota and try again later; recording continues to be saved.':
+    '免费额度已耗尽或请求受限，请检查账户额度并稍后重试；录音继续保存。',
+  'The model does not support these summary parameters. Use the recommended model or check the advanced model settings.':
+    '模型不支持本次总结参数，请使用推荐模型，或核对高级模型设置。',
+  'The provider is temporarily unavailable. The source text is saved; try again later.':
+    '服务商暂时不可用，原文已保存，请稍后重试。',
+  'The summary request did not complete. Check the account and model settings. The source text is saved.':
+    '总结请求未完成，请检查账户和模型设置。原文已保存。',
+  'Cannot reach the summary service or the request timed out. Check your network and try again; recording continues to be saved.':
+    '无法连接总结服务或请求超时，请检查网络后重试；录音继续保存。',
+  'The summary did not finish before the app closed. The source text is saved; you can retry it.':
+    '应用退出前总结未完成。原文已保存，可点击重试。',
+  'A transcript is needed to answer from lecture evidence.':
+    '需要先有转录文本，才能根据课堂内容回答。',
+  'Cannot read summary language.': '无法读取总结语言。',
+  'Cannot check summary references.': '无法核对总结引用。',
+  'Cannot read live summaries.': '无法读取实时总结。',
+  'Cannot read saved summary cards.': '无法读取已保存的总结卡片。',
+  'Cannot mark an outdated summary.': '无法标记过期的总结。',
+  'Cannot reserve a summary.': '无法创建总结任务。',
+  'Cannot check summary coverage.': '无法检查总结覆盖范围。',
+  'Cannot check saved summary sources.': '无法核对已保存的总结原文。',
+  'Cannot encode summary sources.': '无法整理总结原文。',
+  'Cannot save summary input. No request was sent.':
+    '无法保存总结输入，尚未发送任何请求。',
+  'Cannot save summary input.': '无法保存总结输入。',
+  'Cannot retry summary.': '无法重试这段总结。',
+  'Cannot save live summary.': '无法保存实时总结。',
+  'Cannot encode summary.': '无法整理总结内容。',
+  'Cannot save summary outcome.': '无法保存总结结果。',
+  'Cannot save connection test.': '无法保存连接测试结果。',
+  'Cannot clear connection test.': '无法清除连接测试结果。',
+  'Cannot read connection test.': '无法读取连接测试结果。',
+  'App closed before processing finished. Saved results are preserved.':
+    '应用在处理完成前已关闭，已保存的结果会保留。',
+  'Cannot start live summary migration.': '无法开始升级实时总结数据。',
+  'Live summary migration failed.': '实时总结数据升级失败。',
+  'Cannot commit live summary migration.': '无法完成实时总结数据升级。',
+  'Cannot recover live summaries.': '无法恢复实时总结。',
+};
+
+/** Native messages built with format!; each {} is a value shown as-is. */
+export const nativeTemplates: Record<string, string> = {
+  'Recording could not keep up: {} audio buffers ({} samples) were lost. Check the saved recording.':
+    '录音未能跟上：丢失 {} 个音频缓冲区（{} 个采样点）。请检查已保存的录音。',
+  'Download {} in Settings → AI & models → Local models first. No text has been uploaded.':
+    '请先在“设置 → AI 与模型 → 本地模型”下载 {}。尚未上传任何文本。',
+};
+
+/** Not emitted by the native layer: browser and PDF.js errors, and the
+ *  synthetic native errors that the component fixtures raise. */
+export const externalMessages: Record<string, string> = {
+  // Browser fetch and PDF.js
+  'Failed to fetch': '网络连接失败，请检查网络后重试。',
+  'Invalid PDF structure.': 'PDF 文件结构无效，文件可能已损坏。',
+  'Missing PDF "file.pdf".': '没有找到 PDF 文件。',
+  'Incorrect Password': 'PDF 密码错误，请选择无需密码的文件。',
+  'No password given': 'PDF 需要密码，请选择无需密码的文件。',
+  // Component test fixtures (apps/desktop/tests/fixtures)
+  'Connection unavailable. Try again.': '连接暂时不可用，请重试。',
+  'Model status refresh unavailable': '暂时无法刷新模型状态。',
+  'Controlled save failure': '保存失败，请重试。',
 };

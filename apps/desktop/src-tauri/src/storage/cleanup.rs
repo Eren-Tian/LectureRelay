@@ -202,7 +202,7 @@ pub fn delete_lecture(paths: &AppPaths, db: &Storage, id: &str) -> AppResult<()>
     let lecture = db.lecture(id)?;
     // Validate both identifiers before deriving any deletion path.
     paths.lecture_dir(&lecture.course_id, id)?;
-    if lecture.status == "recording" {
+    if lecture.status == crate::domain::LectureStatus::Recording {
         return Err("Stop and save this lecture before deleting it.".into());
     }
     let mut targets = vec![(true, Path::new("Courses").join(&lecture.course_id).join(id))];

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api, errorText } from '../../api/client';
 import { AudioInputTest } from './AudioInputTest';
+import { ui } from '../../i18n';
 import type { AppSettings, InputDevice } from '../../types/domain';
 import type { SettingsSectionProps } from './settings-types';
 
@@ -51,11 +52,11 @@ export function AudioSettings({
   const selected = settings[deviceKey];
   return (
     <section className="settings-card">
-      <h3>声音来源</h3>
+      <h3>{ui.audioSource}</h3>
       <label>
-        默认声音来源
+        {ui.audioSettingsDefaultSource}
         <select
-          aria-label="默认声音来源"
+          aria-label={ui.audioSettingsDefaultSource}
           disabled={controlsBlocked}
           value={source}
           onChange={(event) =>
@@ -65,28 +66,32 @@ export function AudioSettings({
             })
           }
         >
-          <option value="microphone">麦克风</option>
-          <option value="system">系统声音</option>
+          <option value="microphone">{ui.microphone}</option>
+          <option value="system">{ui.systemAudio}</option>
         </select>
       </label>
       <label>
-        {source === 'microphone' ? '麦克风设备' : '系统播放设备'}
+        {source === 'microphone'
+          ? ui.audioSettingsMicrophoneDevice
+          : ui.audioSettingsSystemDevice}
         <select
-          aria-label="声音设备"
+          aria-label={ui.audioSettingsDeviceLabel}
           disabled={controlsBlocked || loading}
           value={selected}
           onChange={(event) =>
             setSettings({ ...settings, [deviceKey]: event.target.value })
           }
         >
-          <option value="">使用 Windows 默认设备</option>
+          <option value="">{ui.audioSettingsUseWindowsDefault}</option>
           {selected && !devices.some((device) => device.id === selected) && (
-            <option value={selected}>此前选择的设备不可用</option>
+            <option value={selected}>
+              {ui.audioSettingsPreviousDeviceUnavailable}
+            </option>
           )}
           {devices.map((device) => (
             <option key={device.id} value={device.id}>
               {device.name}
-              {device.isDefault ? '（默认）' : ''}
+              {device.isDefault ? ui.audioSettingsDefaultSuffix : ''}
             </option>
           ))}
         </select>
@@ -102,7 +107,9 @@ export function AudioSettings({
           disabled={loading || controlsBlocked}
           onClick={() => refresh((current) => current + 1)}
         >
-          {loading ? '正在查找设备…' : '刷新设备列表'}
+          {loading
+            ? ui.audioSettingsFindingDevices
+            : ui.audioSettingsRefreshDevices}
         </button>
       </div>
       <AudioInputTest

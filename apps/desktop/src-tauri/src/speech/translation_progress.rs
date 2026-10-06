@@ -100,7 +100,7 @@ mod tests {
                 end_seconds: 2.0,
                 source_text: "Mitochondria produce energy.".into(),
                 translated_text: String::new(),
-                origin: "cloud".into(),
+                origin: crate::domain::SegmentOrigin::Cloud,
                 provider: "local".into(),
                 status: "final".into(),
                 transcript_version: "live".into(),

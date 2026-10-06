@@ -1,7 +1,9 @@
 mod live_translation;
 pub(crate) mod local;
+mod recognition;
 pub(crate) mod streaming;
 mod translation_progress;
+mod translation_worker;
 
 use crate::{
     error::AppResult,
@@ -13,7 +15,7 @@ pub fn configured(
     course_id: &str,
 ) -> AppResult<Box<dyn TranscriptionProvider>> {
     let settings = state.storage.settings()?;
-    if settings.speech_provider == "local" {
+    if settings.speech_provider == crate::domain::SpeechEngine::Local {
         if !crate::models::manager::status(state)?.installed {
             return Err("Download the local speech model in Settings first.".into());
         }
@@ -33,11 +35,11 @@ pub fn configured(
             std::sync::Arc::new(std::sync::Mutex::new(engine)),
         )))
     } else {
-        let provider = if settings.speech_provider == "none" {
-            &settings.provider
-        } else {
-            &settings.speech_provider
-        };
+        let provider = settings
+            .speech_provider
+            .cloud()
+            .or(settings.provider.cloud())
+            .ok_or("Choose an AI provider and add a key in Settings.")?;
         Ok(Box::new(OfficialProvider::new(
             provider,
             &settings.chat_model,

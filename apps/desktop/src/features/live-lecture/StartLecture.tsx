@@ -18,9 +18,9 @@ export function StartLecture({
   const { refresh, navigate, data } = useWorkspace();
   const [source, setSource] = useState(data.settings.audioSource);
   const [title, setTitle] = useState(
-    ui.s199(
+    ui.defaultLectureTitle(
       new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }),
-      course.code || '课堂记录',
+      course.code || ui.untitledLectureName,
     ),
   );
   const [devices, setDevices] = useState<InputDevice[] | null>(null);
@@ -70,20 +70,20 @@ export function StartLecture({
     });
   };
   return (
-    <Modal title={ui.s200} onClose={close}>
+    <Modal title={ui.startLecture} onClose={close}>
       <p className="modal-copy">{course.name}</p>
       <form className="form-stack" onSubmit={start}>
         <div className="notice">
           <div>
             <strong>
               {data.settings.speechProvider === 'none'
-                ? '仅保存录音'
-                : '上课时显示字幕'}
+                ? ui.startNoticeAudioOnly
+                : ui.startNoticeCaptions}
             </strong>
             <p>
               {data.settings.speechProvider === 'none'
-                ? '英文字幕尚未启用。可先到“设置 → 首次设置”配置本地识别，也可以直接开始录音。'
-                : `${data.settings.speechProvider === 'local' ? '本地英文识别' : '云端英文识别'} · ${data.settings.liveTranslation && data.settings.translationMode !== 'none' ? '翻译已开启' : '翻译已关闭'} · ${data.settings.quietMode ? '安静模式' : '全速模式'}`}
+                ? ui.startNoticeCaptionsOff
+                : `${data.settings.speechProvider === 'local' ? ui.localEnglishRecognition : ui.cloudEnglishRecognition} · ${data.settings.liveTranslation && data.settings.translationMode !== 'none' ? ui.translationOn : ui.translationOff} · ${data.settings.quietMode ? ui.quietMode : ui.fullSpeedMode}`}
             </p>
             {data.settings.speechProvider === 'none' && (
               <button
@@ -94,7 +94,7 @@ export function StartLecture({
                   navigate({ view: 'settings', entry: 'setup' });
                 }}
               >
-                {'设置字幕'}
+                {ui.setUpCaptions}
               </button>
             )}
           </div>
@@ -113,7 +113,7 @@ export function StartLecture({
           </select>
         </label>
         <label>
-          {ui.s201}
+          {ui.lectureTitle}
           <input
             required
             maxLength={150}
@@ -122,21 +122,21 @@ export function StartLecture({
           />
         </label>
         <label>
-          {ui.s202}
+          {ui.audioDevice}
           <select
             value={deviceId}
             onChange={(event) => setDeviceId(event.target.value)}
             disabled={!devices?.length || busy || testing}
           >
             {devices === null ? (
-              <option>{ui.s203}</option>
+              <option>{ui.checkingAudioDevices}</option>
             ) : !devices.length ? (
-              <option>{ui.s204}</option>
+              <option>{ui.noAudioDevices}</option>
             ) : (
               devices.map((device) => (
                 <option key={device.id} value={device.id}>
                   {device.name}
-                  {device.isDefault ? ui.s205 : ''}
+                  {device.isDefault ? ui.defaultDeviceSuffix : ''}
                 </option>
               ))
             )}
@@ -144,13 +144,13 @@ export function StartLecture({
         </label>
         {devices?.length === 0 && (
           <div className="notice warning">
-            <p>{deviceError || ui.s206}</p>
+            <p>{deviceError || ui.microphoneAccessHint}</p>
             <button
               type="button"
               className="text-button"
               onClick={() => void checkDevices()}
             >
-              {ui.s207}
+              {ui.checkAgain}
             </button>
           </div>
         )}
@@ -163,12 +163,14 @@ export function StartLecture({
         <div className="notice">
           <Icon name="shield" />
           <div>
-            <strong>{ui.s208}</strong>
+            <strong>{ui.recordingStaysLocal}</strong>
             <p>{ui.livePrivacy}</p>
           </div>
         </div>
         <p className="field-hint">
-          {source === 'system' ? ui.sourceHint : ui.s210}
+          {source === 'system'
+            ? ui.sourceHint
+            : ui.chooseSpeechRecognitionBeforeClass}
         </p>
         <div className="form-actions">
           <button
@@ -177,14 +179,14 @@ export function StartLecture({
             disabled={busy}
             onClick={close}
           >
-            {ui.s211}
+            {ui.cancel}
           </button>
           <button
             className="button primary"
             disabled={busy || testing || !devices?.length}
           >
             <Icon name="mic" />
-            {busy ? ui.s212 : ui.s213}
+            {busy ? ui.startingRecording : ui.startRecording}
           </button>
         </div>
       </form>

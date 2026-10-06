@@ -14,25 +14,25 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
     <>
       <header className="page-heading">
         <div>
-          <h1>{ui.s080}</h1>
-          <p>{ui.s085(data.courses.length, count)}</p>
+          <h1>{ui.courses}</h1>
+          <p>{ui.courseLibrarySummary(data.courses.length, count)}</p>
         </div>
         <button className="button primary" onClick={onCreate}>
           <Icon name="plus" />
-          {ui.s082}
+          {ui.newCourse}
         </button>
       </header>
       {(!count || data.settings.speechProvider === 'none') && (
         <section className="notice setup-welcome">
           <div>
-            <strong>{'开始使用 LectureRelay'}</strong>
-            <p>{'先设置字幕并测试声音，再创建课程、开始录音。'}</p>
+            <strong>{ui.welcomeTitle}</strong>
+            <p>{ui.welcomeBody}</p>
           </div>
           <button
             className="button secondary"
             onClick={() => navigate({ view: 'settings', entry: 'setup' })}
           >
-            {'完成首次设置'}
+            {ui.completeFirstTimeSetup}
           </button>
         </section>
       )}
@@ -49,7 +49,7 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
                   <Icon name="books" size={26} />
                 </span>
                 <span className="pill">
-                  {'英文 →'}
+                  {ui.englishTo}
                   {languageName(course.assistanceLanguage)}
                 </span>
               </div>
@@ -60,7 +60,7 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
               {course.description && <p>{course.description}</p>}
               <div className="course-card-bottom">
                 <span>
-                  {course.lectureCount} {ui.s092}
+                  {course.lectureCount} {ui.lectureCountSuffix}
                 </span>
                 <Icon name="arrow" />
               </div>
@@ -70,8 +70,8 @@ export function CoursesPage({ onCreate }: { onCreate: () => void }) {
       ) : (
         <div className="empty-state inline-empty">
           <Icon name="books" size={30} />
-          <h3>{ui.s093}</h3>
-          <p>{ui.s094}</p>
+          <h3>{ui.noCoursesTitle}</h3>
+          <p>{ui.noCoursesBody}</p>
         </div>
       )}
       <LibraryPanel />

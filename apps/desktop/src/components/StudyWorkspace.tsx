@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ui } from '../i18n';
 
 export function StudyWorkspace({
   primary,
   secondary,
-  primaryLabel = '转录文本',
+  primaryLabel = ui.transcript,
 }: {
   primary: ReactNode;
   secondary: ReactNode;
@@ -48,10 +49,10 @@ export function StudyWorkspace({
     >
       <div className="workspace-switcher">
         {narrow ? (
-          <div className="tabs" role="tablist" aria-label="工作区面板">
+          <div className="tabs" role="tablist" aria-label={ui.workspacePanels}>
             {[
               ['primary', primaryLabel],
-              ['secondary', '学习工具'],
+              ['secondary', ui.studyTools],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -69,7 +70,9 @@ export function StudyWorkspace({
             aria-pressed={focus}
             onClick={() => setFocus(!focus)}
           >
-            {focus ? '显示学习工具' : '专注阅读' + primaryLabel.toLowerCase()}
+            {focus
+              ? ui.showStudyTools
+              : ui.focusOnPanel(primaryLabel.toLowerCase())}
           </button>
         )}
       </div>
@@ -89,7 +92,7 @@ export function StudyWorkspace({
           <div
             className="study-divider"
             role="separator"
-            aria-label="调整面板宽度"
+            aria-label={ui.resizePanels}
             aria-orientation="vertical"
             aria-valuenow={Math.round(ratio)}
             aria-valuemin={40}

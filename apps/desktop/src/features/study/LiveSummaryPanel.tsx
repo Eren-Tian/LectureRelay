@@ -3,12 +3,11 @@ import { listen } from '@tauri-apps/api/event';
 import { api, errorText } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { Modal } from '../../components/Modal';
+import { ui } from '../../i18n';
+import { messageText } from '../../i18n/messages';
 import { clock } from '../../lib/presentation';
 import type { SummaryState } from '../../types/domain';
-import {
-  LiveSummarySetup,
-  availableSummaryPreferences,
-} from './LiveSummarySetup';
+import { LiveSummarySetup } from './LiveSummarySetup';
 
 export function LiveSummaryPanel({
   id,
@@ -22,9 +21,7 @@ export function LiveSummaryPanel({
   onAppend: (body: string) => void;
 }) {
   const workspace = useWorkspace();
-  const preferences = availableSummaryPreferences(
-    workspace.data.settings.liveSummaries,
-  );
+  const preferences = workspace.data.settings.liveSummaries;
   const [state, setState] = useState<SummaryState>();
   const [setup, setSetup] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -101,20 +98,22 @@ export function LiveSummaryPanel({
     <div className="live-summary-panel">
       <header className="live-summary-heading">
         <div>
-          <h2>实时课堂要点</h2>
+          <h2>{ui.liveSummaryTitle}</h2>
         </div>
         <button className="text-button" onClick={() => setSetup(true)}>
-          设置总结
+          {ui.liveSummarySettingsButton}
         </button>
       </header>
       {preferences.enabled ? (
         <div className="summary-live-status" role="status">
           <span>
             {state?.busy || busy
-              ? '正在整理…'
+              ? ui.summaryInProgress
               : !live && (state?.remaining ?? 0) > 0
-                ? '剩余片段待整理'
-                : `正在收集新英文 · ${Math.floor(state?.collectingSeconds ?? 0)} 秒`}
+                ? ui.liveSummaryRemainingPending
+                : ui.liveSummaryCollecting(
+                    Math.floor(state?.collectingSeconds ?? 0),
+                  )}
           </span>
           <div className="button-row">
             <button
@@ -122,7 +121,9 @@ export function LiveSummaryPanel({
               disabled={busy || state?.busy || !state?.remaining}
               onClick={() => void generate()}
             >
-              {live ? '立即总结' : '整理剩余片段'}
+              {live
+                ? ui.liveSummarySummarizeNow
+                : ui.liveSummarySummarizeRemaining}
             </button>
             <button
               className="text-button"
@@ -133,27 +134,27 @@ export function LiveSummaryPanel({
                   .catch((e) => setError(errorText(e)))
               }
             >
-              关闭自动总结
+              {ui.liveSummaryTurnOffAuto}
             </button>
           </div>
         </div>
       ) : (
         <div className="summary-empty">
           <button className="button primary" onClick={() => setSetup(true)}>
-            设置实时总结
+            {ui.liveSummarySetUp}
           </button>
         </div>
       )}
       {(error || state?.message) && (
         <p className="notice warning" role="alert">
-          {error || state?.message}
+          {error || messageText(state?.message)}
         </p>
       )}
       {cards.map((card) => {
         const first = card.sources[0],
           last = card.sources[card.sources.length - 1];
         const outdated = card.state === 'stale';
-        const body = `\n\n### ${card.title || '课堂要点'} [${clock(first.startSeconds)}](#t=${first.startSeconds})\n\n${card.points
+        const body = `\n\n### ${card.title || ui.liveSummaryNoteHeadingFallback} [${clock(first.startSeconds)}](#t=${first.startSeconds})\n\n${card.points
           .map(
             (p) =>
               `- ${p.text} ${p.sourceIds
@@ -170,15 +171,15 @@ export function LiveSummaryPanel({
             key={card.id}
           >
             <header>
-              <strong>{card.title || '这一段课堂内容'}</strong>
+              <strong>{card.title || ui.liveSummaryCardFallbackTitle}</strong>
               <span className="summary-state">
                 {
                   {
-                    running: '整理中',
-                    completed: 'AI 要点',
-                    failed: '未完成',
-                    deferred: '已暂缓',
-                    stale: '原文已更改',
+                    running: ui.liveSummaryStateRunning,
+                    completed: ui.summaryAiPoints,
+                    failed: ui.liveSummaryStateFailed,
+                    deferred: ui.liveSummaryStateDeferred,
+                    stale: ui.liveSummaryStateStale,
                   }[card.state]
                 }
               </span>
@@ -201,7 +202,9 @@ export function LiveSummaryPanel({
                             <button
                               key={sourceId}
                               className="text-button"
-                              aria-label={`回听原文 ${clock(source.startSeconds)}`}
+                              aria-label={ui.liveSummaryReplaySourceAt(
+                                clock(source.startSeconds),
+                              )}
                               onClick={() =>
                                 void replay(
                                   card.id,
@@ -210,7 +213,8 @@ export function LiveSummaryPanel({
                                 )
                               }
                             >
-                              {clock(source.startSeconds)} · 回听
+                              {clock(source.startSeconds)}
+                              {ui.summaryReplaySuffix}
                             </button>
                           )
                         );
@@ -220,9 +224,11 @@ export function LiveSummaryPanel({
                 ))}
               </ul>
             )}
-            {card.message && <p className="notice warning">{card.message}</p>}
+            {card.message && (
+              <p className="notice warning">{messageText(card.message)}</p>
+            )}
             <details>
-              <summary>查看对应英文原文</summary>
+              <summary>{ui.liveSummaryViewEnglishSource}</summary>
               {card.sources.map((source) => (
                 <p className="summary-source" key={source.id}>
                   <button
@@ -244,7 +250,7 @@ export function LiveSummaryPanel({
                   disabled={outdated || card.state !== 'completed'}
                   onClick={() => onAppend(body)}
                 >
-                  加入我的笔记
+                  {ui.summaryAddToNotes}
                 </button>
               )}
               {card.state !== 'completed' && card.state !== 'running' && (
@@ -253,7 +259,7 @@ export function LiveSummaryPanel({
                   disabled={busy || state?.busy || !preferences.enabled}
                   onClick={() => void generate(card.id)}
                 >
-                  {outdated ? '重新整理' : '重试这一段'}
+                  {outdated ? ui.summaryRegenerate : ui.liveSummaryRetrySegment}
                 </button>
               )}
             </div>
@@ -262,12 +268,12 @@ export function LiveSummaryPanel({
       })}
       {clip && (
         <div className="summary-audio">
-          <p className="field-hint">回听所选原文，最多 60 秒</p>
+          <p className="field-hint">{ui.liveSummaryClipHint}</p>
           <audio controls autoPlay src={clip} />
         </div>
       )}
       {setup && (
-        <Modal title="设置实时总结" onClose={() => setSetup(false)}>
+        <Modal title={ui.liveSummarySetUp} onClose={() => setSetup(false)}>
           <LiveSummarySetup onSaved={() => void load()} />
         </Modal>
       )}

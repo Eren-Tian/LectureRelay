@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { api, pruneDeletedDrafts } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { Icon } from '../../components/Icon';
+import { ui } from '../../i18n';
 import type { ActionRunner } from '../../hooks/useAction';
 import { TrashCard } from '../trash/TrashCard';
 import { StorageUsage } from './StorageUsage';
@@ -35,7 +36,7 @@ export function StorageSettings({
     setStorageRevision((current) => current + 1);
     setRefreshWarning(
       results.some((result) => result.status === 'rejected')
-        ? '部分状态未能刷新，请重新打开设置核对。'
+        ? ui.storageRefreshWarning
         : '',
     );
   };
@@ -47,15 +48,15 @@ export function StorageSettings({
         </p>
       )}
       <section className="settings-card">
-        <h3>{'课堂资料'}</h3>
+        <h3>{ui.storageLectureDataTitle}</h3>
         <StorageUsage key={storageRevision} />
         <dl className="storage-list">
           <div>
-            <dt>{'资料库'}</dt>
+            <dt>{ui.storageLibraryLabel}</dt>
             <dd>{workspace.data.storage.library}</dd>
           </div>
           <div>
-            <dt>{'导出文件'}</dt>
+            <dt>{ui.storageExportsLabel}</dt>
             <dd>{workspace.data.storage.exports}</dd>
           </div>
         </dl>
@@ -65,30 +66,28 @@ export function StorageSettings({
             onClick={() => void run(() => api.openFolder('library'))}
           >
             <Icon name="folder" size={16} />
-            {'打开资料库文件夹'}
+            {ui.storageOpenLibraryFolder}
           </button>
           <button
             className="button text"
             onClick={() => void run(() => api.openFolder('exports'))}
           >
-            {'打开导出文件夹'}
+            {ui.storageOpenExportsFolder}
           </button>
         </div>
         <details className="settings-advanced">
-          <summary>{'存储位置'}</summary>
+          <summary>{ui.storageLocationsSummary}</summary>
           <dl className="storage-list">
             <div>
-              <dt>{'数据库'}</dt>
+              <dt>{ui.storageDatabaseLabel}</dt>
               <dd>{workspace.data.storage.database}</dd>
             </div>
             <div>
-              <dt>{'应用数据'}</dt>
+              <dt>{ui.storageAppDataLabel}</dt>
               <dd>{workspace.data.storage.state}</dd>
             </div>
           </dl>
-          <p className="field-hint">
-            {'备份时请同时保存资料库和数据库。转录与笔记可在课堂回放页导出。'}
-          </p>
+          <p className="field-hint">{ui.storageBackupHint}</p>
         </details>
       </section>
       <TrashCard
@@ -99,17 +98,9 @@ export function StorageSettings({
         onDeleted={async () => setStorageRevision((n) => n + 1)}
       />
       <section className="settings-card">
-        <h2>{'清空课堂数据与模型'}</h2>
-        <p>
-          {
-            '永久删除所有课程（含回收站）、录音、转录、笔记、复习指南、PDF、应用内导出文件、已下载模型及处理缓存。再次使用本地 AI 前需重新下载模型。'
-          }
-        </p>
-        <p className="field-hint">
-          {
-            '应用、偏好设置和 Windows 凭据管理器中的 API Key 会保留，也会保留少量数据库和界面设置文件。应用之外的文件副本不会删除。'
-          }
-        </p>
+        <h2>{ui.storageFreeAllTitle}</h2>
+        <p>{ui.storageFreeAllBody}</p>
+        <p className="field-hint">{ui.storageFreeAllKeepsHint}</p>
         <button
           className="button danger"
           disabled={blocked}
@@ -117,11 +108,11 @@ export function StorageSettings({
             void run(async () => {
               if (
                 !(await workspace.confirm({
-                  title: '清空全部课堂数据和模型？',
-                  body: '所有课程（含回收站）、录音、转录、笔记、复习指南、PDF、应用内导出文件、本地模型和处理缓存都会永久删除，无法恢复。请先导出需要保留的内容。偏好设置和 API Key 会保留。',
-                  action: '清空数据与模型',
+                  title: ui.storageFreeAllConfirmTitle,
+                  body: ui.storageFreeAllConfirmBody,
+                  action: ui.storageFreeAllConfirmAction,
                   danger: true,
-                  confirmationText: '清空全部数据',
+                  confirmationText: ui.storageFreeAllConfirmationPhrase,
                 }))
               )
                 return;
@@ -130,11 +121,11 @@ export function StorageSettings({
               } finally {
                 await refreshAfterCleanup();
               }
-              workspace.notify('课堂数据和模型已清空，存储空间已释放。');
+              workspace.notify(ui.storageFreeAllDone);
             })
           }
         >
-          {'清空课堂数据与模型…'}
+          {ui.storageFreeAllButton}
         </button>
       </section>
     </>

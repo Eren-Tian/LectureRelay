@@ -180,7 +180,8 @@ impl Storage {
         let lecture = self.lecture(id)?;
         if !seconds.is_finite()
             || seconds < 0.0
-            || (lecture.status != "recording" && seconds > lecture.duration_seconds + 0.1)
+            || (lecture.status != LectureStatus::Recording
+                && seconds > lecture.duration_seconds + 0.1)
             || label.trim().is_empty()
             || label.len() > 300
             || !matches!(kind, "bookmark" | "chapter")

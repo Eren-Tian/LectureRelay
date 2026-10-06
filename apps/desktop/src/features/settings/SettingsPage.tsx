@@ -4,6 +4,7 @@ import { useWorkspace } from '../../app/Workspace';
 import type { SettingsEntry } from '../../app/routes';
 import { Icon } from '../../components/Icon';
 import { useAction } from '../../hooks/useAction';
+import { ui } from '../../i18n';
 import { AISettings } from './AISettings';
 import { AboutSettings, PrivacySettings } from './ApplicationInfo';
 import { AudioSettings } from './AudioSettings';
@@ -61,15 +62,15 @@ export function SettingsPage({
     !!model?.downloading ||
     textModels.some((item) => item.downloading);
   const modelBlockedReason = workspace.recording
-    ? '请先结束并保存录音，再下载或删除模型。'
+    ? ui.settingsPageModelBlockedRecording
     : workspace.job
-      ? '请先等待当前 AI 任务完成，或取消任务，再管理模型。'
+      ? ui.settingsPageModelBlockedJob
       : workspace.live?.active
-        ? '字幕或翻译仍在处理，请等待完成，或在课堂记录中停止处理。'
+        ? ui.settingsPageModelBlockedLive
         : model?.downloading || textModels.some((item) => item.downloading)
-          ? '一次只能下载一个模型。请等待下载完成，或取消当前下载。'
+          ? ui.settingsPageModelBlockedDownload
           : busy
-            ? '请等待当前操作完成。'
+            ? ui.settingsPageModelBlockedBusy
             : '';
   const relevantResources: (keyof typeof resources.errors)[] =
     category === 'setup' || (category === 'ai' && aiSection === 'models')
@@ -97,7 +98,7 @@ export function SettingsPage({
   return (
     <div className="settings-page" ref={page}>
       <header className="page-heading settings-heading">
-        <h1>设置</h1>
+        <h1>{ui.settings}</h1>
       </header>
       <div className="settings-layout">
         <SettingsNavigation category={category} onSelect={select} />
@@ -113,7 +114,7 @@ export function SettingsPage({
                 disabled={busy}
                 onClick={resources.retry}
               >
-                重新加载
+                {ui.settingsPageReload}
               </button>
             </div>
           )}
@@ -133,12 +134,12 @@ export function SettingsPage({
               <div
                 className="settings-subnav"
                 role="group"
-                aria-label="课堂设置"
+                aria-label={ui.settingsPageClassroomAriaLabel}
               >
                 {(
                   [
-                    ['audio', '声音设备'],
-                    ['captions', '字幕样式'],
+                    ['audio', ui.settingsPageAudioDevicesTab],
+                    ['captions', ui.settingsPageCaptionStyleTab],
                   ] as const
                 ).map(([id, label]) => (
                   <button
@@ -183,7 +184,9 @@ export function SettingsPage({
           {dirty && !(category === 'ai' && aiSection === 'summaries') && (
             <div className="settings-savebar">
               <span role="status">
-                {blocked ? '当前任务结束后可保存修改' : '有未保存的修改'}
+                {blocked
+                  ? ui.settingsPageSaveAfterTask
+                  : ui.settingsPageUnsavedChanges}
               </span>
               <div className="button-row">
                 <button
@@ -191,7 +194,7 @@ export function SettingsPage({
                   disabled={busy}
                   onClick={draft.reset}
                 >
-                  撤销修改
+                  {ui.settingsPageRevertChanges}
                 </button>
                 <button
                   className="button primary"
@@ -200,11 +203,11 @@ export function SettingsPage({
                     void run(async () => {
                       await api.saveSettings(settings);
                       await workspace.refresh();
-                    }, '设置已保存。')
+                    }, ui.settingsPageSaved)
                   }
                 >
                   <Icon name="check" size={16} />
-                  保存修改
+                  {ui.saveChanges}
                 </button>
               </div>
             </div>

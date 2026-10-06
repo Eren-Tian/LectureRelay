@@ -1,5 +1,6 @@
 use super::capture::{CaptureHealth, CaptureQuality, build_stream, sample_queue};
 use crate::{
+    domain::InputSource,
     error::{AppResult, UserFacing},
     storage::write_atomic,
 };
@@ -33,7 +34,7 @@ pub struct RecordingStatus {
     pub sample_rate: u32,
     #[serde(flatten)]
     pub quality: CaptureQuality,
-    pub source: String,
+    pub source: InputSource,
     pub device_name: String,
 }
 
@@ -100,7 +101,7 @@ impl Recorder {
         path: PathBuf,
         recovery: PathBuf,
         device_id: String,
-        source: String,
+        source: InputSource,
     ) -> AppResult<()> {
         let mut sessions = self.0.lock().user_error("Recording status unavailable.")?;
         if sessions.is_some() {
@@ -213,7 +214,7 @@ struct RecordingContext<R: tauri::Runtime> {
     path: PathBuf,
     recovery: PathBuf,
     device_id: String,
-    source: String,
+    source: InputSource,
     paused: Arc<AtomicBool>,
     status: Arc<Mutex<RecordingStatus>>,
     controls: mpsc::Receiver<Control>,
@@ -237,7 +238,7 @@ fn record<R: tauri::Runtime>(
     } = context;
     let host = cpal::default_host();
     let device = if device_id.is_empty() {
-        if source == "system" {
+        if source == InputSource::System {
             host.default_output_device()
         } else {
             host.default_input_device()
@@ -250,13 +251,13 @@ fn record<R: tauri::Runtime>(
     }
     .ok_or("No audio device found. Connect it and check Windows audio permissions.")?;
     if let Ok(mut current) = status.lock() {
-        current.source = source.clone();
+        current.source = source;
         current.device_name = device
             .description()
             .map(|d| d.name().to_owned())
             .unwrap_or_else(|_| "Selected audio device".into());
     }
-    let config = (if source == "system" {
+    let config = (if source == InputSource::System {
         device.default_output_config()
     } else {
         device.default_input_config()

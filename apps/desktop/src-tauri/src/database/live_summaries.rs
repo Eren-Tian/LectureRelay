@@ -105,7 +105,7 @@ impl Storage {
         for card in &mut cards {
             if !current(&db, card)? {
                 card.state = "stale".into();
-                card.message = "对应原文或辅助语言已更改，请重新整理并核对。".into();
+                card.message = "The source text or assistance language changed. Summarize again and review it.".into();
                 db.execute(
                     "UPDATE live_summary_cards SET state='stale',message=?2 WHERE id=?1",
                     params![card.id, card.message],
@@ -125,16 +125,16 @@ impl Storage {
             .course(&self.lecture(lecture)?.course_id)?
             .assistance_language;
         if sources.is_empty() {
-            return Err("还没有新的已定稿英文。".into());
+            return Err("There is no newly finalized English yet.".into());
         }
         let unique: HashSet<_> = sources.iter().map(|s| s.id.as_str()).collect();
         if unique.len() != sources.len() {
-            return Err("总结原文重复，请重新选择。".into());
+            return Err("The summary sources are duplicated. Select them again.".into());
         }
         let card = SummaryCard {
             id: new_id(),
             lecture_id: lecture.into(),
-            provider: preferences.provider.clone(),
+            provider: preferences.provider.as_str().into(),
             model: preferences.model.clone(),
             language,
             sources,
@@ -147,7 +147,7 @@ impl Storage {
         let mut db = self.lock()?;
         let tx = db.transaction().user_error("Cannot reserve a summary.")?;
         if !current(&tx, &card)? {
-            return Err("原文已更改，请重试。".into());
+            return Err("The source text changed. Try again.".into());
         }
         let covered: HashSet<_> = {
             let mut query = tx
@@ -167,7 +167,9 @@ impl Storage {
             covered
         };
         if card.sources.iter().any(|s| covered.contains(&s.id)) {
-            return Err("这段原文已有总结任务，请查看现有卡片或重试。".into());
+            return Err(
+                "This source text already has a summary. Check the existing card or retry.".into(),
+            );
         }
         tx.execute("INSERT INTO live_summary_cards(id,lecture_id,provider,model,language,sources,state,created_at,updated_at) VALUES(?1,?2,?3,?4,?5,?6,'running',?7,?7)",params![card.id,lecture,card.provider,card.model,card.language,serde_json::to_string(&card.sources).user_error("Cannot encode summary sources.")?,card.created_at]).user_error("Cannot save summary input. No request was sent.")?;
         tx.commit().user_error("Cannot save summary input.")?;
@@ -183,9 +185,9 @@ impl Storage {
             .summary_cards(lecture)?
             .into_iter()
             .find(|c| c.id == id)
-            .ok_or("找不到这张总结卡片。")?;
+            .ok_or("This summary card was not found.")?;
         if card.state == "running" {
-            return Err("这段正在整理，请稍候。".into());
+            return Err("This section is being summarized. Please wait.".into());
         }
         let actual = self.segments(lecture)?;
         let mut sources = Vec::new();
@@ -193,11 +195,11 @@ impl Storage {
             let s = actual
                 .iter()
                 .find(|s| s.id == old.id && s.status == "final")
-                .ok_or("原文已删除，无法重试这段总结。")?;
+                .ok_or("The source text was deleted, so this summary cannot be retried.")?;
             sources.push(SummarySource::from(s));
         }
         card.sources = sources;
-        card.provider = preferences.provider.clone();
+        card.provider = preferences.provider.as_str().into();
         card.model = preferences.model.clone();
         card.language = self
             .course(&self.lecture(lecture)?.course_id)?
@@ -215,7 +217,7 @@ impl Storage {
         let mut db = self.lock()?;
         let tx = db.transaction().user_error("Cannot save live summary.")?;
         let matches = current(&tx, card)?;
-        tx.execute("UPDATE live_summary_cards SET title=?2,points=?3,state=?4,message=?5,updated_at=?6 WHERE id=?1 AND state='running'",params![card.id,title,serde_json::to_string(points).user_error("Cannot encode summary.")?,if matches {"completed"} else {"stale"},if matches {""} else {"原文已更改，未将旧结果作为最新总结。请重试。"},now()]).user_error("Cannot save live summary.")?;
+        tx.execute("UPDATE live_summary_cards SET title=?2,points=?3,state=?4,message=?5,updated_at=?6 WHERE id=?1 AND state='running'",params![card.id,title,serde_json::to_string(points).user_error("Cannot encode summary.")?,if matches {"completed"} else {"stale"},if matches {""} else {"The source text changed, so the old result was not used as the latest summary. Try again."},now()]).user_error("Cannot save live summary.")?;
         tx.commit().user_error("Cannot save live summary.")?;
         Ok(matches)
     }
@@ -223,7 +225,7 @@ impl Storage {
         self.lock()?.execute("UPDATE live_summary_cards SET state=?2,message=?3,updated_at=?4 WHERE id=?1 AND state='running'",params![id,state,message,now()]).user_error("Cannot save summary outcome.")?;
         Ok(())
     }
-    pub fn summary_tested(&self, provider: &str, model: Option<&str>) -> AppResult<()> {
+    pub fn summary_tested(&self, provider: CloudProvider, model: Option<&str>) -> AppResult<()> {
         let key = format!("summary-test/{provider}");
         if let Some(model) = model {
             self.lock()?.execute("INSERT INTO app_settings(key,value) VALUES(?1,?2) ON CONFLICT(key) DO UPDATE SET value=excluded.value", params![key,model]).user_error("Cannot save connection test.")?;
@@ -234,7 +236,7 @@ impl Storage {
         }
         Ok(())
     }
-    pub fn summary_test_matches(&self, provider: &str, model: &str) -> AppResult<bool> {
+    pub fn summary_test_matches(&self, provider: CloudProvider, model: &str) -> AppResult<bool> {
         self.lock()?
             .query_row(
                 "SELECT EXISTS(SELECT 1 FROM app_settings WHERE key=?1 AND value=?2)",

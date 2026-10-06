@@ -1,5 +1,8 @@
 use super::capture::{CaptureHealth, build_stream};
-use crate::error::{AppResult, UserFacing};
+use crate::{
+    domain::InputSource,
+    error::{AppResult, UserFacing},
+};
 use cpal::{
     SampleFormat,
     traits::{DeviceTrait, HostTrait, StreamTrait},
@@ -25,12 +28,12 @@ pub struct PreviewLevel {
 pub fn test(
     app: &tauri::AppHandle,
     id: String,
-    source: String,
+    source: InputSource,
     device_id: String,
 ) -> AppResult<f32> {
     let host = cpal::default_host();
     let device = if device_id.is_empty() {
-        if source == "system" {
+        if source == InputSource::System {
             host.default_output_device()
         } else {
             host.default_input_device()
@@ -43,7 +46,7 @@ pub fn test(
         )
     }
     .ok_or("Audio device unavailable. Connect it and refresh devices.")?;
-    let config = (if source == "system" {
+    let config = (if source == InputSource::System {
         device.default_output_config()
     } else {
         device.default_input_config()

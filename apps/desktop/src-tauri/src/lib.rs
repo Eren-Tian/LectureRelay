@@ -16,3 +16,5 @@ mod tests;
 pub use app::{AppState, run};
 #[doc(hidden)]
 pub use audio::Recorder;
+#[doc(hidden)]
+pub use domain::InputSource;

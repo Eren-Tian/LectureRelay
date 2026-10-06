@@ -30,16 +30,16 @@ export function QuestionsPanel({
     <section className="review-panel">
       <div className="section-heading">
         <div>
-          <h2>{ui.s159}</h2>
-          <p>{ui.s160}</p>
+          <h2>{ui.questionsTitle}</h2>
+          <p>{ui.questionsDescription}</p>
         </div>
         <span className="pill">{cloud}</span>
       </div>
       {!answers.length && (
         <div className="empty-state question-empty">
           <Icon name="search" size={32} />
-          <h3>{ui.s161}</h3>
-          <p>{ui.s162}</p>
+          <h3>{ui.noQuestionsTitle}</h3>
+          <p>{ui.noQuestionsBody}</p>
         </div>
       )}
       <div className="answer-list">
@@ -49,8 +49,8 @@ export function QuestionsPanel({
             <MarkdownBody body={answer.answer} />
             <details>
               <summary>
-                {ui.s163}
-                {answer.sources.length} {ui.s164}
+                {ui.viewEvidencePrefix}
+                {answer.sources.length} {ui.segmentCountSuffix}
               </summary>
               <div className="source-chips">
                 {answer.sources.map((source, index) => (
@@ -70,7 +70,7 @@ export function QuestionsPanel({
         ))}
       </div>
       <form className="question-form" onSubmit={ask}>
-        <label htmlFor="lecture-question">{ui.s165}</label>
+        <label htmlFor="lecture-question">{ui.askThisLecture}</label>
         <div>
           <textarea
             id="lecture-question"
@@ -79,25 +79,25 @@ export function QuestionsPanel({
             maxLength={2000}
             value={question}
             onChange={(event) => setQuestion(event.target.value)}
-            placeholder={ui.s166}
+            placeholder={ui.questionPlaceholder}
             disabled={blocked || !segments.length}
           />
           <button
             className="button primary"
             disabled={blocked || !question.trim() || !segments.length}
           >
-            {ui.s167}
+            {ui.ask}
             <Icon name="arrow" size={17} />
           </button>
         </div>
         <p>
           {local ? (
-            '问答在本机运行，依据检索到的课堂片段作答。请查看引用核对答案；系统复习整节课可使用“整堂复习”。'
+            ui.localQuestionNotice
           ) : (
             <>
-              {ui.s168}
+              {ui.cloudQuestionNoticePrefix}
               {cloud}
-              {ui.s169}
+              {ui.cloudQuestionNoticeSuffix}
             </>
           )}
         </p>

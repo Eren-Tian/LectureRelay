@@ -228,7 +228,8 @@ fn prepare_isolated_native_ui_fixture() {
         wav.write_sample(tone).unwrap();
     }
     wav.finalize().unwrap();
-    db.finish_lecture(&lecture.id, 12.0, "completed").unwrap();
+    db.finish_lecture(&lecture.id, 12.0, LectureStatus::Completed)
+        .unwrap();
     for (start, end, source, translation) in [
         (1.0, 3.0, "Mitochondria generate ATP.", "线粒体产生 ATP。"),
         (

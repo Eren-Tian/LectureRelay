@@ -1,4 +1,5 @@
 import { api, pruneDeletedDrafts } from '../../api/client';
+import { ui } from '../../i18n';
 import { useWorkspace } from '../../app/Workspace';
 import { Icon } from '../../components/Icon';
 import { useAction } from '../../hooks/useAction';
@@ -24,21 +25,17 @@ export function DeleteLecture({
     <button
       className="button text danger-text"
       disabled={blocked}
-      aria-label={`删除课堂记录：${lecture.title}`}
-      title={
-        blocked
-          ? '请先结束录音和 AI 处理，再删除课堂记录。'
-          : '永久删除这节课堂记录'
-      }
+      aria-label={ui.deleteLectureLabel(lecture.title)}
+      title={blocked ? ui.deleteLectureBlockedHint : ui.deleteLectureHint}
       onClick={() =>
         void run(async () => {
           if (
             !(await workspace.confirm({
-              title: '永久删除这节课堂记录？',
-              body: `将永久删除“${lecture.title}”及其录音、转录、笔记、复习指南和应用内导出文件。课程、术语表、PDF 及其他课堂记录会保留。删除后无法恢复。`,
-              action: '删除课堂记录',
+              title: ui.deleteLectureTitle,
+              body: ui.deleteLectureBody(lecture.title),
+              action: ui.deleteLecture,
               danger: true,
-              confirmationText: '删除',
+              confirmationText: ui.deleteConfirmationPhrase,
             }))
           )
             return;
@@ -53,12 +50,12 @@ export function DeleteLecture({
             await workspace.refresh();
           }
           await onDeleted?.();
-          workspace.notify('课堂记录已删除。');
+          workspace.notify(ui.lectureDeleted);
         })
       }
     >
       <Icon name="trash" size={16} />
-      {busy ? '正在删除…' : '删除课堂记录'}
+      {busy ? ui.deleting : ui.deleteLecture}
     </button>
   );
 }

@@ -1,24 +1,25 @@
 import { Icon, type IconName } from '../../components/Icon';
+import { ui } from '../../i18n';
 
 export type SettingsCategory =
   'setup' | 'general' | 'classroom' | 'ai' | 'storage' | 'privacy' | 'about';
 export type AISection = 'services' | 'models' | 'summaries';
 
 export const settingsTitles: Record<SettingsCategory, string> = {
-  setup: '首次设置',
-  general: '通用',
-  classroom: '声音与字幕',
-  ai: 'AI 与模型',
-  storage: '数据与存储',
-  privacy: '安全与隐私',
-  about: '关于',
+  setup: ui.settingsNavSetup,
+  general: ui.settingsNavGeneral,
+  classroom: ui.settingsNavClassroom,
+  ai: ui.settingsNavAI,
+  storage: ui.settingsNavStorage,
+  privacy: ui.privacy,
+  about: ui.about,
 };
 const groups: {
   label: string;
   items: { id: SettingsCategory; icon: IconName }[];
 }[] = [
   {
-    label: '日常使用',
+    label: ui.settingsNavEverydayGroup,
     items: [
       { id: 'general', icon: 'settings' },
       { id: 'classroom', icon: 'mic' },
@@ -26,7 +27,7 @@ const groups: {
     ],
   },
   {
-    label: '应用管理',
+    label: ui.settingsNavAppGroup,
     items: [
       { id: 'storage', icon: 'folder' },
       { id: 'privacy', icon: 'shield' },
@@ -43,14 +44,14 @@ export function SettingsNavigation({
   onSelect: (category: SettingsCategory) => void;
 }) {
   return (
-    <nav className="settings-nav" aria-label="设置分类">
+    <nav className="settings-nav" aria-label={ui.settingsNavAriaLabel}>
       <button
         className="settings-setup-link"
         aria-current={category === 'setup' ? 'page' : undefined}
         onClick={() => onSelect('setup')}
       >
         <Icon name="check" size={18} />
-        首次设置
+        {ui.settingsNavSetup}
       </button>
       {groups.map((group) => (
         <div className="settings-nav-group" key={group.label}>

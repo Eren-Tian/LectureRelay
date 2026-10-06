@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import { useLayoutEffect, useRef, useState } from 'react';
 import { Icon } from '../../components/Icon';
 import { clock, languageName } from '../../lib/presentation';
@@ -94,7 +95,7 @@ export function LiveCaptions({
         className="caption-scroll"
         ref={area}
         tabIndex={0}
-        aria-label="实时字幕"
+        aria-label={ui.liveCaptions}
         onWheel={(e) => {
           if (e.deltaY < 0) following.current = false;
         }}
@@ -114,13 +115,17 @@ export function LiveCaptions({
           {!segments.length && !draft?.partialText && (
             <div className="caption-placeholder">
               <Icon name="books" size={28} />
-              <h3>{listening ? '等待声音' : '正在保存录音'}</h3>
+              <h3>
+                {listening
+                  ? ui.captionsWaitingForAudioTitle
+                  : ui.captionsSavingRecordingTitle}
+              </h3>
               <p>
                 {listening
                   ? settings.translationMode === 'local' && translation.enabled
-                    ? '英文字幕会随讲话更新。本地翻译会先显示临时译文，再根据完整原文更新。'
-                    : '英文字幕会随讲话更新。'
-                  : '实时字幕已关闭，录音仍会保存，课后可以回放。'}
+                    ? ui.captionsPlaceholderLocalTranslationHint
+                    : ui.captionsPlaceholderHint
+                  : ui.captionsOffHint}
               </p>
             </div>
           )}
@@ -168,16 +173,16 @@ export function LiveCaptions({
                       ) : (
                         <p className="translation-placeholder">
                           {!translation.enabled
-                            ? '实时翻译已关闭'
+                            ? ui.captionsTranslationOff
                             : !translation.configured
                               ? settings.translationMode === 'local'
-                                ? '请在“设置 → 本地 AI”下载翻译模型'
-                                : '请在设置中选择翻译服务'
+                                ? ui.captionsDownloadTranslationModel
+                                : ui.captionsChooseTranslationProvider
                               : translation.deferredIds.includes(segment.id)
-                                ? '课后可以重新翻译'
+                                ? ui.captionsTranslateAfterClass
                                 : translation.pendingIds.includes(segment.id)
-                                  ? `正在翻译为${target}…`
-                                  : '暂时无法翻译，课后可重试'}
+                                  ? ui.captionsTranslatingTo(target)
+                                  : ui.captionsTranslationFailed}
                         </p>
                       )}
                     </div>
@@ -193,7 +198,7 @@ export function LiveCaptions({
               >
                 <time>
                   {clock(draft.startSeconds)}
-                  <span>{'识别中'}</span>
+                  <span>{ui.captionsDraftBadge}</span>
                 </time>
                 {settings.showEnglish && (
                   <p
@@ -215,11 +220,11 @@ export function LiveCaptions({
                       <p className="translation-placeholder">
                         {translation.enabled && translation.configured
                           ? settings.translationMode === 'local'
-                            ? `正在等待稳定的英文片段，随后翻译为${target}…`
-                            : `译文语言：${target}，英文定稿后开始翻译`
+                            ? ui.captionsDraftLocalWaiting(target)
+                            : ui.captionsDraftCloudWaiting(target)
                           : !settings.showEnglish
-                            ? '正在识别英文…'
-                            : '句子尚未说完…'}
+                            ? ui.captionsRecognizingEnglish
+                            : ui.captionsSentenceInProgress}
                       </p>
                     )}
                   </div>
@@ -240,7 +245,7 @@ export function LiveCaptions({
             remember();
           }}
         >
-          {'回到最新字幕'}
+          {ui.jumpToLive}
           <Icon name="arrow" size={16} />
         </button>
       )}

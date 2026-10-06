@@ -2,7 +2,7 @@
 use super::*;
 use crate::{
     AppState,
-    domain::TranscriptSegment,
+    domain::{ProcessingMode, TranscriptSegment},
     error::{AppResult, UserFacing},
     models::{catalog, manager},
 };
@@ -21,6 +21,7 @@ use std::{
 use tokio::sync::Mutex;
 
 pub(super) const OUTPUT_LIMIT: &str = "Local AI reached its output limit. Completed review sections are saved; retry the remaining work.";
+// i18n-exempt: internal cancellation sentinel, filtered before display
 pub(crate) const SUPERSEDED: &str = "Live translation preview superseded.";
 const CONTEXT_LIMIT: &str =
     "This text exceeds the local model context. Shorten the requested focus or course background.";
@@ -43,10 +44,10 @@ impl Role {
             Self::Study => catalog::STUDY,
         }
     }
-    pub fn mode(self, settings: &crate::domain::AppSettings) -> &str {
+    pub fn mode(self, settings: &crate::domain::AppSettings) -> ProcessingMode {
         match self {
-            Self::Translation => &settings.translation_mode,
-            Self::Study => &settings.study_mode,
+            Self::Translation => settings.translation_mode,
+            Self::Study => settings.study_mode,
         }
     }
 }
@@ -58,14 +59,14 @@ pub fn configured_text(
 ) -> AppResult<Box<dyn Provider + '_>> {
     let settings = state.storage.settings()?;
     match role.mode(&settings) {
-        "local" => {
+        ProcessingMode::Local => {
             let model = catalog::get(match role {
                 Role::Translation => &settings.translation_model,
                 Role::Study => role.model(),
             })?;
             if !manager::status_for(state, model.id)?.installed {
                 return Err(format!(
-                    "Download {} in Settings → Local AI first. No text has been uploaded.",
+                    "Download {} in Settings → AI & models → Local models first. No text has been uploaded.",
                     model.name
                 ));
             }
@@ -76,8 +77,10 @@ pub fn configured_text(
                 worker: Mutex::new(None),
             }))
         }
-        "cloud" => Ok(Box::new(configured(&settings)?)),
-        _ => Err("This AI feature is off. Choose a model in Settings → AI Providers.".into()),
+        ProcessingMode::Cloud => Ok(Box::new(configured(&settings)?)),
+        ProcessingMode::None => {
+            Err("This AI feature is off. Choose a model in Settings → AI & models.".into())
+        }
     }
 }
 

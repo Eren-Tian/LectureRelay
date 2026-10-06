@@ -105,29 +105,29 @@ export function LecturePage({ id }: { id: string }) {
       kind === 'transcription' &&
       workspace.data.settings.speechProvider === 'local';
     if (!configured && !localSpeech) {
-      workspace.notify(ui.s096, true);
+      workspace.notify(ui.chooseAiProviderFirst, true);
       workspace.navigate({ view: 'settings', entry: 'services' });
       return;
     }
     const action =
       kind === 'transcription'
-        ? ui.s097
+        ? ui.transcribeAndTranslate
         : kind === 'translation'
-          ? ui.s098
-          : ui.s099;
+          ? ui.translateTranscript
+          : ui.generateNotes;
     const body =
       kind === 'transcription'
         ? localSpeech
           ? ui.localPrivacy
-          : ui.s100(cloud)
+          : ui.cloudTranscriptionConsent(cloud)
         : kind === 'notes'
-          ? ui.s101(
+          ? ui.cloudNotesConsent(
               cloud,
               note || editingNote
-                ? '此操作将替换当前笔记。请先保存或导出需要保留的版本。'
-                : '生成的笔记会保存在本机。',
+                ? ui.notesReplaceWarning
+                : ui.generatedNotesStayLocal,
             )
-          : ui.s102(cloud);
+          : ui.cloudTranslationConsent(cloud);
     if (
       !(await workspace.confirm({
         title: `${action} · ${localSpeech ? ui.localSpeech : cloud}`,
@@ -147,7 +147,7 @@ export function LecturePage({ id }: { id: string }) {
             : api.generateNotes(id);
       try {
         await pending;
-        workspace.notify(ui.s103(action));
+        workspace.notify(ui.actionCompleted(action));
       } finally {
         await reload();
         await workspace.refresh();
@@ -163,25 +163,25 @@ export function LecturePage({ id }: { id: string }) {
       return;
     }
     element.currentTime = seconds;
-    void element.play().catch(() => workspace.notify(ui.s104));
+    void element.play().catch(() => workspace.notify(ui.pressPlayInPlayer));
   };
   const exportFile = (
     kind: 'notes' | 'transcript-json' | 'transcript-markdown',
   ) =>
     void run(async () => {
       await api.export(id, kind);
-      workspace.notify(ui.s105);
+      workspace.notify(ui.fileExported);
     });
   const saveNote = () =>
     void run(async () => {
       await api.saveNote(id, draft);
       setEditingNote(false);
       await reload();
-    }, ui.s106);
+    }, ui.notesSaved);
   const ask = (event: FormEvent) => {
     event.preventDefault();
     if (!configured) {
-      workspace.notify(ui.s107, true);
+      workspace.notify(ui.configureAiProviderFirst, true);
       return;
     }
     void run(async () => {
@@ -192,7 +192,7 @@ export function LecturePage({ id }: { id: string }) {
         await reload();
         await workspace.refresh();
       }
-    }, ui.s108);
+    }, ui.answerSaved);
   };
   const fullyTranscribed =
     lecture.durationSeconds > 0 &&
@@ -208,11 +208,11 @@ export function LecturePage({ id }: { id: string }) {
       </button>
       <header className="page-heading">
         <div>
-          <div className="eyebrow">{'课堂回放'}</div>
+          <div className="eyebrow">{ui.lectureReplay}</div>
           <h1>{lecture.title}</h1>
           <p>
             {dateText(lecture.startedAt)} · {clock(lecture.durationSeconds)}
-            {'· 英文 →'}
+            {ui.metaEnglishTo}
             {languageName(course.assistanceLanguage)}
           </p>
         </div>
@@ -220,16 +220,16 @@ export function LecturePage({ id }: { id: string }) {
           className={`pill ${lecture.status === 'interrupted' ? 'gold' : ''}`}
         >
           {lecture.status === 'interrupted'
-            ? ui.s109
+            ? ui.recordingRecovered
             : lecture.status === 'failed'
               ? lecture.audioSource === 'import'
-                ? '导入失败'
-                : ui.s110
-              : ui.s111}
+                ? ui.importFailed
+                : ui.recordingDidNotStart
+              : ui.savedLocally}
         </span>
       </header>
       {lecture.status === 'interrupted' && (
-        <div className="notice warning">{ui.s112}</div>
+        <div className="notice warning">{ui.interruptedLectureWarning}</div>
       )}
       {ownLive?.active && !workspace.recording && (
         <div className="job-banner" role="status">
@@ -265,8 +265,8 @@ export function LecturePage({ id }: { id: string }) {
           <Icon name="play" size={22} />
         </span>
         <div>
-          <h3>{ui.s113}</h3>
-          <p>{ui.s114}</p>
+          <h3>{ui.recordingInProgress}</h3>
+          <p>{ui.replayPlayerHint}</p>
         </div>
         {lecture.durationSeconds > 0 ? (
           <audio
@@ -285,31 +285,31 @@ export function LecturePage({ id }: { id: string }) {
                 void event.currentTarget.play().catch(() => {});
               }
             }}
-            onError={() => workspace.notify(ui.s115, true)}
+            onError={() => workspace.notify(ui.audioPlaybackFailed, true)}
           />
         ) : (
-          <span className="muted">{ui.s116}</span>
+          <span className="muted">{ui.noPlayableAudio}</span>
         )}
         {lecture.durationSeconds > 0 && (
           <div className="playback-tools">
             <button
               className="button secondary"
-              aria-label="后退 10 秒"
+              aria-label={ui.rewind10Seconds}
               onClick={() => skip(-10)}
             >
               −10s
             </button>
             <button
               className="button secondary"
-              aria-label="快进 10 秒"
+              aria-label={ui.forward10Seconds}
               onClick={() => skip(10)}
             >
               +10s
             </button>
             <label>
-              {'播放速度'}
+              {ui.playbackSpeed}
               <select
-                aria-label="播放速度"
+                aria-label={ui.playbackSpeed}
                 value={speed}
                 onChange={(e) => {
                   const rate = Number(e.target.value);
@@ -328,7 +328,7 @@ export function LecturePage({ id }: { id: string }) {
         )}
       </section>
       <div className="review-nav">
-        <div className="tabs" role="tablist" aria-label={ui.s117}>
+        <div className="tabs" role="tablist" aria-label={ui.lectureReview}>
           {(['transcript', 'notes', 'questions'] as const).map((item) => (
             <button
               role="tab"
@@ -338,17 +338,17 @@ export function LecturePage({ id }: { id: string }) {
               onClick={() => setTab(item)}
             >
               {item === 'transcript'
-                ? ui.s118
+                ? ui.transcript
                 : item === 'notes'
-                  ? ui.s119
-                  : ui.s120}
+                  ? ui.notes
+                  : ui.askThisLecture}
               {item === 'transcript' && <span>{segments.length}</span>}
             </button>
           ))}
         </div>
         <span className="review-mode">
           <Icon name="shield" size={15} />
-          {ui.s121}
+          {ui.aiOnDemand}
         </span>
       </div>
       {ownJob && (
@@ -357,16 +357,20 @@ export function LecturePage({ id }: { id: string }) {
           <div>
             <strong>
               {ownJob.kind === 'transcription'
-                ? ui.s122
+                ? ui.jobTranscribingAndTranslating
                 : ownJob.kind === 'translation'
-                  ? ui.s123
+                  ? ui.jobTranslatingTranscript
                   : ownJob.kind === 'notes'
-                    ? ui.s124
-                    : ui.s125}
+                    ? ui.jobGeneratingNotes
+                    : ui.jobFindingEvidence}
             </strong>
             <p>
-              {ownJob.total ? ui.s126(ownJob.completed, ownJob.total) : ''}
-              {ownJob.cancelling ? ui.s127 : ui.s128}
+              {ownJob.total
+                ? ui.jobProgress(ownJob.completed, ownJob.total)
+                : ''}
+              {ownJob.cancelling
+                ? ui.jobCancelling
+                : ui.jobSavedContentPreserved}
             </p>
           </div>
           <button
@@ -374,7 +378,7 @@ export function LecturePage({ id }: { id: string }) {
             disabled={ownJob.cancelling}
             onClick={() => void run(() => api.cancelJob())}
           >
-            {ui.s129}
+            {ui.cancelTask}
           </button>
         </div>
       )}
@@ -382,9 +386,9 @@ export function LecturePage({ id }: { id: string }) {
         <section className="review-panel">
           <div className="section-heading">
             <div>
-              <h2>{ui.s130}</h2>
+              <h2>{ui.transcript}</h2>
               <p>
-                {'英文 ·'}
+                {ui.englishDot}
                 {languageName(course.assistanceLanguage)}
               </p>
             </div>
@@ -395,7 +399,7 @@ export function LecturePage({ id }: { id: string }) {
                 onClick={() => setSegment('new')}
               >
                 <Icon name="plus" size={16} />
-                {ui.s131}
+                {ui.addSegment}
               </button>
               <button
                 className="button secondary"
@@ -404,7 +408,7 @@ export function LecturePage({ id }: { id: string }) {
                 }
                 onClick={() => void beginAI('translation')}
               >
-                {ui.s132}
+                {ui.translate}
               </button>
               <button
                 className="button primary"
@@ -415,10 +419,10 @@ export function LecturePage({ id }: { id: string }) {
               >
                 <Icon name="spark" size={17} />
                 {fullyTranscribed
-                  ? ui.s133
+                  ? ui.transcriptionComplete
                   : lecture.transcribedUntil > 0
-                    ? ui.s134
-                    : ui.s135}
+                    ? ui.continueTranscription
+                    : ui.transcribeRecording}
               </button>
             </div>
           </div>
@@ -428,20 +432,23 @@ export function LecturePage({ id }: { id: string }) {
                 <Icon name="search" size={18} />
                 <input
                   type="search"
-                  aria-label="搜索转录文本"
-                  placeholder="搜索英文原文或译文…"
+                  aria-label={ui.searchTranscript}
+                  placeholder={ui.searchTranscriptPlaceholder}
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                 />
               </label>
               <span role="status">
                 {query
-                  ? `${visibleSegments.length} / ${segments.length} 段`
-                  : `${segments.length} 段`}
+                  ? ui.transcriptMatchCount(
+                      visibleSegments.length,
+                      segments.length,
+                    )
+                  : ui.transcriptSegmentCount(segments.length)}
               </span>
               {search && (
                 <button className="button text" onClick={() => setSearch('')}>
-                  {'清空搜索'}
+                  {ui.clearSearch}
                 </button>
               )}
             </div>
@@ -450,7 +457,7 @@ export function LecturePage({ id }: { id: string }) {
             <div className="transcript-list">
               {visibleSegments.length === 0 && (
                 <p className="empty-state" role="status">
-                  {'没有找到匹配的字幕。'}
+                  {ui.noMatchingCaptions}
                 </p>
               )}
               {visibleSegments.map(({ entry, index }) => (
@@ -461,7 +468,7 @@ export function LecturePage({ id }: { id: string }) {
                   <button
                     className="timestamp"
                     onClick={() => seek(entry.startSeconds)}
-                    aria-label={ui.s136(clock(entry.startSeconds))}
+                    aria-label={ui.playSegmentAt(clock(entry.startSeconds))}
                   >
                     {clock(entry.startSeconds)}
                     <Icon name="play" size={11} />
@@ -482,18 +489,20 @@ export function LecturePage({ id }: { id: string }) {
                           query={search.trim()}
                         />
                       ) : ownLive?.active && ownLive.translationQueue > 0 ? (
-                        ui.s137
+                        ui.translationPending
                       ) : (
                         ui.noTranslationSaved
                       )}
                     </p>
                     <span className="segment-origin">
-                      {entry.origin === 'manual' ? ui.s138 : ui.s139(index + 1)}
+                      {entry.origin === 'manual'
+                        ? ui.segmentCorrected
+                        : ui.segmentNumber(index + 1)}
                     </span>
                   </div>
                   <button
                     className="icon-button segment-edit"
-                    aria-label={ui.s140(clock(entry.startSeconds))}
+                    aria-label={ui.correctSegmentAt(clock(entry.startSeconds))}
                     disabled={blocked}
                     onClick={() => setSegment(entry)}
                   >
@@ -504,12 +513,12 @@ export function LecturePage({ id }: { id: string }) {
             </div>
           ) : (
             <div className="empty-state">
-              <h3>{ui.s141}</h3>
-              <p>{ui.s142}</p>
+              <h3>{ui.emptyTranscriptTitle}</h3>
+              <p>{ui.emptyTranscriptBody}</p>
             </div>
           )}
           <div className="review-footer">
-            <span>{ui.s143}</span>
+            <span>{ui.cloudProcessingNotice}</span>
             <div className="button-row">
               <button
                 className="text-button"

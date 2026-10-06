@@ -2,7 +2,7 @@
 use crate::{
     AppState,
     database::review::{ReviewCheckpoint, ReviewPart},
-    domain::new_id,
+    domain::{ProcessingMode, new_id},
     error::{AppResult, UserFacing},
     providers::{NotesProvider, local},
 };
@@ -37,13 +37,13 @@ pub(crate) fn fingerprint(state: &AppState, id: &str, request: &str) -> AppResul
             .storage
             .course(&detail.lecture.course_id)?
             .assistance_language,
-        &settings.study_mode,
-        if settings.study_mode == "local" {
+        settings.study_mode,
+        if settings.study_mode == ProcessingMode::Local {
             crate::models::catalog::STUDY
         } else {
-            &settings.provider
+            settings.provider.as_str()
         },
-        if settings.study_mode == "cloud" {
+        if settings.study_mode == ProcessingMode::Cloud {
             &settings.chat_model
         } else {
             crate::models::catalog::get(crate::models::catalog::STUDY)?.sha256
@@ -133,7 +133,7 @@ pub async fn run(state: &AppState, id: &str, request: &str, resume: Option<&str>
                 .storage
                 .course(&detail.lecture.course_id)?
                 .assistance_language,
-            origin: if settings.study_mode == "local" {
+            origin: if settings.study_mode == ProcessingMode::Local {
                 "local"
             } else {
                 "cloud"
@@ -254,6 +254,7 @@ async fn generate(
         .enumerate()
         .map(|(i, p)| {
             let heading = if review.language == "zh" {
+                // i18n-exempt: generated study document content
                 format!("第 {} 段", i + 1)
             } else {
                 format!("Section {}", i + 1)
@@ -273,6 +274,7 @@ async fn generate(
         .join("\n\n");
     let coverage = if review.language == "zh" {
         format!(
+            // i18n-exempt: generated study document content
             "## 分段课堂要点\n\n已覆盖全部 {} 段原文。",
             review.parts.len()
         )
@@ -285,10 +287,7 @@ async fn generate(
     };
     let body = format!("# {title}\n\n{overview}\n\n---\n\n{coverage}\n\n{sections}");
     // Course edits and publication share this gate; no mixed-version publish after validation.
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     checkpoint()?;
     state.storage.publish_review(review, &body)?;
     state.storage.snapshot(&state.paths, &review.lecture_id)?;

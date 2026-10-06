@@ -20,15 +20,15 @@ export function ModelManagerCard({
   const speech = !model || model.id === 'nemotron-streaming';
   const translation = model?.id === 'hy-mt2-1.8b';
   const title = speech
-    ? '英文转录'
+    ? ui.modelSpeechTitle
     : translation
-      ? '英文 → 中文 / 日语 / 韩语'
-      : '课堂总结与深度复习';
+      ? ui.modelTranslationTitle
+      : ui.modelStudyTitle;
   const hint = speech
-    ? 'Nemotron 在上课时运行，英文识别无需支付 API 费用。'
+    ? ui.modelSpeechHint
     : translation
-      ? 'Hy-MT2 在本机翻译已定稿的句子。翻译效果和速度受课程内容与电脑性能影响。'
-      : '总结、整堂复习和问答共用 Qwen，待录音和实时处理结束后才会加载。';
+      ? ui.modelTranslationHint
+      : ui.modelStudyHint;
   return (
     <section className="settings-card">
       <div className="settings-title">
@@ -38,14 +38,14 @@ export function ModelManagerCard({
         </div>
         <span className="pill">
           {!model
-            ? '正在检查…'
+            ? ui.checking
             : model.downloading
               ? model.downloadedBytes === 0
-                ? '正在连接…'
-                : '正在下载'
+                ? ui.modelConnecting
+                : ui.modelDownloading
               : model.installed
-                ? '已下载'
-                : '未下载'}
+                ? ui.downloaded
+                : ui.modelNotDownloaded}
         </span>
       </div>
       {model && (
@@ -55,15 +55,11 @@ export function ModelManagerCard({
             {model.license}
           </p>
           <details className="settings-advanced">
-            <summary>{'模型信息'}</summary>
+            <summary>{ui.modelDetailsSummary}</summary>
             <p className="field-hint">
               {model.runtimeVersion} · {model.revision.slice(0, 7)}
             </p>
-            <p className="field-hint">
-              {
-                '模型按需加载，任务结束后释放。安静模式对所有本地 AI 生效，无需登录或 API Key。'
-              }
-            </p>
+            <p className="field-hint">{ui.modelLoadingHint}</p>
           </details>
         </>
       )}
@@ -72,7 +68,7 @@ export function ModelManagerCard({
           <progress max={model.sizeBytes} value={model.downloadedBytes} />
           <p>
             {model.downloadedBytes === 0
-              ? '正在连接下载服务，等待期间可以取消。'
+              ? ui.modelConnectingHint
               : `${Math.round(model.downloadedBytes / 1048576)} / ${Math.round(model.sizeBytes / 1048576)} MiB`}
           </p>
           <button
@@ -104,7 +100,7 @@ export function ModelManagerCard({
                   if (
                     !(await workspace.confirm({
                       title: ui.removeModel,
-                      body: '删除已下载的模型？录音、转录和笔记会保留，之后可以重新下载模型。',
+                      body: ui.modelRemoveConfirmBody,
                       action: ui.removeModel,
                     }))
                   )

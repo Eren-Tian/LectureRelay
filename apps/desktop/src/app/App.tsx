@@ -28,16 +28,16 @@ function CloseGuard() {
       async (event) => {
         if (
           !(await confirm({
-            title: ui.s006,
-            body: ui.s007,
-            action: ui.s008,
+            title: ui.exitWhileRecordingTitle,
+            body: ui.exitWhileRecordingBody,
+            action: ui.saveAndExit,
           }))
         )
           return;
         try {
           const recording = await api.recording();
           if (recording && recording.lectureId !== event.payload) {
-            notify('当前录音已切换，已取消退出。');
+            notify(ui.exitCancelledRecordingChanged);
             return;
           }
           if (recording) await api.stopLecture(recording.lectureId);
@@ -138,12 +138,12 @@ export function App() {
     return (
       <div className="desktop-only">
         <h1>LectureRelay</h1>
-        <h2>{ui.s010}</h2>
-        <p>{ui.s011}</p>
+        <h2>{ui.desktopOnlyTitle}</h2>
+        <p>{ui.desktopOnlyBody}</p>
         <p className="field-hint">
-          {ui.s012}
+          {ui.desktopOnlyDevHintPrefix}
           <code>pnpm dev</code>
-          {ui.s013}
+          {ui.desktopOnlyDevHintSuffix}
         </p>
       </div>
     );
@@ -160,13 +160,13 @@ export function App() {
                 void refresh().catch((error) => setError(errorText(error)))
               }
             >
-              {ui.s014}
+              {ui.reopenLibrary}
             </button>
           </>
         ) : (
           <>
             <div className="spinner" />
-            <p>{ui.s015}</p>
+            <p>{ui.openingLibrary}</p>
           </>
         )}
       </div>
@@ -198,7 +198,7 @@ export function App() {
           </button>
           <button
             className="sidebar-toggle"
-            aria-label={collapsed ? '展开侧栏' : '收起侧栏'}
+            aria-label={collapsed ? ui.expandSidebar : ui.collapseSidebar}
             aria-expanded={!collapsed}
             onClick={() => {
               setCollapsed(!collapsed);
@@ -218,17 +218,17 @@ export function App() {
               onClick={() => setRoute({ view: 'courses' })}
             >
               <Icon name="books" />
-              <span>{ui.s017}</span>
+              <span>{ui.courses}</span>
             </button>
             <button
               className={route.view === 'settings' ? 'selected' : ''}
               onClick={() => setRoute({ view: 'settings' })}
             >
               <Icon name="settings" />
-              <span>{ui.s018}</span>
+              <span>{ui.settings}</span>
             </button>
           </nav>
-          <div className="sidebar-courses" aria-label="课程">
+          <div className="sidebar-courses" aria-label={ui.courses}>
             {data.courses.map((course) => (
               <button
                 key={course.id}
@@ -260,11 +260,11 @@ export function App() {
               />
               <span>
                 {recording.failed
-                  ? ui.s019
+                  ? ui.sidebarRecordingInterrupted
                   : recording.paused
-                    ? ui.s020
-                    : ui.s021}
-                <small>{ui.s022}</small>
+                    ? ui.sidebarRecordingPaused
+                    : ui.sidebarRecordingActive}
+                <small>{ui.returnToLiveLecture}</small>
               </span>
               <Icon name="arrow" size={16} />
             </button>
@@ -282,9 +282,13 @@ export function App() {
             >
               <Icon name="spark" size={17} />
               <span>
-                {job.kind === 'provider-test' ? ui.s023 : ui.s024}
+                {job.kind === 'provider-test'
+                  ? ui.testingConnection
+                  : ui.aiTaskInProgress}
                 <small>
-                  {job.total ? `${job.completed} / ${job.total}` : ui.s025}
+                  {job.total
+                    ? `${job.completed} / ${job.total}`
+                    : ui.viewProgress}
                 </small>
               </span>
             </button>
@@ -313,8 +317,8 @@ export function App() {
           {data.recoveredCount > 0 && (
             <div className="recovery-banner">
               <Icon name="shield" size={17} />
-              {ui.s029}
-              {data.recoveredCount} {ui.s030}
+              {ui.recoveredLecturesPrefix}
+              {data.recoveredCount} {ui.recoveredLecturesSuffix}
             </div>
           )}
           {route.view === 'courses' && (
@@ -342,7 +346,7 @@ export function App() {
           <span>{toast.message}</span>
           <button
             className="icon-button"
-            aria-label={ui.s031}
+            aria-label={ui.dismissMessage}
             onClick={() => setToast(null)}
           >
             <Icon name="close" size={16} />

@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
@@ -18,7 +19,7 @@ export function ImportMedia({
   const { data, navigate, refresh, recording, job, live } = useWorkspace();
   const [open, setOpen] = useState(false),
     [course, setCourse] = useState(courseId ?? data.courses[0]?.id ?? ''),
-    [title, setTitle] = useState('导入的课堂记录');
+    [title, setTitle] = useState(ui.mediaImportDefaultTitle);
   const { busy, run } = useAction();
   const close = useCallback(() => {
     if (!busy) setOpen(false);
@@ -33,10 +34,10 @@ export function ImportMedia({
         onClick={() => setOpen(true)}
       >
         <Icon name="download" size={16} />
-        {'导入音视频'}
+        {ui.importMedia}
       </button>
       {open && (
-        <Modal title="导入课堂录音" onClose={close}>
+        <Modal title={ui.mediaImportTitle} onClose={close}>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -52,7 +53,7 @@ export function ImportMedia({
             }}
           >
             <label>
-              {'课程'}
+              {ui.mediaImportCourseLabel}
               <select
                 value={course}
                 onChange={(e) => setCourse(e.target.value)}
@@ -66,7 +67,7 @@ export function ImportMedia({
               </select>
             </label>
             <label>
-              {'本节课标题'}
+              {ui.lectureTitle}
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
@@ -75,11 +76,7 @@ export function ImportMedia({
                 disabled={busy}
               />
             </label>
-            <p className="field-hint">
-              {
-                '支持 WAV、MP3、M4A、MP4、FLAC 和 OGG，最大 2 GiB、最长 5 小时。应用会保存一份音频副本，保留原文件；导入后可另行转录。'
-              }
-            </p>
+            <p className="field-hint">{ui.mediaImportHint}</p>
             <div className="form-actions">
               {busy ? (
                 <button
@@ -87,7 +84,7 @@ export function ImportMedia({
                   className="button secondary"
                   onClick={() => void api.cancelJob()}
                 >
-                  {'取消导入'}
+                  {ui.mediaImportCancel}
                 </button>
               ) : (
                 <button
@@ -95,11 +92,11 @@ export function ImportMedia({
                   className="button secondary"
                   onClick={close}
                 >
-                  {'取消'}
+                  {ui.cancel}
                 </button>
               )}
               <button className="button primary" disabled={busy || !course}>
-                {busy ? '正在导入…' : '选择文件'}
+                {busy ? ui.mediaImportImporting : ui.mediaImportChooseFile}
               </button>
             </div>
           </form>
@@ -125,15 +122,15 @@ export function LibraryPanel() {
   return (
     <section className="library-panel">
       <div className="section-heading">
-        <h2>{'课堂记录'}</h2>
+        <h2>{ui.libraryHeading}</h2>
         <ImportMedia />
       </div>
       <label className="library-search">
         <Icon name="search" size={17} />
         <input
           type="search"
-          aria-label="搜索全部课堂记录"
-          placeholder="搜索课程、课堂标题或转录内容"
+          aria-label={ui.librarySearchLabel}
+          placeholder={ui.librarySearchPlaceholder}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -162,14 +159,14 @@ export function LibraryPanel() {
                 {lecture.status === 'failed' && (
                   <span className="danger-text">
                     {lecture.audioSource === 'import'
-                      ? '导入失败'
-                      : '录音未能开始'}
+                      ? ui.importFailed
+                      : ui.recordingDidNotStart}
                   </span>
                 )}
               </button>
               <button
                 className={`icon-button pin-button ${pinned ? 'pinned' : ''}`}
-                aria-label={pinned ? '取消置顶' : '置顶课堂记录'}
+                aria-label={pinned ? ui.libraryUnpinLabel : ui.libraryPinLabel}
                 aria-pressed={pinned}
                 onClick={() =>
                   void run(async () => {
@@ -185,9 +182,7 @@ export function LibraryPanel() {
         </div>
       ) : (
         <p className="empty-state">
-          {query
-            ? '没有找到匹配的课堂记录。'
-            : '录制或导入一节课，开始积累你的课堂记录。'}
+          {query ? ui.libraryNoMatches : ui.libraryEmpty}
         </p>
       )}
     </section>

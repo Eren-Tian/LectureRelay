@@ -10,7 +10,8 @@ fn single_lecture_deletion_preserves_course_siblings_and_rolls_back_failed_commi
     let sibling = db
         .create_lecture(&f.paths, &course.id, "Keep sibling")
         .unwrap();
-    db.finish_lecture(&sibling.id, 10.0, "completed").unwrap();
+    db.finish_lecture(&sibling.id, 10.0, LectureStatus::Completed)
+        .unwrap();
     let (other, other_lecture) = lecture(&f, &db);
     db.save_term(&course.id, None, "term", "术语").unwrap();
     for item in [&removed, &sibling, &other_lecture] {
@@ -125,7 +126,8 @@ fn lecture(f: &Fixture, db: &Storage) -> (Course, Lecture) {
     let l = db
         .create_lecture(&f.paths, &c.id, "[ACCEPTANCE] Reliability fixture")
         .unwrap();
-    db.finish_lecture(&l.id, 7.95, "completed").unwrap();
+    db.finish_lecture(&l.id, 7.95, LectureStatus::Completed)
+        .unwrap();
     (c, l)
 }
 fn checkpoint(id: &str) -> ReviewCheckpoint {
@@ -160,7 +162,8 @@ fn classroom_outline_covers_full_source_and_persists_summary_ranges() {
     let l = db
         .create_lecture(&f.paths, &c.id, "Outline coverage")
         .unwrap();
-    db.finish_lecture(&l.id, 1950.0, "completed").unwrap();
+    db.finish_lecture(&l.id, 1950.0, LectureStatus::Completed)
+        .unwrap();
     // Exceeds the caption window: the outline must read the full saved transcript.
     for n in 0..130 {
         db.save_segment(
@@ -295,7 +298,8 @@ fn fractional_times_roundtrip_and_invalid_bounds_are_rejected() {
     ] {
         assert!(db.save_segment(&l.id, None, input(start, end)).is_err());
     }
-    db.finish_lecture(&l.id, 0.037, "completed").unwrap();
+    db.finish_lecture(&l.id, 0.037, LectureStatus::Completed)
+        .unwrap();
     db.save_segment(&l.id, Some(s.id), input(0., 0.037))
         .unwrap();
 }
@@ -344,7 +348,7 @@ fn stale_review_rejects_transcript_context_language_and_model_changes() {
         .unwrap();
     assert_ne!(before, fingerprint("review"));
     let context = fingerprint("review");
-    settings.study_mode = "cloud".into();
+    settings.study_mode = ProcessingMode::Cloud;
     state.storage.save_settings(settings).unwrap();
     assert_ne!(context, fingerprint("review"));
     let model = fingerprint("review");
@@ -493,9 +497,9 @@ fn migration_preserves_translation_history_and_only_corrects_known_local_origins
     drop(old);
     let db = f.db();
     let segments = db.segments("l").unwrap();
-    assert_eq!(segments[0].origin, "local");
-    assert_eq!(segments[1].origin, "cloud");
-    assert_eq!(segments[2].origin, "manual");
+    assert_eq!(segments[0].origin, SegmentOrigin::Local);
+    assert_eq!(segments[1].origin, SegmentOrigin::Cloud);
+    assert_eq!(segments[2].origin, SegmentOrigin::Manual);
     let check = rusqlite::Connection::open(path).unwrap();
     assert_eq!(
         check
@@ -524,12 +528,20 @@ fn old_failed_imports_are_repaired_only_with_recorded_import_evidence() {
     let (_, imported) = lecture(&f, &db);
     let (_, capture) = lecture(&f, &db);
     db.create_task(&imported.id, "import").unwrap();
-    db.finish_lecture(&imported.id, 0., "failed").unwrap();
-    db.finish_lecture(&capture.id, 0., "failed").unwrap();
+    db.finish_lecture(&imported.id, 0., LectureStatus::Failed)
+        .unwrap();
+    db.finish_lecture(&capture.id, 0., LectureStatus::Failed)
+        .unwrap();
     drop(db);
     let db = f.db();
-    assert_eq!(db.lecture(&imported.id).unwrap().audio_source, "import");
-    assert_eq!(db.lecture(&capture.id).unwrap().audio_source, "microphone");
+    assert_eq!(
+        db.lecture(&imported.id).unwrap().audio_source,
+        LectureSource::Import
+    );
+    assert_eq!(
+        db.lecture(&capture.id).unwrap().audio_source,
+        LectureSource::Microphone
+    );
 }
 
 #[test]
@@ -555,10 +567,10 @@ fn prepare_reliability_ui_fixture() {
     let paths = AppPaths::production().unwrap();
     let db = Storage::open(&paths.data.join("app.db")).unwrap();
     db.save_settings(AppSettings {
-        speech_provider: "none".into(),
-        translation_mode: "none".into(),
-        study_mode: "none".into(),
-        audio_source: "system".into(),
+        speech_provider: SpeechEngine::None,
+        translation_mode: ProcessingMode::None,
+        study_mode: ProcessingMode::None,
+        audio_source: InputSource::System,
         ..Default::default()
     })
     .unwrap();
@@ -593,7 +605,8 @@ fn prepare_reliability_ui_fixture() {
             wav.write_sample(0i16).unwrap();
         }
         wav.finalize().unwrap();
-        db.finish_lecture(&l.id, duration, "completed").unwrap();
+        db.finish_lecture(&l.id, duration, LectureStatus::Completed)
+            .unwrap();
         db.save_note(&l.id, "Keep manual notes", "manual").unwrap();
         if name == "Delete fixture" {
             db.save_review_checkpoint(&checkpoint(&l.id)).unwrap();

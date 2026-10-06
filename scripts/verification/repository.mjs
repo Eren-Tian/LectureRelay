@@ -2,6 +2,8 @@ import { execFileSync } from 'node:child_process';
 import { readFile, stat, mkdir, writeFile, readdir } from 'node:fs/promises';
 import { dirname, resolve, relative, extname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { nativeMessageIssues } from './native-messages.mjs';
+import { uiStringIssues } from './ui-strings.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 const files = [
@@ -135,6 +137,10 @@ function visit(file) {
   visited.add(file);
 }
 for (const file of graph.keys()) visit(file);
+issues.push(
+  ...(await uiStringIssues(root)),
+  ...(await nativeMessageIssues(root)),
+);
 for (const finding of secrets)
   issues.push(
     `Potential credential: ${finding.file}:${finding.line} (value withheld)`,

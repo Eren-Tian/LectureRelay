@@ -1,5 +1,8 @@
 use super::trace::{CaptureTrace, PacketTiming, signed_delta_us};
-use crate::error::{AppResult, UserFacing};
+use crate::{
+    domain::InputSource,
+    error::{AppResult, UserFacing},
+};
 use cpal::{
     FromSample, Sample, SizedSample,
     traits::{DeviceTrait, HostTrait},
@@ -147,19 +150,19 @@ pub struct InputDevice {
 }
 
 pub fn input_devices() -> AppResult<Vec<InputDevice>> {
-    devices("microphone")
+    devices(InputSource::Microphone)
 }
 
-pub fn devices(source: &str) -> AppResult<Vec<InputDevice>> {
+pub fn devices(source: InputSource) -> AppResult<Vec<InputDevice>> {
     let host = cpal::default_host();
-    let default_id = (if source == "system" {
+    let default_id = (if source == InputSource::System {
         host.default_output_device()
     } else {
         host.default_input_device()
     })
     .and_then(|device| device.id().ok())
     .map(|id| id.to_string());
-    let devices = (if source == "system" {
+    let devices = (if source == InputSource::System {
         host.output_devices()
     } else {
         host.input_devices()

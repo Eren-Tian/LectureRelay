@@ -18,7 +18,7 @@ impl Storage {
             .user_error("The recovery record is damaged.")
     }
 
-    pub fn set_audio_source(&self, id: &str, source: &str) -> AppResult<()> {
+    pub fn set_audio_source(&self, id: &str, source: LectureSource) -> AppResult<()> {
         self.lock()?
             .execute(
                 "UPDATE lectures SET audio_source=?2 WHERE id=?1",
@@ -61,7 +61,7 @@ impl Storage {
         self.lock()?.query_row("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until,audio_source FROM lectures WHERE id=?1", [id], lecture_from_row).optional().user_error("Cannot read lecture.")?.ok_or("The lecture does not exist.".into())
     }
 
-    pub fn finish_lecture(&self, id: &str, duration: f64, status: &str) -> AppResult<()> {
+    pub fn finish_lecture(&self, id: &str, duration: f64, status: LectureStatus) -> AppResult<()> {
         self.lock()?
             .execute(
                 "UPDATE lectures SET duration_seconds=?2,status=?3,ended_at=?4 WHERE id=?1",

@@ -36,25 +36,25 @@ export function CourseForm({
       await refresh();
       onClose();
       navigate({ view: 'course', id: saved.id });
-    }, ui.s033);
+    }, ui.courseSaved);
   };
   return (
-    <Modal title={course ? ui.s034 : ui.s035} onClose={close}>
+    <Modal title={course ? ui.editCourse : ui.newCourse} onClose={close}>
       <form onSubmit={submit} className="form-stack">
         <label>
-          {ui.s036}
+          {ui.courseName}
           <input
             required
             maxLength={150}
             value={input.name}
             onChange={(event) => field('name', event.target.value)}
-            placeholder={ui.s037}
+            placeholder={ui.courseNamePlaceholder}
           />
         </label>
         <div className="form-grid">
           <label>
-            {ui.s038}
-            <span className="optional">{ui.s039}</span>
+            {ui.courseCodeLabel}
+            <span className="optional">{ui.optional}</span>
             <input
               maxLength={40}
               value={input.code}
@@ -63,7 +63,7 @@ export function CourseForm({
             />
           </label>
           <label>
-            {ui.s040}
+            {ui.assistanceLanguage}
             <select
               value={input.assistanceLanguage}
               onChange={(event) =>
@@ -82,7 +82,7 @@ export function CourseForm({
           </label>
         </div>
         <label>
-          {ui.s041}
+          {ui.subject}
           <select
             value={input.subject}
             onChange={(event) => field('subject', event.target.value)}
@@ -95,14 +95,14 @@ export function CourseForm({
           </select>
         </label>
         <label>
-          {ui.s042}
-          <span className="optional">{ui.s043}</span>
+          {ui.courseContextLabel}
+          <span className="optional">{ui.optional}</span>
           <textarea
             maxLength={6000}
             rows={3}
             value={input.description}
             onChange={(event) => field('description', event.target.value)}
-            placeholder={ui.s044}
+            placeholder={ui.courseContextPlaceholder}
           />
         </label>
         <div className="form-actions">
@@ -112,10 +112,10 @@ export function CourseForm({
             onClick={close}
             disabled={busy}
           >
-            {ui.s046}
+            {ui.cancel}
           </button>
           <button className="button primary" disabled={busy}>
-            {busy ? ui.s047 : ui.s048}
+            {busy ? ui.saving : ui.saveCourse}
           </button>
         </div>
       </form>

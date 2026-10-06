@@ -34,25 +34,25 @@ export function CourseGlossaryEditor({
       await api.saveTerm(id, term?.id ?? null, source, translation);
       resetTerm();
       await reload();
-    }, ui.s049);
+    }, ui.glossaryTermSaved);
   };
   return (
     <aside className="glossary-panel">
       <div className="section-heading">
-        <h2>{ui.s067}</h2>
+        <h2>{ui.courseGlossary}</h2>
         <span>{terms.length}</span>
       </div>
-      <p className="field-hint">{ui.s068}</p>
+      <p className="field-hint">{ui.courseGlossaryHint}</p>
       <div className="glossary-list">
         {terms.map((entry) => (
           <div className="glossary-row" key={entry.id}>
             <div>
               <strong>{entry.source}</strong>
-              <p>{entry.translation || ui.s069}</p>
+              <p>{entry.translation || ui.keepEnglish}</p>
             </div>
             <button
               className="icon-button"
-              aria-label={ui.s070(entry.source)}
+              aria-label={ui.editTermLabel(entry.source)}
               onClick={() => {
                 setTerm(entry);
                 setSource(entry.source);
@@ -63,7 +63,7 @@ export function CourseGlossaryEditor({
             </button>
             <button
               className="icon-button"
-              aria-label={ui.s071(entry.source)}
+              aria-label={ui.deleteTermLabel(entry.source)}
               disabled={busy}
               onClick={() =>
                 void run(async () => {
@@ -79,33 +79,33 @@ export function CourseGlossaryEditor({
       </div>
       <form className="form-stack glossary-form" onSubmit={saveTerm}>
         <label>
-          {ui.s072}
+          {ui.englishTerm}
           <input
             required
             maxLength={150}
             value={source}
             onChange={(event) => setSource(event.target.value)}
-            placeholder={ui.s073}
+            placeholder={ui.englishTermPlaceholder}
           />
         </label>
         <label>
           {languageName(course.assistanceLanguage)}
-          {ui.s074}
+          {ui.glossaryMeaningSuffix}
           <input
             maxLength={250}
             value={translation}
             onChange={(event) => setTranslation(event.target.value)}
-            placeholder={ui.s075}
+            placeholder={ui.preferredTranslationPlaceholder}
           />
         </label>
         <div className="button-row">
           {term && (
             <button type="button" className="button text" onClick={resetTerm}>
-              {ui.s076}
+              {ui.cancelEdit}
             </button>
           )}
           <button className="button secondary" disabled={busy}>
-            {term ? ui.s077 : ui.s078}
+            {term ? ui.saveChanges : ui.addTerm}
           </button>
         </div>
       </form>

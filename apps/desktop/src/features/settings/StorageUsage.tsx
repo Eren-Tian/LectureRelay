@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { api, errorText } from '../../api/client';
+import { ui } from '../../i18n';
 
 export function StorageUsage() {
   const [usage, setUsage] = useState<{
@@ -32,15 +33,15 @@ export function StorageUsage() {
           <>
             <span>
               <strong>{size(usage.libraryBytes)}</strong>
-              {'资料库与导出文件'}
+              {ui.storageUsageLibraryAndExports}
             </span>
             <span>
               <strong>{size(usage.modelBytes)}</strong>
-              {'本地模型'}
+              {ui.localModels}
             </span>
           </>
         ) : (
-          '正在计算存储占用…'
+          ui.storageUsageCalculating
         ))}
     </div>
   );

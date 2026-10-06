@@ -27,7 +27,7 @@ import {
 } from '../types/domain';
 
 function call<T>(command: string, args?: Record<string, unknown>): Promise<T> {
-  if (!isTauri()) return Promise.reject(new Error(ui.s000));
+  if (!isTauri()) return Promise.reject(new Error(ui.desktopAppRequiredError));
   return invoke<T>(command, args);
 }
 
@@ -184,5 +184,5 @@ export const errorText = (error: unknown) =>
       ? error
       : error instanceof Error
         ? error.message
-        : ui.s001,
+        : ui.actionFailed,
   );

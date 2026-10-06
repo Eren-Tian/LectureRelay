@@ -37,7 +37,7 @@ interface WorkspaceValue {
 const Workspace = createContext<WorkspaceValue | null>(null);
 export function useWorkspace() {
   const workspace = useContext(Workspace);
-  if (!workspace) throw new Error('暂时无法打开工作区');
+  if (!workspace) throw new Error(ui.workspaceUnavailable);
   return workspace;
 }
 export function WorkspaceProvider({
@@ -79,7 +79,9 @@ export function WorkspaceProvider({
           {dialog.confirmationText && (
             <label className="form-stack">
               <span>
-                输入 <strong>{dialog.confirmationText}</strong> 以确认
+                {ui.confirmTypePrefix}
+                <strong>{dialog.confirmationText}</strong>
+                {ui.confirmTypeSuffix}
               </span>
               <input
                 value={confirmationText}
@@ -91,7 +93,7 @@ export function WorkspaceProvider({
           )}
           <div className="form-actions">
             <button className="button secondary" onClick={close}>
-              {ui.s258}
+              {ui.cancel}
             </button>
             <button
               className={`button ${dialog.danger ? 'danger' : 'primary'}`}

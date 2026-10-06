@@ -199,7 +199,7 @@ mod tests {
             start_seconds: 0.,
             end_seconds: 1.,
             translated_text: String::new(),
-            origin: "local".into(),
+            origin: crate::domain::SegmentOrigin::Local,
             provider: "local".into(),
             status: "final".into(),
             transcript_version: "live".into(),

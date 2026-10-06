@@ -28,14 +28,28 @@ pub(super) async fn read_summary_response(
         .unwrap_or(60)
         .max(1);
     let message = match status {
-        401 => "API Key 无效或已撤销，请替换后重新测试。",
-        402 => "账户余额或 API 计费未就绪，请检查服务商账户；录音继续保存。",
-        403 => "账户没有访问权限，请检查服务地区、模型权限和账户状态。",
-        404 => "所选模型不可用，请在高级设置中更换模型后测试。",
-        429 => "免费额度已耗尽或请求受限，请检查账户额度并稍后重试；录音继续保存。",
-        400 | 422 => "模型不支持本次总结参数，请使用推荐模型，或核对高级模型设置。",
-        500..=599 => "服务商暂时不可用，原文已保存，请稍后重试。",
-        _ => "总结请求未完成，请检查账户和模型设置。原文已保存。",
+        401 => "The API key is invalid or revoked. Replace it and test again.",
+        402 => {
+            "Account balance or API billing is not ready. Check the provider account; recording continues to be saved."
+        }
+        403 => {
+            "The account lacks access. Check the service region, model permissions and account status."
+        }
+        404 => {
+            "The selected model is unavailable. Choose another model in advanced settings and test again."
+        }
+        429 => {
+            "The free allowance is used up or requests are limited. Check the account quota and try again later; recording continues to be saved."
+        }
+        400 | 422 => {
+            "The model does not support these summary parameters. Use the recommended model or check the advanced model settings."
+        }
+        500..=599 => {
+            "The provider is temporarily unavailable. The source text is saved; try again later."
+        }
+        _ => {
+            "The summary request did not complete. Check the account and model settings. The source text is saved."
+        }
     };
     Err(SummaryFailure {
         message: message.into(),
@@ -158,10 +172,10 @@ mod tests {
             assert!(!error.message.contains(&address.to_string()));
             assert_eq!(error.retry_after, if status == 429 { 123 } else { 0 });
             if status == 401 {
-                assert!(error.message.contains("Key"));
+                assert!(error.message.contains("API key"));
             }
             if status == 404 {
-                assert!(error.message.contains("模型"));
+                assert!(error.message.contains("model"));
             }
         }
     }

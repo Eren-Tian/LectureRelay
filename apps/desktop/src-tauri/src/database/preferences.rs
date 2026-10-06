@@ -34,34 +34,20 @@ impl Storage {
     }
 
     pub fn save_settings(&self, settings: AppSettings) -> AppResult<()> {
+        // Enumerated choices are already validated by their typed decoding.
         settings.live_summaries.validate()?;
         if !matches!(
             settings.translation_model.as_str(),
-            "hy-mt2-1.8b" | "qwen3.5-4b"
+            crate::models::catalog::TRANSLATION | crate::models::catalog::STUDY
         ) {
             return Err("Choose a supported local translation model.".into());
         }
-        if !matches!(settings.theme.as_str(), "light" | "dark") {
-            return Err("Choose Light or Dark appearance.".into());
-        }
-        if !matches!(
-            settings.translation_mode.as_str(),
-            "local" | "cloud" | "none"
-        ) || !matches!(settings.study_mode.as_str(), "local" | "cloud" | "none")
-        {
-            return Err("Choose local, cloud or off for translation and study tools.".into());
-        }
-        if !matches!(
-            settings.speech_provider.as_str(),
-            "none" | "local" | "openai" | "groq"
-        ) || !matches!(settings.audio_source.as_str(), "microphone" | "system")
-            || !(16..=44).contains(&settings.english_font_size)
+        if !(16..=44).contains(&settings.english_font_size)
             || !(14..=36).contains(&settings.translation_font_size)
             || (!settings.show_english && !settings.show_translation)
             || settings.microphone_device_id.len() > 2048
             || settings.system_device_id.len() > 2048
             || !valid_language(&settings.assistance_language)
-            || !matches!(settings.provider.as_str(), "none" | "openai" | "groq")
             || settings.chat_model.trim().is_empty()
             || settings.chat_model.len() > 120
             || !settings
@@ -78,22 +64,40 @@ impl Storage {
 }
 
 fn decode_settings(text: &str) -> AppResult<AppSettings> {
-    let value: serde_json::Value =
+    let mut value: serde_json::Value =
         serde_json::from_str(text).user_error("Saved settings could not be read.")?;
+    // Also protect settings reads from an old client writing legacy preferences.
+    LiveSummaryPreferences::disable_unsupported(&mut value);
+    // A stored choice this version does not know falls back to its default
+    // instead of making every settings read, including startup, fail.
+    drop_unknown::<Theme>(&mut value, "theme");
+    drop_unknown::<CloudChoice>(&mut value, "provider");
+    drop_unknown::<ProcessingMode>(&mut value, "translationMode");
+    drop_unknown::<ProcessingMode>(&mut value, "studyMode");
+    drop_unknown::<SpeechEngine>(&mut value, "speechProvider");
+    drop_unknown::<InputSource>(&mut value, "audioSource");
     let mut settings: AppSettings =
         serde_json::from_value(value.clone()).user_error("Saved settings could not be read.")?;
     // Retain a previous explicit cloud selection when upgrading existing preferences.
-    if settings.provider != "none" {
+    if settings.provider.cloud().is_some() {
         if value.get("translationMode").is_none() {
-            settings.translation_mode = "cloud".into();
+            settings.translation_mode = ProcessingMode::Cloud;
         }
         if value.get("studyMode").is_none() {
-            settings.study_mode = "cloud".into();
+            settings.study_mode = ProcessingMode::Cloud;
         }
     }
-    // Also protect settings reads from an old client writing legacy preferences.
-    settings.live_summaries.disable_legacy_local();
     Ok(settings)
+}
+
+fn drop_unknown<T: serde::de::DeserializeOwned>(object: &mut serde_json::Value, key: &str) {
+    if let Some(object) = object.as_object_mut()
+        && object
+            .get(key)
+            .is_some_and(|value| T::deserialize(value).is_err())
+    {
+        object.remove(key);
+    }
 }
 
 pub(super) fn disable_local_live_summaries(connection: &rusqlite::Connection) -> AppResult<()> {
@@ -104,29 +108,22 @@ pub(super) fn disable_local_live_summaries(connection: &rusqlite::Connection) ->
             |row| row.get(0),
         )
         .optional()
-        .user_error("无法读取实时总结设置。")?;
+        .user_error("Cannot read live summary settings.")?;
     let Some(text) = text else {
         return Ok(());
     };
     let mut value: serde_json::Value =
         serde_json::from_str(&text).user_error("Saved settings could not be read.")?;
-    if value["liveSummaries"]["provider"] != "local" {
+    if !LiveSummaryPreferences::disable_unsupported(&mut value) {
         return Ok(());
     }
-    // Change only this feature. Keep unrelated and unknown preferences intact,
-    // and never migrate local processing into a cloud upload.
-    let preferences = &mut value["liveSummaries"];
-    preferences["enabled"] = false.into();
-    preferences["provider"] = "none".into();
-    preferences["model"] = LiveSummaryPreferences::default().model.into();
-    preferences["uploadConsent"] = false.into();
-    let updated = serde_json::to_string(&value).user_error("无法保存实时总结设置。")?;
+    let updated = serde_json::to_string(&value).user_error("Cannot save live summary settings.")?;
     connection
         .execute(
             "UPDATE app_settings SET value=?1 WHERE key='preferences' AND value=?2",
             params![updated, text],
         )
-        .user_error("无法停用旧的本地实时总结设置。")?;
+        .user_error("Cannot turn off the old local live summary setting.")?;
     Ok(())
 }
 
@@ -139,13 +136,13 @@ mod tests {
             decode_settings(r#"{"provider":"openai"}"#)
                 .unwrap()
                 .translation_mode,
-            "cloud"
+            ProcessingMode::Cloud
         );
         assert_eq!(
             decode_settings(r#"{"provider":"none"}"#)
                 .unwrap()
                 .study_mode,
-            "local"
+            ProcessingMode::Local
         );
         assert_eq!(
             decode_settings(
@@ -153,7 +150,31 @@ mod tests {
             )
             .unwrap()
             .translation_mode,
-            "local"
+            ProcessingMode::Local
         );
+    }
+
+    #[test]
+    fn unknown_stored_choices_fall_back_without_losing_known_preferences() {
+        let settings = decode_settings(
+            r#"{"theme":"sepia","speechProvider":"parakeet","audioSource":"system","translationMode":"remote","chatModel":"kept","liveSummaries":{"provider":"other","intervalMinutes":5}}"#,
+        )
+        .unwrap();
+        assert_eq!(settings.theme, Theme::Light);
+        assert_eq!(settings.speech_provider, SpeechEngine::None);
+        assert_eq!(settings.audio_source, InputSource::System);
+        assert_eq!(settings.translation_mode, ProcessingMode::Local);
+        assert_eq!(settings.chat_model, "kept");
+        // An unknown summary provider is turned off, never redirected to a cloud default.
+        assert_eq!(settings.live_summaries.provider, CloudChoice::None);
+        assert!(!settings.live_summaries.enabled);
+        assert_eq!(settings.live_summaries.interval_minutes, 5);
+        // Settings without newer sections still decode.
+        assert!(decode_settings(r#"{"theme":"dark"}"#).is_ok());
+        assert!(decode_settings("null").is_err());
+        // Stored strings round-trip unchanged for the TypeScript contract.
+        let encoded = serde_json::to_value(&settings).unwrap();
+        assert_eq!(encoded["speechProvider"], "none");
+        assert_eq!(encoded["audioSource"], "system");
     }
 }

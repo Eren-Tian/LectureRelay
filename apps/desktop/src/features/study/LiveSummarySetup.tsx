@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, errorText } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
+import { ui } from '../../i18n';
 import type {
   LiveSummaryPreferences,
   ProviderStatus,
@@ -13,19 +14,6 @@ export const defaultSummaryPreferences: LiveSummaryPreferences = {
   intervalMinutes: 4,
   uploadConsent: false,
 };
-export function availableSummaryPreferences(
-  preferences: LiveSummaryPreferences = defaultSummaryPreferences,
-): LiveSummaryPreferences {
-  return preferences.provider === 'local'
-    ? {
-        ...preferences,
-        enabled: false,
-        provider: 'none',
-        model: defaultSummaryPreferences.model,
-        uploadConsent: false,
-      }
-    : preferences;
-}
 const models = {
   groq: 'openai/gpt-oss-120b',
   openai: 'gpt-4o-mini',
@@ -34,7 +22,7 @@ const models = {
 export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
   const workspace = useWorkspace();
   const [preferences, setPreferences] = useState(
-    availableSummaryPreferences(workspace.data.settings.liveSummaries),
+    workspace.data.settings.liveSummaries,
   );
   const [providers, setProviders] = useState<ProviderStatus[]>([]);
   const [key, setKey] = useState('');
@@ -90,20 +78,20 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
     onSaved?.();
     setMessage(
       next.enabled
-        ? '实时总结已启用，录音与字幕设置保持不变。'
-        : '总结设置已保存；已完成卡片会保留。',
+        ? ui.summarySetupEnabledMessage
+        : ui.summarySetupSavedMessage,
     );
   };
   return (
     <section className="settings-card live-summary-setup">
-      <h3>实时课堂总结</h3>
+      <h3>{ui.summarySetupTitle}</h3>
       <details className="settings-advanced">
-        <summary>使用说明</summary>
-        <p>整理新定稿的英文，不改变语音识别、翻译或课后学习设置。</p>
-        <p>已停用本地 Qwen 实时总结，已有卡片保留。</p>
+        <summary>{ui.summarySetupHowItWorks}</summary>
+        <p>{ui.summarySetupHowItWorksBody}</p>
+        <p>{ui.summarySetupLocalQwenRetired}</p>
       </details>
       <label>
-        总结方式
+        {ui.summarySetupProviderLabel}
         <select
           disabled={busy}
           value={preferences.provider}
@@ -120,13 +108,13 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
             });
           }}
         >
-          <option value="groq">Groq · 推荐云端入口</option>
+          <option value="groq">{ui.summarySetupGroqOption}</option>
           <option value="openai">OpenAI</option>
-          <option value="none">关闭</option>
+          <option value="none">{ui.off}</option>
         </select>
       </label>
       <label>
-        自动整理间隔
+        {ui.summarySetupIntervalLabel}
         <select
           disabled={busy}
           value={preferences.intervalMinutes}
@@ -137,18 +125,18 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
             })
           }
         >
-          <option value={2}>2 分钟</option>
-          <option value={4}>4 分钟 · 默认</option>
-          <option value={5}>5 分钟</option>
+          <option value={2}>{ui.summarySetupIntervalOption(2)}</option>
+          <option value={4}>{ui.summarySetupIntervalDefaultOption(4)}</option>
+          <option value={5}>{ui.summarySetupIntervalOption(5)}</option>
         </select>
       </label>
       {cloud && (
         <>
           <ol className="summary-setup-steps">
-            <li>获取 Key</li>
-            <li>粘贴并保存</li>
-            <li>测试</li>
-            <li>启用总结</li>
+            <li>{ui.summarySetupStepGetKey}</li>
+            <li>{ui.summarySetupStepPasteAndSave}</li>
+            <li>{ui.summarySetupStepTest}</li>
+            <li>{ui.summarySetupStepEnable}</li>
           </ol>
           <button
             className="button secondary"
@@ -160,17 +148,14 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
             }
           >
             {preferences.provider === 'groq'
-              ? '获取 Groq API Key'
-              : '获取 OpenAI API Key'}
+              ? ui.summarySetupGetGroqKey
+              : ui.summarySetupGetOpenAiKey}
           </button>
-          <p className="field-hint">
-            在服务商网站创建 Key，再粘贴到这里。Key 使用 Windows Credential
-            Manager 保存。
-          </p>
+          <p className="field-hint">{ui.summarySetupKeyHint}</p>
           <p role="status">
             {selected?.hasKey
-              ? `Key 已保存：${selected.maskedKey} · ${tested === identity ? '本模型测试通过' : '本模型尚未测试'}`
-              : '尚未保存 API Key'}
+              ? `${ui.summarySetupKeySavedStatus(selected.maskedKey)} · ${tested === identity ? ui.summarySetupModelTested : ui.summarySetupModelUntested}`
+              : ui.summarySetupNoKeySaved}
           </p>
           <form
             onSubmit={(e) => {
@@ -183,12 +168,14 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 setKey('');
                 setTested('');
                 await load();
-                setMessage('Key 已保存，请点击“测试总结连接”。');
+                setMessage(ui.summarySetupKeySavedMessage);
               });
             }}
           >
             <label>
-              {selected?.hasKey ? '替换 API Key' : '粘贴 API Key'}
+              {selected?.hasKey
+                ? ui.summarySetupReplaceKeyLabel
+                : ui.summarySetupPasteKeyLabel}
               <input
                 type="password"
                 autoComplete="off"
@@ -197,7 +184,7 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 value={key}
                 disabled={busy}
                 onChange={(e) => setKey(e.target.value)}
-                placeholder="仅保存在此电脑，不进入笔记或导出"
+                placeholder={ui.summarySetupKeyPlaceholder}
               />
             </label>
             <div className="button-row">
@@ -205,7 +192,7 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 className="button secondary"
                 disabled={busy || !key.trim()}
               >
-                保存 Key
+                {ui.summarySetupSaveKey}
               </button>
               {selected?.hasKey && (
                 <button
@@ -220,19 +207,19 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                       setKey('');
                       setTested('');
                       await load();
-                      setMessage('Key 已移除。');
+                      setMessage(ui.summarySetupKeyRemovedMessage);
                     })
                   }
                 >
-                  移除 Key
+                  {ui.summarySetupRemoveKey}
                 </button>
               )}
             </div>
           </form>
           <details>
-            <summary>模型高级设置</summary>
+            <summary>{ui.advancedModelSettings}</summary>
             <label>
-              总结模型
+              {ui.summarySetupModelLabel}
               <input
                 maxLength={120}
                 disabled={busy}
@@ -246,10 +233,7 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 }
               />
             </label>
-            <p className="field-hint">
-              默认模型已经按官方参数配置。自选模型需支持 JSON
-              Schema；修改后请重新测试。
-            </p>
+            <p className="field-hint">{ui.summarySetupModelHint}</p>
           </details>
           <button
             className="button secondary"
@@ -267,22 +251,18 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 );
                 await load();
                 await workspace.refresh();
-                setMessage(
-                  '所选模型已实际生成并通过格式与引用校验。请确认文字上传范围，然后启用总结。',
-                );
+                setMessage(ui.summarySetupTestPassedMessage);
               })
             }
           >
-            {busy ? '正在处理…' : '测试总结连接'}
+            {busy ? ui.processing : ui.summarySetupTestConnection}
           </button>
-          <p className="field-hint">
-            测试会发送一小段固定测试文字并生成结果。保存 Key
-            不代表模型、权限或额度可用。
-          </p>
+          <p className="field-hint">{ui.summarySetupTestHint}</p>
           <label className="toggle-row">
             <span>
-              允许向 {preferences.provider === 'groq' ? 'Groq' : 'OpenAI'}{' '}
-              发送所选英文转录片段及课程背景、术语，用于总结。此功能不上传录音。
+              {ui.summarySetupUploadConsent(
+                preferences.provider === 'groq' ? 'Groq' : 'OpenAI',
+              )}
             </span>
             <input
               type="checkbox"
@@ -305,7 +285,7 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 )
               }
             >
-              查看服务商数据政策
+              {ui.summarySetupViewDataPolicy}
             </button>
             <button
               className="text-button"
@@ -315,13 +295,13 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
                 )
               }
             >
-              查看账户额度
+              {ui.summarySetupViewAccountLimits}
             </button>
           </div>
           <p className="field-hint">
             {preferences.provider === 'groq'
-              ? 'Groq 免费额度以账户显示为准，有请求与 tokens 限制，不保证无限免费使用。'
-              : 'OpenAI API 单独计费，ChatGPT 订阅不包含 API 用量。已创建的完整 Key 无法再次查看；未保存时请创建新 Key。'}
+              ? ui.summarySetupGroqQuotaHint
+              : ui.summarySetupOpenAiBillingHint}
           </p>
         </>
       )}
@@ -338,14 +318,18 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
           }
           onClick={() => void action(() => save(true))}
         >
-          {preferences.enabled ? '保存并保持启用' : '启用实时总结'}
+          {preferences.enabled
+            ? ui.summarySetupSaveAndKeepEnabled
+            : ui.summarySetupEnable}
         </button>
         <button
           className="button secondary"
           disabled={busy}
           onClick={() => void action(() => save(false))}
         >
-          {preferences.enabled ? '关闭实时总结' : '保存设置，暂不启用'}
+          {preferences.enabled
+            ? ui.summarySetupDisable
+            : ui.summarySetupSaveWithoutEnabling}
         </button>
       </div>
       {message && (

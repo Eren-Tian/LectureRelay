@@ -1,4 +1,5 @@
 pub(crate) mod assistance;
+pub(crate) mod busy;
 pub(crate) mod exports;
 pub(crate) mod jobs;
 pub(crate) mod live_summaries;
@@ -8,6 +9,7 @@ pub(crate) mod review;
 use crate::{
     audio, commands, database, models::manager as model_manager, speech::streaming as live, storage,
 };
+pub(crate) use busy::Operation;
 use std::sync::{Arc, Mutex};
 use tauri::{Emitter, Manager};
 
@@ -76,11 +78,7 @@ pub fn run() {
                 tauri::WebviewUrl::App("index.html".into()),
             )
             .title("LectureRelay")
-            .theme(Some(if preferences.theme == "dark" {
-                tauri::Theme::Dark
-            } else {
-                tauri::Theme::Light
-            }))
+            .theme(Some(preferences.theme.into()))
             .inner_size(1180.0, 780.0)
             .min_inner_size(880.0, 620.0)
             .visible(false)
@@ -220,6 +218,7 @@ pub fn run() {
             MessageBoxW(
                 None,
                 w!(
+                    // i18n-exempt: native dialog shown before the webview and its catalog exist
                     "LectureRelay 无法启动。请检查应用数据与文档目录权限、WebView2 Runtime，并确认应用是否已在运行。已有课堂资料会保留。"
                 ),
                 w!("LectureRelay"),

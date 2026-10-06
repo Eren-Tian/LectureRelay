@@ -40,9 +40,9 @@ export function CoursePage({ id }: { id: string }) {
   const removeCourse = async () => {
     if (
       await workspace.confirm({
-        title: ui.s050,
-        body: ui.s051,
-        action: ui.s052,
+        title: ui.trashCourseTitle,
+        body: ui.trashCourseBody,
+        action: ui.moveToTrash,
         danger: true,
       })
     ) {
@@ -50,7 +50,7 @@ export function CoursePage({ id }: { id: string }) {
         await api.deleteCourse(id);
         await workspace.refresh();
         workspace.navigate({ view: 'courses' });
-      }, ui.s053);
+      }, ui.courseMovedToTrash);
     }
   };
   return (
@@ -60,7 +60,7 @@ export function CoursePage({ id }: { id: string }) {
         onClick={() => workspace.navigate({ view: 'courses' })}
       >
         <Icon name="back" size={16} />
-        {ui.s054}
+        {ui.courses}
       </button>
       <header className="page-heading">
         <div>
@@ -70,11 +70,11 @@ export function CoursePage({ id }: { id: string }) {
           <h1>{course.name}</h1>
           <div className="heading-meta">
             <span className="pill">
-              {'英文 →'}
+              {ui.englishTo}
               {languageName(course.assistanceLanguage)}
             </span>
             <span>
-              {data.lectures.length} {ui.s055}
+              {data.lectures.length} {ui.lectureCountSuffix}
             </span>
           </div>
         </div>
@@ -82,7 +82,7 @@ export function CoursePage({ id }: { id: string }) {
           <ImportMedia courseId={id} onDone={() => void reload()} />
           <button
             className="icon-button bordered"
-            aria-label={ui.s056}
+            aria-label={ui.editCourse}
             onClick={() => setEdit(true)}
           >
             <Icon name="edit" />
@@ -97,7 +97,7 @@ export function CoursePage({ id }: { id: string }) {
             onClick={() => setStart(true)}
           >
             <Icon name="mic" />
-            {ui.s057}
+            {ui.startLecture}
           </button>
         </div>
       </header>
@@ -107,7 +107,7 @@ export function CoursePage({ id }: { id: string }) {
       <div className="course-detail-grid">
         <section>
           <div className="section-heading">
-            <h2>{ui.s058}</h2>
+            <h2>{ui.lectureHistory}</h2>
           </div>
           {data.lectures.length ? (
             <div className="lecture-list">
@@ -137,14 +137,14 @@ export function CoursePage({ id }: { id: string }) {
                       className={`pill ${lecture.status === 'interrupted' || lecture.status === 'failed' ? 'gold' : ''}`}
                     >
                       {lecture.status === 'completed'
-                        ? ui.s060
+                        ? ui.saved
                         : lecture.status === 'interrupted'
-                          ? ui.s061
+                          ? ui.lectureStatusRecovered
                           : lecture.status === 'failed'
                             ? lecture.audioSource === 'import'
-                              ? '导入失败'
-                              : ui.s062
-                            : ui.s063}
+                              ? ui.importFailed
+                              : ui.recordingDidNotStart
+                            : ui.recordingInProgress}
                     </span>
                     <Icon name="arrow" size={18} />
                   </button>
@@ -154,8 +154,8 @@ export function CoursePage({ id }: { id: string }) {
             </div>
           ) : (
             <div className="empty-state paper">
-              <h3>{ui.s064}</h3>
-              <p>{ui.s065}</p>
+              <h3>{ui.noLecturesTitle}</h3>
+              <p>{ui.noLecturesBody}</p>
               <button
                 className="button primary"
                 disabled={
@@ -165,7 +165,7 @@ export function CoursePage({ id }: { id: string }) {
                 }
                 onClick={() => setStart(true)}
               >
-                {ui.s066}
+                {ui.startLecture}
               </button>
             </div>
           )}
@@ -184,7 +184,7 @@ export function CoursePage({ id }: { id: string }) {
         disabled={busy || !!workspace.live?.active}
       >
         <Icon name="trash" size={16} />
-        {ui.s079}
+        {ui.moveToTrash}
       </button>
       {edit && <CourseForm course={course} onClose={closeEdit} />}
       {start && <StartLecture course={course} onClose={closeStart} />}

@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { WorkspaceProvider } from '../../src/app/Workspace';
 import { StudyTools } from '../../src/features/study/StudyTools';
 import { api } from '../../src/api/client';
+import { defaultSummaryPreferences } from '../../src/features/study/LiveSummarySetup';
 import type {
   Bootstrap,
   LectureDetail,
@@ -40,7 +41,11 @@ const detail = {
   answers: [],
 } as unknown as LectureDetail;
 const data = {
-  settings: { studyMode: 'local', theme: 'light' },
+  settings: {
+    studyMode: 'local',
+    theme: 'light',
+    liveSummaries: defaultSummaryPreferences,
+  },
   courses: [],
   providers: [],
   storage: {},

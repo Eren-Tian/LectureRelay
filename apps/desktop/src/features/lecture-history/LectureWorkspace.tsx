@@ -1,4 +1,5 @@
 import { messageText } from '../../i18n/messages';
+import { ui } from '../../i18n';
 import {
   useCallback,
   useEffect,
@@ -87,7 +88,7 @@ export function LecturePage({ id }: { id: string }) {
       return;
     }
     el.currentTime = seconds;
-    void el.play().catch(() => workspace.notify('请点击播放，开始收听录音。'));
+    void el.play().catch(() => workspace.notify(ui.replayPressPlay));
   };
   const beginAI = async (kind: 'transcription' | 'translation' | 'notes') => {
     const local =
@@ -103,7 +104,7 @@ export function LecturePage({ id }: { id: string }) {
             ? workspace.data.settings.translationMode
             : workspace.data.settings.studyMode) === 'none';
     if (off || (!local && !configured)) {
-      workspace.notify('请先在设置中选择 AI 服务。', true);
+      workspace.notify(ui.chooseAiServiceFirst, true);
       workspace.navigate({ view: 'settings', entry: 'services' });
       return;
     }
@@ -117,16 +118,21 @@ export function LecturePage({ id }: { id: string }) {
       !(await workspace.confirm({
         title:
           kind === 'notes'
-            ? '生成 AI 笔记草稿？'
+            ? ui.aiNotesDraftTitle
             : kind === 'transcription'
-              ? '继续转录？'
-              : '补全尚未翻译的段落？',
+              ? ui.continueTranscriptionTitle
+              : ui.fillMissingTranslationsTitle,
         body: local
-          ? '录音将在本机转录。翻译需要另行操作。'
+          ? ui.localTranscriptionBody
           : kind === 'transcription'
-            ? `录音将发送至 ${speechName}。服务商可能收取费用，已保存的转录会保留。`
-            : `转录文本和课程背景将发送至 ${cloud}。服务商可能收取费用。${kind === 'notes' ? '新草稿将单独保存，现有笔记会保留。' : '只处理尚未翻译的段落。'}`,
-        action: local ? '在本机转录' : '继续',
+            ? ui.cloudTranscriptionBody(speechName)
+            : ui.cloudTextBody(
+                cloud,
+                kind === 'notes'
+                  ? ui.notesDraftKeepsExisting
+                  : ui.translateOnlyMissing,
+              ),
+        action: local ? ui.transcribeLocally : ui.continueAction,
       }))
     )
       return;
@@ -138,9 +144,7 @@ export function LecturePage({ id }: { id: string }) {
             ? api.translate(id)
             : api.generateNotes(id));
         workspace.notify(
-          kind === 'notes'
-            ? '课堂要点已保存，可在右侧“课堂要点”中查看。'
-            : '处理完成。',
+          kind === 'notes' ? ui.keyPointsSaved : ui.processingComplete,
         );
       } finally {
         await reload();
@@ -154,7 +158,7 @@ export function LecturePage({ id }: { id: string }) {
       workspace.data.settings.studyMode === 'none' ||
       (workspace.data.settings.studyMode === 'cloud' && !configured)
     ) {
-      workspace.notify('请先在设置中配置文本 AI 服务。', true);
+      workspace.notify(ui.configureTextAiFirst, true);
       return;
     }
     void run(async () => {
@@ -173,7 +177,7 @@ export function LecturePage({ id }: { id: string }) {
   const exportFile = () =>
     void run(async () => {
       await api.export(id, format);
-      workspace.notify('导出文件已保存。');
+      workspace.notify(ui.exportSaved);
     });
   const print = () =>
     void run(async () => {
@@ -202,7 +206,7 @@ export function LecturePage({ id }: { id: string }) {
           <h1>{lecture.title}</h1>
           <p>
             {dateText(lecture.startedAt)} · {clock(lecture.durationSeconds)}
-            {'· 英文 →'}
+            {ui.metaEnglishTo}
             {languageName(course.assistanceLanguage)}
           </p>
         </div>
@@ -211,11 +215,11 @@ export function LecturePage({ id }: { id: string }) {
         >
           {lecture.status === 'failed'
             ? lecture.audioSource === 'import'
-              ? '导入失败'
-              : '录音未能开始'
+              ? ui.importFailed
+              : ui.recordingDidNotStart
             : lecture.status === 'interrupted'
-              ? '已恢复的录音'
-              : '录音已保存'}
+              ? ui.recoveredRecording
+              : ui.recordingSaved}
         </span>
       </header>
       <div className="button-row replay-actions">
@@ -253,19 +257,19 @@ export function LecturePage({ id }: { id: string }) {
         <div className="job-banner" role="status">
           <div className="spinner" />
           <div>
-            <strong>{'录音已保存'}</strong>
+            <strong>{ui.recordingSaved}</strong>
             <p>
               {live.translationQueue
-                ? `${live.translationQueue} 批翻译待完成。`
-                : '正在处理剩余字幕。'}{' '}
-              {'现在即可播放已保存的录音。'}
+                ? ui.translationBatchesPending(live.translationQueue)
+                : ui.processingRemainingCaptions}{' '}
+              {ui.savedRecordingPlayableNow}
             </p>
           </div>
           <button
             className="button secondary"
             onClick={() => void api.cancelLive()}
           >
-            {'停止处理'}
+            {ui.stopProcessing}
           </button>
         </div>
       )}
@@ -277,11 +281,11 @@ export function LecturePage({ id }: { id: string }) {
             <p>
               {ownJob.total
                 ? `${ownJob.completed} / ${ownJob.total}`
-                : '正在处理…'}{' '}
+                : ui.processing}{' '}
               ·{' '}
               {ownJob.cancelling
-                ? '正在取消…'
-                : messageText(ownJob.message) || '录音已保存。'}
+                ? ui.cancelling
+                : messageText(ownJob.message) || ui.recordingSavedNotice}
             </p>
           </div>
           <button
@@ -289,11 +293,11 @@ export function LecturePage({ id }: { id: string }) {
             disabled={ownJob.cancelling}
             onClick={() => void api.cancelJob()}
           >
-            {'取消'}
+            {ui.cancel}
           </button>
         </div>
       )}
-      <section className="replay-player" aria-label="课堂录音">
+      <section className="replay-player" aria-label={ui.lectureRecording}>
         <audio
           ref={audio}
           src={recordingUrl(lecture.recordingPath)}
@@ -308,30 +312,25 @@ export function LecturePage({ id }: { id: string }) {
               void e.currentTarget.play().catch(() => {});
             }
           }}
-          onError={() =>
-            workspace.notify(
-              '无法读取录音，请检查文件是否被移动、删除或损坏。',
-              true,
-            )
-          }
+          onError={() => workspace.notify(ui.recordingUnreadable, true)}
         />
         <div className="playback-tools">
           <button
             className="button secondary"
-            aria-label="后退 10 秒"
+            aria-label={ui.rewind10Seconds}
             onClick={() => seek(position - 10)}
           >
             −10s
           </button>
           <button
             className="button secondary"
-            aria-label="快进 10 秒"
+            aria-label={ui.forward10Seconds}
             onClick={() => seek(position + 10)}
           >
             +10s
           </button>
           <select
-            aria-label="播放速度"
+            aria-label={ui.playbackSpeed}
             value={speed}
             onChange={(e) => {
               const n = Number(e.target.value);
@@ -351,21 +350,21 @@ export function LecturePage({ id }: { id: string }) {
         primary={
           <section className="review-panel transcript-panel">
             <div className="section-heading">
-              <h2>{'转录文本'}</h2>
+              <h2>{ui.transcript}</h2>
               <div className="button-row">
                 <button
                   className="text-button"
                   disabled={blocked || lecture.durationSeconds <= 0}
                   onClick={() => setSegment('new')}
                 >
-                  {'+ 添加段落'}
+                  {ui.addSegmentWithPlus}
                 </button>
                 <button
                   className="button secondary"
                   disabled={blocked || !segments.some((s) => !s.translatedText)}
                   onClick={() => void beginAI('translation')}
                 >
-                  {'补全翻译'}
+                  {ui.fillMissingTranslations}
                 </button>
                 <button
                   className="button primary"
@@ -376,7 +375,9 @@ export function LecturePage({ id }: { id: string }) {
                   }
                   onClick={() => void beginAI('transcription')}
                 >
-                  {lecture.transcribedUntil > 0 ? '继续转录' : '转录录音'}
+                  {lecture.transcribedUntil > 0
+                    ? ui.continueTranscription
+                    : ui.transcribeRecording}
                 </button>
               </div>
             </div>
@@ -385,8 +386,8 @@ export function LecturePage({ id }: { id: string }) {
                 <Icon name="search" size={17} />
                 <input
                   type="search"
-                  aria-label="搜索转录文本"
-                  placeholder="搜索英文原文或译文…"
+                  aria-label={ui.searchTranscript}
+                  placeholder={ui.searchTranscriptPlaceholder}
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -394,7 +395,10 @@ export function LecturePage({ id }: { id: string }) {
                   }}
                 />
               </label>
-              <span>{filtered.length} 段</span>
+              <span>
+                {filtered.length}
+                {ui.segmentCountSuffix}
+              </span>
             </div>
             <div className="transcript-list">
               {visible.map((s) => (
@@ -437,13 +441,13 @@ export function LecturePage({ id }: { id: string }) {
                           query={search.trim()}
                         />
                       ) : (
-                        '暂无译文'
+                        ui.noTranslationSaved
                       )}
                     </p>
                   </div>
                   <button
                     className="icon-button segment-edit"
-                    aria-label={'编辑字幕，时间：' + clock(s.startSeconds)}
+                    aria-label={ui.editCaptionAt(clock(s.startSeconds))}
                     disabled={blocked}
                     onClick={() => setSegment(s)}
                   >
@@ -454,13 +458,11 @@ export function LecturePage({ id }: { id: string }) {
               {!visible.length && (
                 <div className="empty-state">
                   <h3>
-                    {search ? '没有找到匹配的段落' : '转录文本将显示在这里'}
-                  </h3>
-                  <p>
                     {search
-                      ? '试试其他关键词。'
-                      : '可以转录已保存的录音，也可以手动添加段落。'}
-                  </p>
+                      ? ui.noMatchingSegmentsTitle
+                      : ui.transcriptEmptyTitle}
+                  </h3>
+                  <p>{search ? ui.tryOtherKeywords : ui.transcriptEmptyBody}</p>
                 </div>
               )}
             </div>
@@ -471,7 +473,7 @@ export function LecturePage({ id }: { id: string }) {
                   disabled={currentPage === 0}
                   onClick={() => setPage(currentPage - 1)}
                 >
-                  {'上一页'}
+                  {ui.previousPage}
                 </button>
                 <span>
                   {currentPage + 1} / {pages}
@@ -481,7 +483,7 @@ export function LecturePage({ id }: { id: string }) {
                   disabled={currentPage === pages - 1}
                   onClick={() => setPage(currentPage + 1)}
                 >
-                  {'下一页'}
+                  {ui.nextPage}
                 </button>
                 <button
                   className="text-button"
@@ -493,13 +495,13 @@ export function LecturePage({ id }: { id: string }) {
                     if (index >= 0) setPage(Math.floor(index / 80));
                   }}
                 >
-                  {'当前录音'}
+                  {ui.currentPlaybackPage}
                 </button>
               </div>
             )}
             <div className="review-footer">
               <select
-                aria-label="导出格式"
+                aria-label={ui.exportFormat}
                 value={format}
                 onChange={(e) => setFormat(e.target.value as ExportKind)}
               >
@@ -527,10 +529,10 @@ export function LecturePage({ id }: { id: string }) {
                 onClick={exportFile}
               >
                 <Icon name="download" size={15} />
-                {'导出'}
+                {ui.exportAction}
               </button>
               <button className="text-button" disabled={busy} onClick={print}>
-                {'打印 / 保存为 PDF'}
+                {ui.printOrSavePdf}
               </button>
             </div>
           </section>
@@ -546,7 +548,7 @@ export function LecturePage({ id }: { id: string }) {
               <QuestionsPanel
                 answers={answers}
                 cloud={
-                  settings.studyMode === 'local' ? 'Qwen3.5 · 本地' : cloud
+                  settings.studyMode === 'local' ? ui.localQaModelLabel : cloud
                 }
                 local={settings.studyMode === 'local'}
                 blocked={blocked}
@@ -579,11 +581,11 @@ export function LecturePage({ id }: { id: string }) {
           </p>
           {data.note && (
             <>
-              <h2>{'笔记'}</h2>
+              <h2>{ui.notes}</h2>
               <MarkdownBody body={data.note.body} />
             </>
           )}
-          <h2>{'转录文本'}</h2>
+          <h2>{ui.transcript}</h2>
           {segments.map((s) => (
             <section key={s.id}>
               <h3>{clock(s.startSeconds)}</h3>

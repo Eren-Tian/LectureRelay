@@ -50,11 +50,14 @@ export function TrashCard({
                 void run(async () => {
                   if (
                     !(await workspace.confirm({
-                      title: '永久删除这门课程？',
-                      body: `永久删除“${course.name}”及其中的 ${course.lectureCount}节课堂记录，以及录音、转录、笔记、复习草稿、PDF 和应用内导出文件。删除后无法恢复，导出到其他位置的副本会保留。`,
-                      action: '永久删除',
+                      title: ui.trashDeleteCourseTitle,
+                      body: ui.trashDeleteCourseBody(
+                        course.name,
+                        course.lectureCount,
+                      ),
+                      action: ui.trashDeletePermanently,
                       danger: true,
-                      confirmationText: '删除',
+                      confirmationText: ui.deleteConfirmationPhrase,
                     }))
                   )
                     return;
@@ -66,11 +69,11 @@ export function TrashCard({
                     await workspace.refresh();
                     await onDeleted();
                   }
-                  workspace.notify('课程已永久删除。');
+                  workspace.notify(ui.trashCourseDeleted);
                 })
               }
             >
-              {'永久删除'}
+              {ui.trashDeletePermanently}
             </button>
           </div>
         ))

@@ -25,15 +25,15 @@ pub fn course_context(state: &AppState, course: &Course) -> AppResult<String> {
 
 pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResult<()> {
     let detail = state.storage.detail(id)?;
-    if detail.lecture.status == "recording" {
+    if detail.lecture.status == LectureStatus::Recording {
         return Err("Stop and save the recording before transcription.".into());
     }
     let provider = crate::speech::configured(state, &detail.course.id)?;
     let settings = state.storage.settings()?;
-    let speech_provider = if settings.speech_provider == "none" {
-        &settings.provider
-    } else {
-        &settings.speech_provider
+    // Matches crate::speech::configured: no speech engine falls back to the text provider.
+    let speech_provider = match settings.speech_provider {
+        SpeechEngine::None => settings.provider.as_str(),
+        engine => engine.as_str(),
     };
     let _capabilities = provider.capabilities();
     let context = course_context(state, &detail.course)?;
@@ -98,13 +98,12 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
                     end_seconds: start_offset + end,
                     source_text: segment.text.trim().into(),
                     translated_text: String::new(),
-                    origin: if settings.speech_provider == "local" {
-                        "local"
+                    origin: if settings.speech_provider == SpeechEngine::Local {
+                        SegmentOrigin::Local
                     } else {
-                        "cloud"
-                    }
-                    .into(),
-                    provider: speech_provider.clone(),
+                        SegmentOrigin::Cloud
+                    },
+                    provider: speech_provider.into(),
                     status: "final".into(),
                     transcript_version: "postclass".into(),
                     revision: 0,
@@ -360,7 +359,7 @@ mod tests {
                 end_seconds: index as f64 + 1.0,
                 source_text: "ordinary lecture material ".repeat(20),
                 translated_text: String::new(),
-                origin: "cloud".into(),
+                origin: crate::domain::SegmentOrigin::Cloud,
                 provider: "legacy".into(),
                 status: "final".into(),
                 transcript_version: "original".into(),

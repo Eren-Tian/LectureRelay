@@ -21,14 +21,14 @@ export function useProviderKeyForm(run: ActionRunner) {
     void run(async () => {
       await api.saveKey(keyProvider, enteredKey);
       await workspace.refresh();
-    }, ui.s215);
+    }, ui.apiKeySaved);
   };
   const removeKey = async () => {
     if (
       !(await workspace.confirm({
-        title: ui.s216(providerName(keyProvider)),
-        body: ui.s217,
-        action: ui.s218,
+        title: ui.removeApiKeyTitle(providerName(keyProvider)),
+        body: ui.removeApiKeyBody,
+        action: ui.removeApiKey,
         danger: true,
       }))
     )
@@ -36,7 +36,7 @@ export function useProviderKeyForm(run: ActionRunner) {
     void run(async () => {
       await api.removeKey(keyProvider);
       await workspace.refresh();
-    }, ui.s219);
+    }, ui.apiKeyRemoved);
   };
   return {
     key,
@@ -76,12 +76,12 @@ export function ProviderKeyForm({
         <Icon name="shield" />
         <div>
           <h2>
-            {providerName(keyProvider)} {ui.s232}
+            {providerName(keyProvider)} {ui.apiKeyTitleSuffix}
           </h2>
-          <p>{ui.s233}</p>
+          <p>{ui.apiKeyStorageHint}</p>
         </div>
         <span className={`pill ${status?.hasKey ? '' : 'gold'}`}>
-          {status?.hasKey ? 'API Key 已保存' : '尚未添加 API Key'}
+          {status?.hasKey ? ui.apiKeySavedBadge : ui.apiKeyMissingBadge}
         </span>
       </div>
       <label>
@@ -106,13 +106,13 @@ export function ProviderKeyForm({
             disabled={busy}
             onClick={() => void removeKey()}
           >
-            {ui.s236}
+            {ui.removeApiKey}
           </button>
         </div>
       )}
       <form className="key-form" onSubmit={saveKey}>
         <label>
-          {status?.hasKey ? ui.s237 : ui.s238}
+          {status?.hasKey ? ui.replaceApiKey : ui.addApiKey}
           <input
             type="password"
             disabled={busy}
@@ -121,12 +121,12 @@ export function ProviderKeyForm({
             value={key}
             maxLength={2000}
             onChange={(event) => setKey(event.target.value)}
-            placeholder={ui.s239}
+            placeholder={ui.apiKeyPlaceholder}
             required
           />
         </label>
         <button className="button secondary" disabled={busy || !key}>
-          {ui.s240}
+          {ui.saveSecurely}
         </button>
       </form>
       <div className="credential-actions">
@@ -144,18 +144,19 @@ export function ProviderKeyForm({
                       ? 'llama-3.3-70b-versatile'
                       : 'gpt-4o-mini',
                 ),
-              ui.s241,
+              ui.connectionSucceeded,
             )
           }
         >
-          {ui.s242}
+          {ui.testConnection}
         </button>
-        <span>{ui.s243}</span>
+        <span>{ui.testConnectionHint}</span>
       </div>
       <div className="notice">
         <Icon name="cloud" size={18} />
         <p>
-          {ui.s244} {providerName(keyProvider)} {ui.s245}
+          {ui.cloudRequestsNoticePrefix} {providerName(keyProvider)}{' '}
+          {ui.cloudRequestsNoticeSuffix}
         </p>
       </div>
     </section>

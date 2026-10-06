@@ -134,15 +134,12 @@ pub fn decode(
 
 pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> AppResult<Lecture> {
     let (lecture, job) = {
-        let _gate = state.gate.lock().user_error("The app is busy.")?;
-        if state.recorder.status()?.is_some()
-            || state.live.active()
-            || state.jobs.status()?.is_some()
-        {
-            return Err("Finish active work before importing media.".into());
-        }
+        let _gate = state.lock_gate();
+        state.ensure_idle(super::Operation::Job)?;
         let lecture = state.storage.create_lecture(&state.paths, course, title)?;
-        state.storage.set_audio_source(&lecture.id, "import")?;
+        state
+            .storage
+            .set_audio_source(&lecture.id, LectureSource::Import)?;
         let job = state.jobs.begin(&lecture.id, "import")?;
         (lecture, job)
     };
@@ -162,17 +159,21 @@ pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> App
         state.jobs.checkpoint()?;
         std::fs::rename(&pending, &target).user_error("Cannot save imported audio.")?;
         audio_committed = true;
-        state.storage.set_audio_source(&lecture.id, "import")?;
         state
             .storage
-            .finish_lecture(&lecture.id, duration, "completed")?;
+            .set_audio_source(&lecture.id, LectureSource::Import)?;
+        state
+            .storage
+            .finish_lecture(&lecture.id, duration, LectureStatus::Completed)?;
         state.storage.snapshot(&state.paths, &lecture.id)?;
         state.storage.lecture(&lecture.id)
     })();
     if result.is_err() {
         let _ = std::fs::remove_file(&pending);
         if !audio_committed {
-            let _ = state.storage.finish_lecture(&lecture.id, 0.0, "failed");
+            let _ = state
+                .storage
+                .finish_lecture(&lecture.id, 0.0, LectureStatus::Failed);
         }
     }
     job.finish(&result)?;

@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import { messageText } from '../../i18n/messages';
 import {
   lazy,
@@ -71,7 +72,7 @@ export function StudyTools({
   };
   return (
     <section className="study-tools">
-      <div className="study-tabs" role="tablist" aria-label="学习工具">
+      <div className="study-tabs" role="tablist" aria-label={ui.studyTools}>
         {[
           'summary',
           'notes',
@@ -90,12 +91,12 @@ export function StudyTools({
             {
               (
                 {
-                  summary: '课堂要点',
-                  notes: '我的笔记',
-                  index: '时间索引',
-                  slides: '讲义',
-                  questions: '问答',
-                  tasks: '处理进度',
+                  summary: ui.studyTabSummary,
+                  notes: ui.studyMyNotes,
+                  index: ui.studyTabIndex,
+                  slides: ui.studyTabSlides,
+                  questions: ui.studyTabQuestions,
+                  tasks: ui.studyTabTasks,
                 } as Record<string, string>
               )[name]
             }
@@ -155,7 +156,7 @@ export function StudyTools({
             </div>
             {tab === 'index' && (
               <>
-                <h2>{'标记值得回顾的片段'}</h2>
+                <h2>{ui.studyMarksTitle}</h2>
                 <form
                   className="mark-form"
                   onSubmit={(e) => {
@@ -169,23 +170,23 @@ export function StudyTools({
                 >
                   <span className="pill">{clock(position)}</span>
                   <select
-                    aria-label="标记类型"
+                    aria-label={ui.studyMarkTypeLabel}
                     value={kind}
                     onChange={(e) => setKind(e.target.value as typeof kind)}
                   >
-                    <option value="bookmark">{'书签'}</option>
-                    <option value="chapter">{'章节'}</option>
+                    <option value="bookmark">{ui.studyMarkBookmark}</option>
+                    <option value="chapter">{ui.studyMarkChapter}</option>
                   </select>
                   <input
-                    aria-label="标记名称"
-                    placeholder="这个片段讲了什么？"
+                    aria-label={ui.studyMarkNameLabel}
+                    placeholder={ui.studyMarkNamePlaceholder}
                     value={label}
                     maxLength={150}
                     onChange={(e) => setLabel(e.target.value)}
                     required
                   />
                   <button className="button primary" disabled={busy}>
-                    {'添加'}
+                    {ui.studyAddMark}
                   </button>
                 </form>
                 <div className="study-mark-list">
@@ -200,13 +201,15 @@ export function StudyTools({
                       </button>
                       <div>
                         <small>
-                          {mark.kind === 'chapter' ? '章节' : '书签'}
+                          {mark.kind === 'chapter'
+                            ? ui.studyMarkChapter
+                            : ui.studyMarkBookmark}
                         </small>
                         <strong>{mark.label}</strong>
                       </div>
                       <button
                         className="icon-button"
-                        aria-label={'移除 ' + mark.label}
+                        aria-label={ui.studyRemoveMarkLabel(mark.label)}
                         onClick={() =>
                           void run(async () => {
                             await api.deleteMark(id, mark.id);
@@ -222,7 +225,7 @@ export function StudyTools({
               </>
             )}
             {tab === 'slides' && (
-              <Suspense fallback={<p>{'正在加载 PDF 阅读器…'}</p>}>
+              <Suspense fallback={<p>{ui.studyLoadingPdfReader}</p>}>
                 <PdfPanel
                   courseId={detail.course.id}
                   documents={data.documents}
@@ -238,24 +241,27 @@ export function StudyTools({
             {tab === 'questions' && questions}
             {tab === 'tasks' && (
               <>
-                <h2>{'录音与处理进度'}</h2>
+                <h2>{ui.studyTasksTitle}</h2>
                 <p className="notice">
                   {detail.lecture.status === 'recording'
-                    ? '录音正在保存到本机。'
+                    ? ui.studyTasksRecordingInProgress
                     : detail.lecture.durationSeconds > 0
-                      ? '录音已保存，AI 处理可以单独重试。'
-                      : '本次操作没有生成可用录音。'}
+                      ? ui.studyTasksRecordingSaved
+                      : ui.studyTasksNoRecording}
                 </p>
                 {detail.lecture.transcribedUntil <
                   detail.lecture.durationSeconds - 0.1 && (
                   <p className="notice warning">
-                    {'尚未转录的时间范围：'}{' '}
-                    {clock(detail.lecture.transcribedUntil)} 至{' '}
-                    {clock(detail.lecture.durationSeconds)}
+                    {ui.studyTasksUntranscribedRange(
+                      clock(detail.lecture.transcribedUntil),
+                      clock(detail.lecture.durationSeconds),
+                    )}
                   </p>
                 )}
                 {untranslatedCount > 0 && (
-                  <p className="field-hint">待翻译：{untranslatedCount} 段</p>
+                  <p className="field-hint">
+                    {ui.studyTasksUntranslatedCount(untranslatedCount)}
+                  </p>
                 )}
                 {data.tasks.length ? (
                   data.tasks.map((task) => (
@@ -298,13 +304,13 @@ export function StudyTools({
                               )
                             }
                           >
-                            {'重试'}
+                            {ui.tryAgain}
                           </button>
                         )}
                     </article>
                   ))
                 ) : (
-                  <p>{'暂无后台处理任务。'}</p>
+                  <p>{ui.studyTasksEmpty}</p>
                 )}
               </>
             )}

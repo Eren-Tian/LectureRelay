@@ -11,6 +11,7 @@ import type { ProviderStatus } from '../../types/domain';
 import type { ActionRunner } from '../../hooks/useAction';
 import type { AISection } from './SettingsNavigation';
 import type { SettingsResources } from './useSettingsResources';
+import { ui } from '../../i18n';
 
 export function AISettings({
   section,
@@ -44,12 +45,16 @@ export function AISettings({
   };
   return (
     <>
-      <div className="settings-subnav" role="group" aria-label="AI 设置">
+      <div
+        className="settings-subnav"
+        role="group"
+        aria-label={ui.aiSettingsNavLabel}
+      >
         {(
           [
-            ['services', '功能设置'],
-            ['models', '本地模型'],
-            ['summaries', '实时总结'],
+            ['services', ui.aiSettingsServicesTab],
+            ['models', ui.localModels],
+            ['summaries', ui.aiSettingsSummariesTab],
           ] as const
         ).map(([id, label]) => (
           <button
@@ -82,7 +87,7 @@ export function AISettings({
               if (!event.currentTarget.open) keyForm.setKey('');
             }}
           >
-            <summary>云端 API Key</summary>
+            <summary>{ui.aiSettingsCloudApiKeys}</summary>
             <ProviderKeyForm
               settings={props.settings}
               busy={props.blocked}

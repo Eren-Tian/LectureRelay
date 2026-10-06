@@ -136,22 +136,11 @@ pub(crate) async fn download_model_from(
 ) -> AppResult<()> {
     let model = catalog::get(id)?;
     let mut value = {
-        let _gate = state.gate.lock().user_error("The app is busy.")?;
-        if state.summaries.busy() {
-            return Err("实时总结正在处理，请等待完成，或关闭总结后再下载模型。".into());
-        }
-        if state.recorder.status()?.is_some()
-            || state.live.active()
-            || state.jobs.status()?.is_some()
-        {
-            return Err("Download models after the lecture and current task finish.".into());
-        }
+        let _gate = state.lock_gate();
+        state.ensure_idle(crate::app::Operation::ManageModels)?;
         let value = status_for(state, id)?;
         if value.installed {
             return Ok(());
-        }
-        if downloading(state)? {
-            return Err("Another model is downloading. Wait or cancel it.".into());
         }
         state.models.cancel.store(false, Ordering::Relaxed);
         let mut value = value;
@@ -242,17 +231,8 @@ pub fn remove(state: &AppState) -> AppResult<()> {
 }
 pub fn remove_model(state: &AppState, id: &str) -> AppResult<()> {
     catalog::get(id)?;
-    let _gate = state.gate.lock().user_error("The app is busy.")?;
-    if state.summaries.busy() {
-        return Err("实时总结正在处理，请等待完成，或关闭总结后再删除模型。".into());
-    }
-    if state.recorder.status()?.is_some()
-        || state.live.active()
-        || state.jobs.status()?.is_some()
-        || downloading(state)?
-    {
-        return Err("Remove models after active work finishes.".into());
-    }
+    let _gate = state.lock_gate();
+    state.ensure_idle(crate::app::Operation::ManageModels)?;
     for p in [
         path_for(state, id)?,
         state.paths.data.join(format!("models/{id}.json")),

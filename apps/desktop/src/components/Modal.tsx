@@ -67,7 +67,7 @@ export function Modal({
           <button
             className="icon-button"
             onClick={onClose}
-            aria-label={ui.s032}
+            aria-label={ui.close}
           >
             <Icon name="close" />
           </button>

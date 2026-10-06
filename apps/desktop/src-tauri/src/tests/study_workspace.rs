@@ -6,7 +6,8 @@ fn lecture(f: &Fixture, db: &Storage) -> (Course, Lecture) {
     let lecture = db
         .create_lecture(&f.paths, &course.id, "Workspace test")
         .unwrap();
-    db.finish_lecture(&lecture.id, 60., "completed").unwrap();
+    db.finish_lecture(&lecture.id, 60., LectureStatus::Completed)
+        .unwrap();
     (course, lecture)
 }
 fn segment(db: &Storage, id: &str) -> TranscriptSegment {

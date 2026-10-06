@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import { useEffect, useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
 import { api, errorText } from '../../api/client';
@@ -36,7 +37,7 @@ export function FloatingCaptions() {
           setError('');
         }
       } catch {
-        if (alive) setError('字幕连接暂时不可用，请查看主窗口。');
+        if (alive) setError(ui.floatingCaptionsConnectionError);
       } finally {
         busy = false;
       }
@@ -52,15 +53,15 @@ export function FloatingCaptions() {
   return (
     <main className="floating-captions">
       <header>
-        <strong>{'实时字幕'}</strong>
+        <strong>{ui.liveCaptions}</strong>
         <span>
           {recording
             ? recording.paused
-              ? '已暂停'
-              : '正在录音'
+              ? ui.liveRecordingPausedStatus
+              : ui.recordingInProgress
             : live?.active
-              ? '正在完成剩余字幕'
-              : '录音已保存'}
+              ? ui.floatingCaptionsFinishing
+              : ui.recordingSaved}
         </span>
         <button
           className="button secondary"
@@ -68,7 +69,7 @@ export function FloatingCaptions() {
             void api.closeCaptions().catch((e) => setError(errorText(e)))
           }
         >
-          {'关闭字幕窗'}
+          {ui.floatingCaptionsClose}
         </button>
       </header>
       {error && <p role="alert">{error}</p>}
@@ -130,11 +131,13 @@ export function FloatingCaptions() {
           })()}
         {!live?.segments.length && !live?.draft && (
           <p className="muted">
-            {recording ? '等待声音…' : '请在主窗口开始录音。'}
+            {recording
+              ? ui.floatingCaptionsWaitingForAudio
+              : ui.floatingCaptionsStartInMainWindow}
           </p>
         )}
       </div>
-      <footer>{'关闭字幕窗不会停止录音。'}</footer>
+      <footer>{ui.floatingCaptionsCloseHint}</footer>
     </main>
   );
 }

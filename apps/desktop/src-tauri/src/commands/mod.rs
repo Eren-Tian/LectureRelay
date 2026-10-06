@@ -3,8 +3,8 @@ pub(crate) mod live_summaries;
 pub(crate) mod study;
 use crate::{
     AppState,
-    app::assistance as ai,
     app::jobs::{JobGuard, JobStatus},
+    app::{Operation, assistance as ai},
     audio::{InputDevice, RecordingStatus},
     domain::*,
     error::{AppResult, UserFacing},
@@ -38,11 +38,11 @@ pub struct CourseDetail {
 
 #[tauri::command]
 pub fn bootstrap(state: App<'_>) -> AppResult<Bootstrap> {
-    let providers = ["openai", "groq"]
+    let providers = CloudProvider::ALL
         .into_iter()
         .map(|provider| {
             credentials::status(provider).unwrap_or(ProviderStatus {
-                provider: provider.into(),
+                provider,
                 has_key: false,
                 masked_key: String::new(),
             })
@@ -70,25 +70,14 @@ pub fn course_detail(state: App<'_>, id: String) -> AppResult<CourseDetail> {
 
 #[tauri::command]
 pub fn save_course(state: App<'_>, id: Option<String>, input: CourseInput) -> AppResult<Course> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     state.storage.save_course(id, input)
 }
 
 #[tauri::command]
 pub fn delete_course(state: App<'_>, id: String) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
-    if state.live.active() {
-        return Err("Wait for live caption processing to finish.".into());
-    }
-    if state.summaries.busy() {
-        return Err("实时总结正在处理，请等待完成，或关闭总结后再移入回收站。".into());
-    }
+    let _gate = state.lock_gate();
+    state.ensure_idle(Operation::TrashCourse)?;
     if let Some(recording) = state.recorder.status()?
         && state.storage.lecture(&recording.lecture_id)?.course_id == id
     {
@@ -110,10 +99,7 @@ pub fn save_term(
     source: String,
     translation: String,
 ) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     state
         .storage
         .save_term(&course_id, id, &source, &translation)
@@ -121,10 +107,7 @@ pub fn save_term(
 
 #[tauri::command]
 pub fn delete_term(state: App<'_>, course_id: String, id: String) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     state.storage.delete_term(&course_id, &id)
 }
 
@@ -140,28 +123,17 @@ pub async fn test_audio_input(
     app: tauri::AppHandle,
     state: App<'_>,
     id: String,
-    source: String,
+    source: InputSource,
     device_id: String,
 ) -> AppResult<f32> {
     use std::sync::atomic::Ordering;
     let state = state.inner().clone();
     {
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
-        if !matches!(source.as_str(), "microphone" | "system")
-            || id.len() > 64
-            || device_id.len() > 2048
-        {
+        let _gate = state.lock_gate();
+        if id.len() > 64 || device_id.len() > 2048 {
             return Err("Choose a valid audio source and device.".into());
         }
-        if state.recorder.status()?.is_some()
-            || state.live.active()
-            || state.jobs.status()?.is_some()
-        {
-            return Err("Finish active recording or processing before testing audio.".into());
-        }
+        state.ensure_idle(Operation::AudioTest)?;
         if state.audio_preview.swap(true, Ordering::Relaxed) {
             return Err("An audio test is already running. It finishes after five seconds.".into());
         }
@@ -188,43 +160,25 @@ pub async fn start_lecture(
     course_id: String,
     title: String,
     device_id: String,
-    source: String,
+    source: InputSource,
 ) -> AppResult<Lecture> {
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
-        if !matches!(source.as_str(), "microphone" | "system") {
-            return Err("Choose Microphone or System Audio.".into());
-        }
-        if state
-            .audio_preview
-            .load(std::sync::atomic::Ordering::Relaxed)
-        {
-            return Err("Wait for the five-second audio test to finish before recording.".into());
-        }
-        if state.live.active() || crate::models::manager::downloading(&state)? {
-            return Err("Wait for caption processing or model download to finish.".into());
-        }
+        let _gate = state.lock_gate();
+        state.ensure_idle(Operation::StartRecording)?;
         let settings = state.storage.settings()?;
-        if settings.speech_provider == "local" && !crate::models::manager::status(&state)?.installed
+        if settings.speech_provider == SpeechEngine::Local
+            && !crate::models::manager::status(&state)?.installed
         {
             return Err(
-                "Download the local speech model in Settings → Local AI before class.".into(),
+                "Download the local speech model in Settings → AI & models → Local models before class."
+                    .into(),
             );
         }
-        if matches!(settings.speech_provider.as_str(), "openai" | "groq")
-            && !credentials::status(&settings.speech_provider)?.has_key
+        if let Some(provider) = settings.speech_provider.cloud()
+            && !credentials::status(provider)?.has_key
         {
             return Err("Add your speech provider key in Settings before class.".into());
-        }
-        if state.recorder.status()?.is_some() {
-            return Err("A lecture is already recording.".into());
-        }
-        if state.jobs.status()?.is_some() || state.live.active() {
-            return Err("Cancel or finish the AI task before starting a lecture.".into());
         }
         let mut lecture = state
             .storage
@@ -233,13 +187,15 @@ pub async fn start_lecture(
         // error must not leave a recording running behind a failed Start request.
         if let Err(error) = state
             .storage
-            .set_audio_source(&lecture.id, &source)
+            .set_audio_source(&lecture.id, source.into())
             .and_then(|()| state.storage.snapshot(&state.paths, &lecture.id))
         {
-            state.storage.finish_lecture(&lecture.id, 0.0, "failed")?;
+            state
+                .storage
+                .finish_lecture(&lecture.id, 0.0, LectureStatus::Failed)?;
             return Err(error);
         }
-        lecture.audio_source = source.clone();
+        lecture.audio_source = source.into();
         let recording = state.paths.recording(&course_id, &lecture.id)?;
         let recovery = state
             .paths
@@ -252,16 +208,15 @@ pub async fn start_lecture(
             recording,
             recovery,
             device_id,
-            source.clone(),
+            source,
         ) {
-            state.storage.finish_lecture(&lecture.id, 0.0, "failed")?;
+            state
+                .storage
+                .finish_lecture(&lecture.id, 0.0, LectureStatus::Failed)?;
             state.storage.snapshot(&state.paths, &lecture.id)?;
             return Err(error);
         }
-        if settings.speech_provider != "none" {
-            if settings.live_summaries.provider == "local" && state.summaries.busy() {
-                state.summaries.cancel();
-            }
+        if settings.speech_provider != SpeechEngine::None {
             crate::speech::streaming::Live::start(state.clone(), app, lecture.id.clone());
         }
         Ok(lecture)
@@ -284,17 +239,14 @@ pub async fn stop_lecture(state: App<'_>, id: String) -> AppResult<Lecture> {
 }
 
 pub(crate) fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     let lecture = state.storage.lecture(id)?;
     match state.recorder.status()? {
         Some(recording) if recording.lecture_id == id => {}
         Some(_) => {
             return Err("Another lecture is recording. Open that lecture to stop it.".into());
         }
-        None if lecture.status != "recording" => return Ok(lecture),
+        None if lecture.status != LectureStatus::Recording => return Ok(lecture),
         None => {
             return Err("This recording is not active. Restart to recover its saved audio.".into());
         }
@@ -304,16 +256,16 @@ pub(crate) fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
         Ok(summary) => (
             summary.duration_seconds,
             if summary.error.is_some() {
-                "interrupted"
+                LectureStatus::Interrupted
             } else {
-                "completed"
+                LectureStatus::Completed
             },
         ),
         Err(_) => {
             let duration = hound::WavReader::open(state.paths.recording(&lecture.course_id, id)?)
                 .map(|reader| reader.duration() as f64 / reader.spec().sample_rate as f64)
                 .unwrap_or(0.0);
-            (duration, "interrupted")
+            (duration, LectureStatus::Interrupted)
         }
     };
     state.live.finish();
@@ -343,24 +295,16 @@ pub fn save_segment(
     id: Option<String>,
     input: SegmentInput,
 ) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     ensure_ended(&state, &lecture_id)?;
-    if state.jobs.status()?.is_some() || state.live.active() {
-        return Err("Wait for the AI task before editing the transcript.".into());
-    }
+    state.ensure_idle(Operation::EditTranscript)?;
     state.storage.save_segment(&lecture_id, id, input)?;
     state.storage.snapshot(&state.paths, &lecture_id)
 }
 
 #[tauri::command]
 pub fn save_note(state: App<'_>, lecture_id: String, body: String) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     state.storage.lecture(&lecture_id)?;
     if let Some(previous) = state.storage.note(&lecture_id)?
         && previous.body != body
@@ -385,17 +329,8 @@ pub fn save_note(state: App<'_>, lecture_id: String, body: String) -> AppResult<
 
 #[tauri::command]
 pub fn save_settings(state: App<'_>, mut settings: AppSettings) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
-    if state.jobs.status()?.is_some()
-        || state.live.active()
-        || state.recorder.status()?.is_some()
-        || crate::models::manager::downloading(&state)?
-    {
-        return Err("Wait for active work before changing preferences.".into());
-    }
+    let _gate = state.lock_gate();
+    state.ensure_idle(Operation::ChangePreferences)?;
     // Runtime preferences are saved independently, including during recording.
     let current = state.storage.settings()?;
     settings.theme = current.theme;
@@ -408,13 +343,10 @@ pub fn save_settings(state: App<'_>, mut settings: AppSettings) -> AppResult<()>
 pub fn save_runtime_preferences(
     window: tauri::WebviewWindow,
     state: App<'_>,
-    theme: Option<String>,
+    theme: Option<Theme>,
     quiet_mode: Option<bool>,
 ) -> AppResult<AppSettings> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     let mut settings = state.storage.settings()?;
     if let Some(theme) = theme {
         settings.theme = theme;
@@ -425,73 +357,57 @@ pub fn save_runtime_preferences(
     state.performance.save(settings.quiet_mode, || {
         state.storage.save_settings(settings.clone())
     })?;
-    let _ = window.set_theme(Some(if settings.theme == "dark" {
-        tauri::Theme::Dark
-    } else {
-        tauri::Theme::Light
-    }));
+    let _ = window.set_theme(Some(settings.theme.into()));
     Ok(settings)
 }
 
 #[tauri::command]
-pub fn save_provider_key(state: App<'_>, provider: String, key: String) -> AppResult<()> {
-    let _gate = state.gate.lock().user_error("应用正忙，请稍后重试。")?;
-    credentials::save(&provider, key)?;
-    state.storage.summary_tested(&provider, None)?;
+pub fn save_provider_key(state: App<'_>, provider: CloudProvider, key: String) -> AppResult<()> {
+    let _gate = state.lock_gate();
+    credentials::save(provider, key)?;
+    state.storage.summary_tested(provider, None)?;
     state.summaries.cancel();
     Ok(())
 }
 
 #[tauri::command]
-pub fn remove_provider_key(state: App<'_>, provider: String) -> AppResult<()> {
-    let _gate = state.gate.lock().user_error("应用正忙，请稍后重试。")?;
-    credentials::remove(&provider)?;
-    state.storage.summary_tested(&provider, None)?;
+pub fn remove_provider_key(state: App<'_>, provider: CloudProvider) -> AppResult<()> {
+    let _gate = state.lock_gate();
+    credentials::remove(provider)?;
+    state.storage.summary_tested(provider, None)?;
     state.summaries.cancel();
     Ok(())
 }
 
 #[tauri::command]
-pub fn provider_status(provider: String) -> AppResult<ProviderStatus> {
-    credentials::status(&provider)
+pub fn provider_status(provider: CloudProvider) -> AppResult<ProviderStatus> {
+    credentials::status(provider)
 }
 
 #[tauri::command]
-pub async fn test_provider(state: App<'_>, provider: String, model: String) -> AppResult<()> {
+pub async fn test_provider(
+    state: App<'_>,
+    provider: CloudProvider,
+    model: String,
+) -> AppResult<()> {
     let _job = {
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
-        if state.recorder.status()?.is_some()
-            || state.live.active()
-            || crate::models::manager::downloading(&state)?
-        {
-            return Err("Test provider connections after active work ends.".into());
-        }
+        let _gate = state.lock_gate();
+        state.ensure_idle(Operation::Job)?;
         state.jobs.begin("", "provider-test")?
     };
-    OfficialProvider::new(&provider, &model)?.test().await
+    OfficialProvider::new(provider, &model)?.test().await
 }
 
 fn ensure_ended(state: &AppState, id: &str) -> AppResult<()> {
-    if state.storage.lecture(id)?.status == "recording" {
+    if state.storage.lecture(id)?.status == LectureStatus::Recording {
         return Err("Stop and save the lecture first.".into());
     }
     Ok(())
 }
 
 fn begin_job<'a>(state: &'a AppState, id: &str, kind: &str) -> AppResult<JobGuard<'a>> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
-    if state.live.active() || crate::models::manager::downloading(state)? {
-        return Err("Wait for live captions or model download to finish.".into());
-    }
-    if state.recorder.status()?.is_some() {
-        return Err("Run this AI task after recording ends.".into());
-    }
+    let _gate = state.lock_gate();
+    state.ensure_idle(Operation::Job)?;
     ensure_ended(state, id)?;
     state.jobs.begin(id, kind)
 }
@@ -587,10 +503,7 @@ pub fn cancel_job(state: App<'_>) {
 
 #[tauri::command]
 pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<String> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     let detail = state.storage.detail(&id)?;
     let (extension, content) = match kind.as_str() {
         "srt-source" | "srt-translation" | "srt-bilingual" | "vtt-source" | "vtt-translation"
@@ -664,11 +577,8 @@ pub fn quit_app(app: tauri::AppHandle, state: App<'_>) -> AppResult<()> {
 }
 
 #[tauri::command]
-pub async fn audio_devices(source: String) -> AppResult<Vec<InputDevice>> {
-    if !matches!(source.as_str(), "microphone" | "system") {
-        return Err("Invalid audio source.".into());
-    }
-    tauri::async_runtime::spawn_blocking(move || crate::audio::devices(&source))
+pub async fn audio_devices(source: InputSource) -> AppResult<Vec<InputDevice>> {
+    tauri::async_runtime::spawn_blocking(move || crate::audio::devices(source))
         .await
         .user_error("Cannot list audio devices.")?
 }
@@ -714,31 +624,8 @@ pub fn trash_courses(state: App<'_>) -> AppResult<Vec<Course>> {
 }
 #[tauri::command]
 pub fn restore_course(state: App<'_>, id: String) -> AppResult<()> {
-    let _gate = state
-        .gate
-        .lock()
-        .user_error("The app is busy. Try again.")?;
+    let _gate = state.lock_gate();
     state.storage.restore_course(&id)
-}
-
-pub(crate) fn ensure_cleanup_idle(state: &AppState) -> AppResult<()> {
-    if state.summaries.busy() {
-        return Err("实时总结正在处理，请等待完成，或关闭总结后再删除数据。".into());
-    }
-    if state.recorder.status()?.is_some()
-        || state.jobs.status()?.is_some()
-        || state.live.active()
-        || state
-            .audio_preview
-            .load(std::sync::atomic::Ordering::Relaxed)
-        || crate::models::manager::downloading(state)?
-    {
-        return Err(
-            "Finish recording, processing, audio testing and downloads before deleting data."
-                .into(),
-        );
-    }
-    Ok(())
 }
 
 #[tauri::command]
@@ -756,11 +643,8 @@ pub async fn permanently_delete_lecture(
     }
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
-        ensure_cleanup_idle(&state)?;
+        let _gate = state.lock_gate();
+        state.ensure_idle(Operation::DeleteData)?;
         let result = crate::storage::cleanup::delete_lecture(&state.paths, &state.storage, &id);
         if let Ok(mut status) = state.live.status.lock()
             && status.lecture_id == id
@@ -785,11 +669,8 @@ pub async fn permanently_delete_course(
     }
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
-        ensure_cleanup_idle(&state)?;
+        let _gate = state.lock_gate();
+        state.ensure_idle(Operation::DeleteData)?;
         let result = crate::storage::cleanup::run(&state.paths, &state.storage, Some(&id));
         if let Ok(mut status) = state.live.status.lock()
             && !status.lecture_id.is_empty()
@@ -809,11 +690,8 @@ pub async fn free_all_storage(state: App<'_>, confirmation: String) -> AppResult
     }
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
-        ensure_cleanup_idle(&state)?;
+        let _gate = state.lock_gate();
+        state.ensure_idle(Operation::DeleteData)?;
         let result = crate::storage::cleanup::run(&state.paths, &state.storage, None);
         *state
             .models

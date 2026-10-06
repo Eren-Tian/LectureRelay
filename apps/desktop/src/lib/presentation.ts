@@ -2,9 +2,9 @@ import { ui } from '../i18n';
 import type { ExportKind } from '../types/domain';
 
 export const LANGUAGES = [
-  { value: 'zh', label: ui.s002 },
-  { value: 'ja', label: ui.s003 },
-  { value: 'ko', label: '韩语' },
+  { value: 'zh', label: ui.languageChinese },
+  { value: 'ja', label: ui.languageJapanese },
+  { value: 'ko', label: ui.languageKorean },
 ] as const;
 export const SUBJECTS = [
   'Computer Science',
@@ -22,62 +22,67 @@ export const SUBJECTS = [
 ];
 export const languageName = (language: string) =>
   language === 'en'
-    ? '英文'
-    : (LANGUAGES.find((entry) => entry.value === language)?.label ?? ui.s004);
+    ? ui.english
+    : (LANGUAGES.find((entry) => entry.value === language)?.label ??
+      ui.languageChinese);
 const subjectLabels: Record<string, string> = {
-  'Computer Science': '计算机科学',
-  Engineering: '工程',
-  Mathematics: '数学',
-  Physics: '物理',
-  Chemistry: '化学',
-  'Biology / Medicine': '生物学与医学',
-  'Business / Economics': '商科与经济学',
-  'Social Sciences': '社会科学',
-  Humanities: '人文',
-  'Geography / Earth Science': '地理与地球科学',
-  Law: '法学',
-  Other: '其他',
+  'Computer Science': ui.subjectComputerScience,
+  Engineering: ui.subjectEngineering,
+  Mathematics: ui.subjectMathematics,
+  Physics: ui.subjectPhysics,
+  Chemistry: ui.subjectChemistry,
+  'Biology / Medicine': ui.subjectBiologyMedicine,
+  'Business / Economics': ui.subjectBusinessEconomics,
+  'Social Sciences': ui.subjectSocialSciences,
+  Humanities: ui.subjectHumanities,
+  'Geography / Earth Science': ui.subjectGeographyEarthScience,
+  Law: ui.subjectLaw,
+  Other: ui.subjectOther,
 };
 export const subjectName = (subject: string) =>
   subjectLabels[subject] ?? subject;
 const exportLabels: Record<ExportKind, string> = {
-  notes: '笔记（Markdown）',
-  'transcript-json': '转录数据（JSON）',
-  'transcript-markdown': '转录文本（Markdown）',
-  'srt-source': '英文字幕（SRT）',
-  'srt-translation': '译文字幕（SRT）',
-  'srt-bilingual': '双语字幕（SRT）',
-  'vtt-source': '英文字幕（VTT）',
-  'vtt-translation': '译文字幕（VTT）',
-  'vtt-bilingual': '双语字幕（VTT）',
+  notes: ui.exportNotesMarkdown,
+  'transcript-json': ui.exportTranscriptJson,
+  'transcript-markdown': ui.exportTranscriptMarkdown,
+  'srt-source': ui.exportSrtSource,
+  'srt-translation': ui.exportSrtTranslation,
+  'srt-bilingual': ui.exportSrtBilingual,
+  'vtt-source': ui.exportVttSource,
+  'vtt-translation': ui.exportVttTranslation,
+  'vtt-bilingual': ui.exportVttBilingual,
 };
 export const exportName = (kind: ExportKind) => exportLabels[kind];
 export const taskName = (kind: string) =>
   (
     ({
-      transcription: '转录录音',
-      translation: '翻译文本',
-      notes: '生成笔记',
-      review: '整理复习指南',
-      question: '课堂问答',
-      'provider-test': '测试服务连接',
-      'live-captions': '实时字幕',
-      import: '导入音视频',
+      transcription: ui.taskTranscription,
+      translation: ui.taskTranslation,
+      notes: ui.taskNotes,
+      review: ui.taskReview,
+      question: ui.taskQuestion,
+      'provider-test': ui.taskProviderTest,
+      'live-captions': ui.liveCaptions,
+      import: ui.taskImport,
     }) as Record<string, string>
-  )[kind] ?? 'AI 处理';
+  )[kind] ?? ui.taskFallback;
 export const taskStateName = (state: string) =>
   (
     ({
-      running: '处理中',
-      completed: '已完成',
-      failed: '失败',
-      cancelled: '已取消',
-      interrupted: '已中断',
-      stale: '原文已更新',
+      running: ui.taskStateRunning,
+      completed: ui.taskStateCompleted,
+      failed: ui.taskStateFailed,
+      cancelled: ui.taskStateCancelled,
+      interrupted: ui.taskStateInterrupted,
+      stale: ui.taskStateStale,
     }) as Record<string, string>
-  )[state] ?? '待处理';
+  )[state] ?? ui.pending;
 export const providerName = (provider: string) =>
-  provider === 'openai' ? 'OpenAI' : provider === 'groq' ? 'Groq' : ui.s005;
+  provider === 'openai'
+    ? 'OpenAI'
+    : provider === 'groq'
+      ? 'Groq'
+      : ui.providerLocalOnly;
 export const clock = (seconds: number) => {
   const total = Math.floor(Math.max(0, seconds));
   const parts =

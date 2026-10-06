@@ -37,16 +37,16 @@ export function NotesPanel({
     <section className="review-panel">
       <div className="section-heading">
         <div>
-          <h2>{ui.s144}</h2>
+          <h2>{ui.notes}</h2>
           <p>
             {note
-              ? ui.s145(
+              ? ui.notesMeta(
                   note.origin === 'cloud'
-                    ? 'AI 整理，请结合课堂原文核对'
-                    : '手写笔记',
+                    ? ui.notesOriginAi
+                    : ui.notesOriginManual,
                   dateText(note.updatedAt),
                 )
-              : ui.s146}
+              : ui.notesDescription}
           </p>
         </div>
         <div className="button-row">
@@ -59,7 +59,7 @@ export function NotesPanel({
             }}
           >
             <Icon name="edit" size={16} />
-            {ui.s147}
+            {ui.editNotes}
           </button>
           <button
             className="button primary"
@@ -67,14 +67,14 @@ export function NotesPanel({
             onClick={() => void beginAI('notes')}
           >
             <Icon name="spark" size={17} />
-            {ui.s148}
+            {ui.generateNotes}
           </button>
         </div>
       </div>
       {editingNote ? (
         <div className="note-editor">
           <textarea
-            aria-label={ui.s149}
+            aria-label={ui.markdownNotes}
             rows={18}
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -87,23 +87,23 @@ export function NotesPanel({
               onClick={async () => {
                 if (
                   !(await workspace.confirm({
-                    title: ui.s150,
-                    body: ui.s151,
-                    action: ui.s152,
+                    title: ui.discardNoteChangesTitle,
+                    body: ui.discardNoteChangesBody,
+                    action: ui.discardChanges,
                   }))
                 )
                   return;
                 setEditingNote(false);
               }}
             >
-              {ui.s153}
+              {ui.cancelEdit}
             </button>
             <button
               className="button primary"
               disabled={blocked}
               onClick={saveNote}
             >
-              {ui.s154}
+              {ui.saveNotes}
             </button>
           </div>
         </div>
@@ -112,19 +112,19 @@ export function NotesPanel({
       ) : (
         <div className="empty-state">
           <Icon name="books" size={32} />
-          <h3>{ui.s155}</h3>
-          <p>{ui.s156}</p>
+          <h3>{ui.noNotesTitle}</h3>
+          <p>{ui.noNotesBody}</p>
         </div>
       )}
       <div className="review-footer">
-        <span>{ui.s157}</span>
+        <span>{ui.notesStoredLocally}</span>
         <button
           className="text-button"
           disabled={busy || !note}
           onClick={() => exportFile('notes')}
         >
           <Icon name="download" size={15} />
-          {ui.s158}
+          {ui.exportMarkdown}
         </button>
       </div>
     </section>

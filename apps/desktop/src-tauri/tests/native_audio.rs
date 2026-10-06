@@ -1,6 +1,7 @@
 #[test]
 #[ignore = "uses real Windows audio devices and plays eight seconds of synthetic test audio"]
 fn wasapi_loopback_checkpoint_pause_resume_and_microphone() {
+    use lecturerelay_desktop_lib::InputSource;
     use std::{os::windows::process::CommandExt, time::Duration};
     let project = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
     let root = project
@@ -23,7 +24,7 @@ fn wasapi_loopback_checkpoint_pause_resume_and_microphone() {
             path.clone(),
             root.join("recovery.json"),
             String::new(),
-            "system".into(),
+            InputSource::System,
         )
         .unwrap();
     std::thread::sleep(Duration::from_secs(2));
@@ -78,7 +79,7 @@ fn wasapi_loopback_checkpoint_pause_resume_and_microphone() {
             root.join("microphone/recording.wav"),
             root.join("mic-recovery.json"),
             String::new(),
-            "microphone".into(),
+            InputSource::Microphone,
         )
         .unwrap();
     std::thread::sleep(Duration::from_secs(2));

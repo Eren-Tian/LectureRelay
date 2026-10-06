@@ -43,7 +43,6 @@ const fixture = {
   stale: () => {},
   refresh: () => {},
   live: (_live: boolean) => {},
-  legacy: () => {},
   preferences: () => structuredClone(data.settings.liveSummaries),
 };
 Object.assign(window, { liveSummaryFixture: fixture });
@@ -121,18 +120,6 @@ function Fixture() {
   const [live, setLive] = useState(true);
   fixture.refresh = () => tick((n) => n + 1);
   fixture.live = setLive;
-  fixture.legacy = () => {
-    data.settings.liveSummaries = {
-      enabled: true,
-      provider: 'local',
-      model: 'qwen3.5-4b',
-      intervalMinutes: 2,
-      uploadConsent: true,
-    };
-    state.cards[0].provider = 'local';
-    state.cards[0].model = 'qwen3.5-4b';
-    fixture.refresh();
-  };
   fixture.stale = () => {
     state.cards[0].state = 'stale';
     state.cards[0].message = '对应原文已更改，请重新整理。';

@@ -1,4 +1,5 @@
 import { Icon } from '../../components/Icon';
+import { ui } from '../../i18n';
 import type { AppSettings, ProviderStatus } from '../../types/domain';
 import type { SettingsSectionProps } from './settings-types';
 export function ProviderSettings({
@@ -22,9 +23,9 @@ export function ProviderSettings({
   return (
     <>
       <section className="settings-card">
-        <h3>{'英文语音识别'}</h3>
+        <h3>{ui.servicesSpeechTitle}</h3>
         <label>
-          {'语音识别'}
+          {ui.speechRecognition}
           <select
             disabled={blocked}
             value={settings.speechProvider}
@@ -35,15 +36,15 @@ export function ProviderSettings({
               })
             }
           >
-            <option value="local">{'本地英文识别 · 在本机运行'}</option>
-            <option value="none">{'仅录音 · 不生成字幕'}</option>
-            <option value="openai">{'OpenAI · 云端识别'}</option>
-            <option value="groq">{'Groq · 云端识别'}</option>
+            <option value="local">{ui.servicesSpeechLocalOption}</option>
+            <option value="none">{ui.servicesSpeechNoneOption}</option>
+            <option value="openai">{ui.servicesSpeechOpenAIOption}</option>
+            <option value="groq">{ui.servicesSpeechGroqOption}</option>
           </select>
         </label>
         {settings.speechProvider === 'local' ? (
           <button className="button text" onClick={onLocal}>
-            {'管理本地模型'}
+            {ui.servicesManageLocalModels}
             <Icon name="arrow" size={16} />
           </button>
         ) : (
@@ -54,15 +55,15 @@ export function ProviderSettings({
                 onKeys(settings.speechProvider as 'openai' | 'groq')
               }
             >
-              {speechHasKey ? '管理 API Key' : '添加 API Key'}
+              {speechHasKey ? ui.servicesManageApiKey : ui.addApiKey}
             </button>
           )
         )}
       </section>
       <section className="settings-card">
-        <h3>课堂翻译</h3>
+        <h3>{ui.servicesTranslationTitle}</h3>
         <label>
-          {'翻译'}
+          {ui.servicesTranslationLabel}
           <select
             disabled={blocked}
             value={settings.translationMode}
@@ -74,14 +75,14 @@ export function ProviderSettings({
               })
             }
           >
-            <option value="local">{'本地 · 在本机运行'}</option>
-            <option value="cloud">{'云端 · 使用下方所选服务'}</option>
-            <option value="none">{'关闭'}</option>
+            <option value="local">{ui.servicesLocalOnDeviceOption}</option>
+            <option value="cloud">{ui.servicesCloudSelectedBelowOption}</option>
+            <option value="none">{ui.off}</option>
           </select>
         </label>
         {settings.translationMode === 'local' && (
           <label>
-            {'本地翻译模型'}
+            {ui.servicesLocalTranslationModel}
             <select
               disabled={blocked}
               value={settings.translationModel}
@@ -94,10 +95,10 @@ export function ProviderSettings({
               }
             >
               <option value="hy-mt2-1.8b">
-                {'Hy-MT2-1.8B · 体积较小，速度优先'}
+                {ui.servicesTranslationHyMtOption}
               </option>
               <option value="qwen3.5-4b">
-                {'Qwen3.5-4B · 备选，与学习工具共用模型'}
+                {ui.servicesTranslationQwenOption}
               </option>
             </select>
           </label>
@@ -105,7 +106,7 @@ export function ProviderSettings({
         {settings.translationMode !== 'none' && (
           <label className="toggle-row">
             <span>
-              <strong>上课时自动翻译</strong>
+              <strong>{ui.servicesLiveTranslationToggle}</strong>
             </span>
             <input
               type="checkbox"
@@ -123,9 +124,9 @@ export function ProviderSettings({
         )}
       </section>
       <section className="settings-card">
-        <h3>课后学习</h3>
+        <h3>{ui.servicesStudyTitle}</h3>
         <label>
-          {'总结、深度复习与问答'}
+          {ui.servicesStudyLabel}
           <select
             disabled={blocked}
             value={settings.studyMode}
@@ -136,14 +137,14 @@ export function ProviderSettings({
               })
             }
           >
-            <option value="local">{'本地 · Qwen3.5-4B'}</option>
-            <option value="cloud">{'云端 · 使用下方所选服务'}</option>
-            <option value="none">{'关闭'}</option>
+            <option value="local">{ui.servicesStudyLocalOption}</option>
+            <option value="cloud">{ui.servicesCloudSelectedBelowOption}</option>
+            <option value="none">{ui.off}</option>
           </select>
         </label>
         {settings.studyMode === 'local' && (
           <button className="button text" onClick={onLocal}>
-            {'下载与管理本地模型'}
+            {ui.servicesDownloadManageModels}
             <Icon name="arrow" size={16} />
           </button>
         )}
@@ -151,9 +152,9 @@ export function ProviderSettings({
       {(settings.translationMode === 'cloud' ||
         settings.studyMode === 'cloud') && (
         <section className="settings-card">
-          <h3>云端文本服务</h3>
+          <h3>{ui.servicesCloudTextTitle}</h3>
           <label>
-            {'可选云端文本服务'}
+            {ui.servicesCloudTextLabel}
             <select
               disabled={blocked}
               value={settings.provider}
@@ -169,7 +170,7 @@ export function ProviderSettings({
                 });
               }}
             >
-              <option value="none">{'未连接'}</option>
+              <option value="none">{ui.servicesProviderNotConnected}</option>
               <option value="openai">OpenAI</option>
               <option value="groq">Groq</option>
             </select>
@@ -181,12 +182,12 @@ export function ProviderSettings({
                 onClick={() => onKeys(settings.provider as 'openai' | 'groq')}
               >
                 <Icon name="shield" size={16} />
-                {hasKey ? '管理 API Key' : '添加 API Key'}
+                {hasKey ? ui.servicesManageApiKey : ui.addApiKey}
               </button>
               <details className="settings-advanced">
-                <summary>{'模型高级设置'}</summary>
+                <summary>{ui.advancedModelSettings}</summary>
                 <label>
-                  {'文本模型'}
+                  {ui.servicesTextModel}
                   <input
                     disabled={blocked}
                     maxLength={100}
@@ -196,17 +197,11 @@ export function ProviderSettings({
                     }
                   />
                 </label>
-                <p className="field-hint">
-                  {
-                    '请填写你的服务商账号可用的模型名。保存 API Key 并不代表已获得该模型的访问权限。'
-                  }
-                </p>
+                <p className="field-hint">{ui.servicesTextModelHint}</p>
               </details>
             </>
           )}
-          <p className="field-hint">
-            使用自己的 API Key，费用与额度由服务商账户承担。
-          </p>
+          <p className="field-hint">{ui.servicesOwnApiKeyHint}</p>
         </section>
       )}
     </>

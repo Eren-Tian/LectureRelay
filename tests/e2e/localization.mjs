@@ -190,9 +190,10 @@ try {
   assert.match(message, /设备未提供受影响的时长/);
   assert.doesNotMatch(message, /Recording|audio/);
   const model = await d.read(
-    `return window.localizationFixture.messageText('Download Hy-MT2-1.8B · Q4_K_M in Settings → Local AI first. No text has been uploaded.');`,
+    `return window.localizationFixture.messageText('Download Hy-MT2-1.8B · Q4_K_M in Settings → AI & models → Local models first. No text has been uploaded.');`,
   );
   assert.match(model, /下载 Hy-MT2-1.8B · Q4_K_M/);
+  assert.match(model, /设置 → AI 与模型 → 本地模型/);
   assert.match(model, /尚未上传任何文本/);
   const report = {
     passed: true,

@@ -41,14 +41,17 @@ export function SegmentForm({
       await api.saveSegment(lectureId, segment?.id ?? null, input);
       await onSaved();
       onClose();
-    }, ui.s188);
+    }, ui.transcriptSaved);
   };
   return (
-    <Modal title={segment ? ui.s189 : ui.s190} onClose={close}>
+    <Modal
+      title={segment ? ui.correctTranscript : ui.addSegment}
+      onClose={close}
+    >
       <form className="form-stack" onSubmit={submit}>
         <div className="form-grid">
           <label>
-            {ui.s191}
+            {ui.startSecondsLabel}
             <input
               type="number"
               required
@@ -65,7 +68,7 @@ export function SegmentForm({
             />
           </label>
           <label>
-            {ui.s192}
+            {ui.endSecondsLabel}
             <input
               type="number"
               required
@@ -83,7 +86,7 @@ export function SegmentForm({
           </label>
         </div>
         <label>
-          {'英文'}
+          {ui.english}
           <textarea
             required
             rows={4}
@@ -95,13 +98,13 @@ export function SegmentForm({
                 sourceText: event.target.value,
               }))
             }
-            placeholder={ui.s193}
+            placeholder={ui.transcriptPlaceholder}
           />
         </label>
         <label>
           {languageName(language)}
-          {ui.s194}
-          <span className="optional">{ui.s195}</span>
+          {ui.segmentTranslationSuffix}
+          <span className="optional">{ui.optional}</span>
           <textarea
             rows={3}
             maxLength={10000}
@@ -114,7 +117,7 @@ export function SegmentForm({
             }
           />
         </label>
-        <p className="field-hint">{ui.s196}</p>
+        <p className="field-hint">{ui.segmentFormHint}</p>
         <div className="form-actions">
           <button
             type="button"
@@ -122,10 +125,10 @@ export function SegmentForm({
             onClick={close}
             disabled={busy}
           >
-            {ui.s197}
+            {ui.cancel}
           </button>
           <button className="button primary" disabled={busy}>
-            {ui.s198}
+            {ui.saveTranscript}
           </button>
         </div>
       </form>

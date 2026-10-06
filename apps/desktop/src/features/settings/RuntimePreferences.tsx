@@ -2,6 +2,7 @@ import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { useAction } from '../../hooks/useAction';
 import type { AppSettings } from '../../types/domain';
+import { ui } from '../../i18n';
 
 export function RuntimePreferences() {
   const { data, refresh } = useWorkspace();
@@ -16,10 +17,14 @@ export function RuntimePreferences() {
     <>
       <section className="settings-card">
         <div className="settings-title">
-          <h3>外观</h3>
-          <span className="pill">自动保存</span>
+          <h3>{ui.runtimeAppearance}</h3>
+          <span className="pill">{ui.runtimeAutoSave}</span>
         </div>
-        <div className="theme-options" role="group" aria-label="外观">
+        <div
+          className="theme-options"
+          role="group"
+          aria-label={ui.runtimeAppearance}
+        >
           {(['light', 'dark'] as const).map((value) => (
             <button
               key={value}
@@ -33,7 +38,7 @@ export function RuntimePreferences() {
                 <i />
                 <i />
               </span>
-              {value === 'light' ? '浅色' : '深色'}
+              {value === 'light' ? ui.runtimeThemeLight : ui.runtimeThemeDark}
               <span className="theme-selected" aria-hidden="true">
                 {theme === value ? '✓' : ''}
               </span>
@@ -44,13 +49,13 @@ export function RuntimePreferences() {
       <section className="settings-card">
         <label className="toggle-row performance-toggle">
           <span>
-            <strong>{'安静模式'}</strong>
-            <small>{'本地 AI 共用最多 4 个 CPU 核心'}</small>
+            <strong>{ui.quietMode}</strong>
+            <small>{ui.runtimeQuietModeHint}</small>
           </span>
           <input
             type="checkbox"
             role="switch"
-            aria-label="安静模式"
+            aria-label={ui.quietMode}
             checked={quietMode}
             disabled={busy}
             onChange={(e) => save({ quietMode: e.target.checked })}
@@ -58,8 +63,8 @@ export function RuntimePreferences() {
         </label>
         <p className="field-hint" role="status">
           {quietMode
-            ? '已限制 CPU 占用 · 自动保存'
-            : '全速运行，功耗更高 · 自动保存'}
+            ? ui.runtimeQuietModeOnStatus
+            : ui.runtimeQuietModeOffStatus}
         </p>
       </section>
     </>

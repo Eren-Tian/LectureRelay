@@ -1,5 +1,5 @@
 use crate::{
-    domain::ProviderStatus,
+    domain::{CloudProvider, ProviderStatus},
     error::{AppResult, UserFacing},
 };
 use windows::{
@@ -8,18 +8,15 @@ use windows::{
 };
 use zeroize::{Zeroize, Zeroizing};
 
-fn target(provider: &str) -> AppResult<String> {
-    if !matches!(provider, "openai" | "groq") {
-        return Err("Unsupported provider.".into());
-    }
-    Ok(format!("LectureRelay/provider/{provider}"))
+fn target(provider: CloudProvider) -> String {
+    format!("LectureRelay/provider/{provider}")
 }
 
 fn wide(value: &str) -> Vec<u16> {
     value.encode_utf16().chain(Some(0)).collect()
 }
 
-pub fn save(provider: &str, key: String) -> AppResult<()> {
+pub fn save(provider: CloudProvider, key: String) -> AppResult<()> {
     let key = Zeroizing::new(key);
     if key.trim() != key.as_str()
         || key.len() < 8
@@ -29,7 +26,7 @@ pub fn save(provider: &str, key: String) -> AppResult<()> {
     {
         return Err("Paste a valid API key without spaces or newlines.".into());
     }
-    save_target(&target(provider)?, key.as_str())
+    save_target(&target(provider), key.as_str())
 }
 
 fn save_target(name: &str, key: &str) -> AppResult<()> {
@@ -50,8 +47,8 @@ fn save_target(name: &str, key: &str) -> AppResult<()> {
         .user_error("Windows Credential Manager could not save the key.")
 }
 
-pub fn load(provider: &str) -> AppResult<Option<Zeroizing<String>>> {
-    load_target(&target(provider)?)
+pub fn load(provider: CloudProvider) -> AppResult<Option<Zeroizing<String>>> {
+    load_target(&target(provider))
 }
 
 fn load_target(name: &str) -> AppResult<Option<Zeroizing<String>>> {
@@ -82,8 +79,8 @@ fn load_target(name: &str) -> AppResult<Option<Zeroizing<String>>> {
     }
 }
 
-pub fn remove(provider: &str) -> AppResult<()> {
-    remove_target(&target(provider)?)
+pub fn remove(provider: CloudProvider) -> AppResult<()> {
+    remove_target(&target(provider))
 }
 
 fn remove_target(name: &str) -> AppResult<()> {
@@ -95,10 +92,10 @@ fn remove_target(name: &str) -> AppResult<()> {
     }
 }
 
-pub fn status(provider: &str) -> AppResult<ProviderStatus> {
+pub fn status(provider: CloudProvider) -> AppResult<ProviderStatus> {
     let key = load(provider)?;
     Ok(ProviderStatus {
-        provider: provider.into(),
+        provider,
         has_key: key.is_some(),
         masked_key: key
             .as_ref()

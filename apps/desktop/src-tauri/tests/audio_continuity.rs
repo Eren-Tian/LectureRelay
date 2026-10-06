@@ -1,4 +1,5 @@
 //! Hardware evidence only. Uses production Recorder with a test app handle, no AI/WebView flow.
+use lecturerelay_desktop_lib::InputSource;
 use std::{
     path::Path,
     process::Child,
@@ -31,9 +32,9 @@ fn real_record_only_continuity_lifecycle() {
         .unwrap();
     let recorder = lecturerelay_desktop_lib::Recorder::default();
     for (scenario, source) in [
-        ("continuous", "system"),
-        ("pause-idle", "system"),
-        ("microphone", "microphone"),
+        ("continuous", InputSource::System),
+        ("pause-idle", InputSource::System),
+        ("microphone", InputSource::Microphone),
     ] {
         if std::env::var("LECTURERELAY_CONTINUITY_SCENARIO").is_ok_and(|value| value != scenario) {
             continue;
@@ -58,7 +59,7 @@ fn real_record_only_continuity_lifecycle() {
                 directory.join("recording.wav"),
                 directory.join("recovery.json"),
                 std::env::var("LECTURERELAY_CONTINUITY_DEVICE").unwrap_or_default(),
-                source.into(),
+                source,
             )
             .unwrap();
         sleep(Duration::from_secs(2));

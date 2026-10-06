@@ -2,7 +2,7 @@ use super::*;
 use crate::{app::live_summaries as engine, database::live_summaries::*};
 
 #[test]
-fn storage_and_model_cleanup_cannot_race_an_active_summary() {
+fn storage_cleanup_cannot_race_an_active_summary_but_models_are_independent() {
     let f = Fixture::new();
     let storage = std::sync::Arc::new(f.db());
     let state = crate::AppState {
@@ -28,18 +28,16 @@ fn storage_and_model_cleanup_cannot_race_an_active_summary() {
     std::fs::write(&model, b"fixture").unwrap();
     let flight = state.summaries.test_flight().unwrap();
     assert!(
-        crate::commands::ensure_cleanup_idle(&state)
+        state
+            .ensure_idle(crate::app::Operation::DeleteData)
             .unwrap_err()
-            .contains("总结")
+            .contains("live summary")
     );
-    assert!(
-        crate::models::manager::remove_model(&state, "qwen3.5-4b")
-            .unwrap_err()
-            .contains("总结")
-    );
-    assert_eq!(std::fs::read(model).unwrap(), b"fixture");
+    // Cloud live summaries load no local model, so model files may be managed meanwhile.
+    crate::models::manager::remove_model(&state, "qwen3.5-4b").unwrap();
+    assert!(!model.exists());
     drop(flight);
-    assert!(crate::commands::ensure_cleanup_idle(&state).is_ok());
+    assert!(state.ensure_idle(crate::app::Operation::DeleteData).is_ok());
 }
 
 fn segment(n: usize) -> TranscriptSegment {
@@ -50,7 +48,7 @@ fn segment(n: usize) -> TranscriptSegment {
         end_seconds: (n * 60 + 59) as f64,
         source_text: format!("Example {n}: the limit is 2 mg, not 3 mg."),
         translated_text: String::new(),
-        origin: "local".into(),
+        origin: SegmentOrigin::Local,
         provider: "local".into(),
         status: "final".into(),
         transcript_version: "original".into(),
@@ -62,7 +60,8 @@ fn lecture(f: &Fixture, db: &Storage) -> Lecture {
     let l = db
         .create_lecture(&f.paths, &c.id, "Summary regression")
         .unwrap();
-    db.finish_lecture(&l.id, 1200., "completed").unwrap();
+    db.finish_lecture(&l.id, 1200., LectureStatus::Completed)
+        .unwrap();
     l
 }
 fn add(db: &Storage, l: &Lecture, n: usize) -> SummarySource {
@@ -100,7 +99,7 @@ fn summaries_upgrade_opt_in_and_validate_independently() {
         serde_json::from_str(r#"{"speechProvider":"local","translationMode":"local"}"#).unwrap();
     assert!(!legacy.live_summaries.enabled);
     assert_eq!(legacy.live_summaries.interval_minutes, 4);
-    assert_eq!(legacy.live_summaries.provider, "groq");
+    assert_eq!(legacy.live_summaries.provider, CloudChoice::Groq);
     assert_eq!(legacy.live_summaries.model, "openai/gpt-oss-120b");
     let f = Fixture::new();
     let db = f.db();
@@ -128,27 +127,29 @@ fn legacy_local_summary_settings_become_off_without_changing_saved_content() {
     let f = Fixture::new();
     let db = f.db();
     let l = lecture(&f, &db);
-    let old_preferences = LiveSummaryPreferences {
+    let reserved = LiveSummaryPreferences {
         enabled: true,
-        provider: "local".into(),
         model: "qwen3.5-4b".into(),
         interval_minutes: 2,
         upload_consent: true,
+        ..Default::default()
     };
     // Represent a card created by 0.3.9, before local live summaries were removed.
     let card = db
-        .reserve_summary(&l.id, &old_preferences, vec![add(&db, &l, 0)])
+        .reserve_summary(&l.id, &reserved, vec![add(&db, &l, 0)])
         .unwrap();
     db.finish_summary(&card, "旧本地总结", &points(&card))
         .unwrap();
     db.save_note(&l.id, "手写笔记保留", "manual").unwrap();
     let mut saved = serde_json::to_value(AppSettings {
-        theme: "dark".into(),
-        speech_provider: "local".into(),
-        live_summaries: old_preferences,
+        theme: Theme::Dark,
+        speech_provider: SpeechEngine::Local,
+        live_summaries: reserved,
         ..Default::default()
     })
     .unwrap();
+    // 0.3.9 stored the legacy provider as a plain string that no longer decodes.
+    saved["liveSummaries"]["provider"] = "local".into();
     saved["futurePreference"] = serde_json::json!({"preserve": true});
     drop(db);
     let raw = rusqlite::Connection::open(f.paths.data.join("app.db")).unwrap();
@@ -157,18 +158,23 @@ fn legacy_local_summary_settings_become_off_without_changing_saved_content() {
         [saved.to_string()],
     )
     .unwrap();
+    raw.execute(
+        "UPDATE live_summary_cards SET provider='local' WHERE id=?1",
+        [&card.id],
+    )
+    .unwrap();
     drop(raw);
 
     let db = f.db();
     let settings = db.settings().unwrap();
     assert!(!settings.live_summaries.enabled);
-    assert_eq!(settings.live_summaries.provider, "none");
+    assert_eq!(settings.live_summaries.provider, CloudChoice::None);
     assert!(!settings.live_summaries.upload_consent);
     assert_eq!(settings.live_summaries.interval_minutes, 2);
-    assert_eq!(settings.speech_provider, "local");
-    assert_eq!(settings.translation_mode, "local");
-    assert_eq!(settings.study_mode, "local");
-    assert_eq!(settings.theme, "dark");
+    assert_eq!(settings.speech_provider, SpeechEngine::Local);
+    assert_eq!(settings.translation_mode, ProcessingMode::Local);
+    assert_eq!(settings.study_mode, ProcessingMode::Local);
+    assert_eq!(settings.theme, Theme::Dark);
     let cards = db.summary_cards(&l.id).unwrap();
     assert_eq!(cards.len(), 1);
     assert_eq!(cards[0].provider, "local");
@@ -200,17 +206,10 @@ fn obsolete_clients_cannot_reenable_local_live_summaries() {
     let db = f.db();
     let original = db.settings().unwrap();
     for enabled in [false, true] {
-        let mut requested = original.clone();
-        requested.live_summaries.provider = "local".into();
-        requested.live_summaries.enabled = enabled;
-        assert!(
-            requested
-                .live_summaries
-                .validate()
-                .unwrap_err()
-                .contains("已停用")
-        );
-        assert!(db.save_settings(requested).is_err());
+        // The removed provider no longer decodes, so an obsolete client's
+        // request is rejected at the IPC boundary before anything is saved.
+        let requested = serde_json::json!({"provider": "local", "enabled": enabled});
+        assert!(serde_json::from_value::<LiveSummaryPreferences>(requested).is_err());
         assert!(db.settings().unwrap().live_summaries == original.live_summaries);
     }
     // A legacy settings row written after startup is also exposed as Off.
@@ -222,7 +221,7 @@ fn obsolete_clients_cannot_reenable_local_live_summaries() {
     .unwrap();
     let effective = db.settings().unwrap().live_summaries;
     assert!(!effective.enabled);
-    assert_eq!(effective.provider, "none");
+    assert_eq!(effective.provider, CloudChoice::None);
     assert!(effective.validate().is_ok());
 }
 
@@ -438,14 +437,15 @@ fn parser_rejects_untraceable_or_incomplete_results_and_maps_real_refs() {
 }
 #[test]
 fn groq_payload_supports_structured_output_without_conflicting_reasoning_flags() {
-    let body = crate::providers::summary_payload("groq", "openai/gpt-oss-120b", "s", "u");
+    let body =
+        crate::providers::summary_payload(CloudProvider::Groq, "openai/gpt-oss-120b", "s", "u");
     assert_eq!(body["reasoning_effort"], "low");
     assert_eq!(body["include_reasoning"], false);
     assert!(body.get("reasoning_format").is_none());
     assert_eq!(body["stream"], false);
     assert_eq!(body["response_format"]["json_schema"]["strict"], true);
     assert_eq!(
-        crate::providers::summary_payload("openai", "gpt-4o-mini", "s", "u")["store"],
+        crate::providers::summary_payload(CloudProvider::OpenAi, "gpt-4o-mini", "s", "u")["store"],
         false
     );
 }
@@ -456,9 +456,9 @@ fn single_flight_and_provider_cooldowns_do_not_spill_between_providers() {
     assert!(engine.test_flight().is_err());
     drop(flight);
     assert!(!engine.busy());
-    engine.rate_limited("groq", 30);
-    assert!(engine.check_cooldown("groq").is_err());
-    assert!(engine.check_cooldown("openai").is_ok());
+    engine.rate_limited(CloudProvider::Groq, 30);
+    assert!(engine.check_cooldown(CloudProvider::Groq).is_err());
+    assert!(engine.check_cooldown(CloudProvider::OpenAi).is_ok());
     let generation = engine.generation();
     engine.cancel();
     assert!(!engine.matches_generation(generation));

@@ -61,7 +61,7 @@ fn local_stream_preview_preemption_and_final() {
         id: "stream-fixture".into(), lecture_id: "fixture".into(),
         source_text: "Correlation does not imply causation. Increasing sample size reduces sampling error but does not remove confounding.".into(),
         start_seconds:0., end_seconds:10., translated_text:String::new(),
-        origin:"local".into(), provider:"local".into(),status:"final".into(),
+        origin:SegmentOrigin::Local, provider:"local".into(),status:"final".into(),
         transcript_version:"fixture".into(), revision:0,
     };
     let obsolete = AtomicBool::new(false);
@@ -195,7 +195,7 @@ fn local_ai_translation_summary_review_and_cancel() {
         .unwrap();
     state
         .storage
-        .finish_lecture(&lecture.id, 5400., "completed")
+        .finish_lecture(&lecture.id, 5400., LectureStatus::Completed)
         .unwrap();
     for (time, text) in [
         (
@@ -332,7 +332,7 @@ fn classroom_translation_comparison() {
                     end_seconds: 10.,
                     source_text: source.into(),
                     translated_text: String::new(),
-                    origin: "manual".into(),
+                    origin: SegmentOrigin::Manual,
                     provider: "".into(),
                     status: "final".into(),
                     transcript_version: "evaluation".into(),

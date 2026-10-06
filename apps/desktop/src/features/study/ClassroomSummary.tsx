@@ -3,6 +3,7 @@ import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { useAction } from '../../hooks/useAction';
 import { MarkdownBody } from '../../components/MarkdownBody';
+import { ui } from '../../i18n';
 import { clock } from '../../lib/presentation';
 import { messageText } from '../../i18n/messages';
 import type { StudyState } from '../../types/domain';
@@ -64,7 +65,7 @@ export function ClassroomSummary({
       try {
         if (resume) await api.resumeReview(id, review.id);
         else await api.generateNotes(id);
-        workspace.notify('课堂要点已保存在本机。');
+        workspace.notify(ui.classroomSummarySavedLocally);
       } finally {
         await onSaved();
         await workspace.refresh();
@@ -80,14 +81,14 @@ export function ClassroomSummary({
       />
       {!live && (
         <details className="summary-archive">
-          <summary>原文分段与课后整理</summary>
+          <summary>{ui.classroomSummaryArchiveTitle}</summary>
           <header className="summary-heading">
             <div>
-              <h2>分段课堂要点</h2>
+              <h2>{ui.classroomSummaryHeading}</h2>
               <p className="field-hint">
                 {live
-                  ? '按约两分钟收集已定稿字幕，课后再由 AI 整理。'
-                  : `${cards.length} 段课堂内容 · ${done} 段已整理`}
+                  ? ui.classroomSummaryLiveHint
+                  : ui.classroomSummaryProgress(cards.length, done)}
               </p>
             </div>
             {!live && canGenerate && local && (
@@ -97,49 +98,43 @@ export function ClassroomSummary({
                 onClick={generate}
               >
                 {busy
-                  ? '正在整理…'
+                  ? ui.summaryInProgress
                   : resume
-                    ? '继续整理'
+                    ? ui.classroomSummaryResume
                     : review && !stale
-                      ? '重新整理'
-                      : '生成课堂要点'}
+                      ? ui.summaryRegenerate
+                      : ui.classroomSummaryGenerate}
               </button>
             )}
           </header>
           {live ? (
-            <p className="notice">
-              上课时优先保证录音和字幕；这里的原文片段尚未经过 AI 总结。
-            </p>
+            <p className="notice">{ui.classroomSummaryLiveNotice}</p>
           ) : (
             !local && (
               <p className="notice">
-                分段要点使用本地 Qwen3.5-4B。
+                {ui.classroomSummaryLocalModelNotice}
                 <button
                   className="text-button"
                   onClick={() =>
                     workspace.navigate({ view: 'settings', entry: 'services' })
                   }
                 >
-                  设置学习模型
+                  {ui.classroomSummaryStudyModelSettings}
                 </button>
               </p>
             )
           )}
           {!live && stale && (
-            <p className="notice warning">
-              转录文本或整理语言已更改，下方为上次保存的要点。请重新生成后再用于复习。
-            </p>
+            <p className="notice warning">{ui.classroomSummaryStaleWarning}</p>
           )}
           {!live && review && !review.publishedVersion && (
             <p className="notice" role="status">
-              已保存 {done} / {cards.length} 段要点。
-              {messageText(review.message) || '尚未完成的片段可以继续整理。'}
+              {ui.classroomSummarySavedProgress(done, cards.length)}
+              {messageText(review.message) || ui.classroomSummaryResumeHint}
             </p>
           )}
           {!cards.length && (
-            <p className="summary-empty">
-              第一段英文字幕定稿后，课堂片段会出现在这里。
-            </p>
+            <p className="summary-empty">{ui.classroomSummaryEmpty}</p>
           )}
           {cards
             .slice(current * PAGE_SIZE, (current + 1) * PAGE_SIZE)
@@ -158,19 +153,26 @@ export function ClassroomSummary({
                   key={`${index}:${card.startSeconds}`}
                 >
                   <header>
-                    <strong>{chapter?.label || `第 ${index + 1} 段`}</strong>
+                    <strong>
+                      {chapter?.label ||
+                        ui.classroomSummarySegmentLabel(index + 1)}
+                    </strong>
                     <span className="summary-state">
-                      {card.body ? 'AI 要点' : live ? '原文已收集' : '待整理'}
+                      {card.body
+                        ? ui.summaryAiPoints
+                        : live
+                          ? ui.classroomSummarySourceCollected
+                          : ui.classroomSummaryPending}
                     </span>
                   </header>
                   <button
                     className="text-button summary-time"
                     disabled={!onSeek}
-                    aria-label={`回听第 ${index + 1} 段`}
+                    aria-label={ui.classroomSummaryReplaySegment(index + 1)}
                     onClick={() => onSeek?.(card.startSeconds)}
                   >
                     {clock(card.startSeconds)} — {clock(card.endSeconds)}
-                    {onSeek ? ' · 回听' : ''}
+                    {onSeek ? ui.summaryReplaySuffix : ''}
                   </button>
                   {card.body ? (
                     <MarkdownBody body={card.body} onSeek={onSeek} />
@@ -183,7 +185,7 @@ export function ClassroomSummary({
                     </p>
                   )}
                   <details>
-                    <summary>查看对应原文</summary>
+                    <summary>{ui.classroomSummaryViewSource}</summary>
                     <p className="summary-source">{card.source}</p>
                     {card.translation && (
                       <p className="summary-source">{card.translation}</p>
@@ -193,17 +195,22 @@ export function ClassroomSummary({
                     className="text-button"
                     onClick={() =>
                       onAppend(
-                        `\n\n### 第 ${index + 1} 段 ${stamp}\n\n${card.body || card.translation || card.source}\n\n补充：`,
+                        `\n\n### ${ui.classroomSummarySegmentLabel(index + 1)} ${stamp}\n\n${card.body || card.translation || card.source}\n\n${ui.classroomSummaryNoteAddendumLabel}`,
                       )
                     }
                   >
-                    {card.body ? '加入我的笔记' : '为这段补充笔记'}
+                    {card.body
+                      ? ui.summaryAddToNotes
+                      : ui.classroomSummaryAddNoteForSegment}
                   </button>
                 </article>
               );
             })}
           {cards.length > PAGE_SIZE && (
-            <nav className="summary-pages" aria-label="课堂片段分页">
+            <nav
+              className="summary-pages"
+              aria-label={ui.classroomSummaryPagination}
+            >
               <button
                 className="button secondary"
                 disabled={current === 0}
@@ -212,7 +219,7 @@ export function ClassroomSummary({
                   setPage(current - 1);
                 }}
               >
-                上一页
+                {ui.previousPage}
               </button>
               <span>
                 {current + 1} / {lastPage + 1}
@@ -225,20 +232,17 @@ export function ClassroomSummary({
                   setPage(current + 1);
                 }}
               >
-                下一页
+                {ui.nextPage}
               </button>
               {live && (
                 <button className="text-button" onClick={() => setFollow(true)}>
-                  查看最新片段
+                  {ui.classroomSummaryJumpToLatest}
                 </button>
               )}
             </nav>
           )}
           {!live && (
-            <p className="field-hint">
-              AI
-              要点可能有误；可展开原文核对，或点击时间范围回听。生成失败会保留已完成的片段。
-            </p>
+            <p className="field-hint">{ui.classroomSummaryAccuracyHint}</p>
           )}
         </details>
       )}

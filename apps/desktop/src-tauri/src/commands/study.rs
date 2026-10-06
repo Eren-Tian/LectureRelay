@@ -44,7 +44,9 @@ pub async fn import_media(
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
         let Some(source) = rfd::FileDialog::new()
+            // i18n-exempt: native file dialog title
             .set_title("导入课堂音视频")
+            // i18n-exempt: native file dialog filter name
             .add_filter("音频与视频", &["wav", "mp3", "m4a", "mp4", "flac", "ogg"])
             .pick_file()
         else {
@@ -64,16 +66,14 @@ pub async fn attach_document(
     tauri::async_runtime::spawn_blocking(move || {
         state.storage.course(&course_id)?;
         let Some(source) = rfd::FileDialog::new()
+            // i18n-exempt: native file dialog title
             .set_title("添加课程 PDF")
             .add_filter("PDF", &["pdf"])
             .pick_file()
         else {
             return Ok(None);
         };
-        let _gate = state
-            .gate
-            .lock()
-            .user_error("The app is busy. Try again.")?;
+        let _gate = state.lock_gate();
         state.storage.course(&course_id)?;
         let bytes = crate::app::media::read_pdf(&source)?;
         let id = new_id();
@@ -162,6 +162,7 @@ pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppRe
         "captions",
         tauri::WebviewUrl::App("index.html?panel=captions".into()),
     )
+    // i18n-exempt: native window title
     .title("LectureRelay — 字幕")
     .inner_size(660., 340.)
     .min_inner_size(380., 220.)
@@ -169,11 +170,7 @@ pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppRe
     .visible(false)
     .focused(false)
     .data_directory(state.paths.data.join("state").join("webview2"))
-    .theme(Some(if state.storage.settings()?.theme == "dark" {
-        tauri::Theme::Dark
-    } else {
-        tauri::Theme::Light
-    }))
+    .theme(Some(state.storage.settings()?.theme.into()))
     .build()
     .user_error("Cannot open caption window.")?;
     // Place it beside the main window on the same display, including portrait screens.

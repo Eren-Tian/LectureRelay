@@ -11,16 +11,16 @@ export function ResourceState({
     <div className="empty-state small">
       {error ? (
         <>
-          <h2>{ui.s259}</h2>
+          <h2>{ui.unableToOpen}</h2>
           <p>{error}</p>
           <button className="button secondary" onClick={() => void reload()}>
-            {ui.s260}
+            {ui.tryAgain}
           </button>
         </>
       ) : (
         <>
           <div className="spinner" />
-          <p>{ui.s261}</p>
+          <p>{ui.openingCourse}</p>
         </>
       )}
     </div>

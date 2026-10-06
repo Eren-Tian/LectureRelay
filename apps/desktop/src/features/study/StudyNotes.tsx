@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import { api, errorText } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
@@ -60,17 +61,18 @@ export function StudyNotes({
     if (savingRef.current) return;
     latest.current = value;
     setDraft(value);
-    setStatus('正在保存草稿…');
+    setStatus(ui.studyNotesSavingDraft);
     try {
       localStorage.setItem(key, value);
     } catch {
-      setStatus('本地恢复缓存暂时不可用，正在等待数据库保存。');
+      setStatus(ui.studyNotesRecoveryCacheUnavailable);
     }
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(() => {
       void persist(value)
         .then(() => {
-          if (latest.current === value) setStatus('草稿已保存在本机');
+          if (latest.current === value)
+            setStatus(ui.studyNotesDraftSavedLocally);
         })
         .catch((e) => setStatus(errorText(e)));
     }, 650);
@@ -92,7 +94,7 @@ export function StudyNotes({
       setDraft(body);
       setEditing(false);
       setVersion('');
-      setStatus('已保存');
+      setStatus(ui.saved);
       await onSaved();
     } catch (e) {
       setStatus(errorText(e));
@@ -107,7 +109,7 @@ export function StudyNotes({
     appended.current = append.key;
     const body = latest.current + append.body;
     if (body.length > 100000) {
-      notify('笔记长度已达上限，请先导出或精简内容。', true);
+      notify(ui.studyNotesLengthLimit, true);
       return;
     }
     change(body);
@@ -115,7 +117,7 @@ export function StudyNotes({
     if (timer.current) clearTimeout(timer.current);
     void persist(body)
       .then(() => {
-        if (latest.current === body) setStatus('草稿已保存在本机');
+        if (latest.current === body) setStatus(ui.studyNotesDraftSavedLocally);
       })
       .catch((e) => setStatus(errorText(e)));
     setEditing(true);
@@ -133,7 +135,7 @@ export function StudyNotes({
             setVersion('');
           }}
         >
-          {editing ? '预览草稿' : '编辑笔记'}
+          {editing ? ui.studyNotesPreviewDraft : ui.editNotes}
         </button>
         {onGenerate && (
           <button
@@ -141,7 +143,7 @@ export function StudyNotes({
             disabled={blocked}
             onClick={onGenerate}
           >
-            {'生成 AI 草稿'}
+            {ui.studyNotesGenerateAiDraft}
           </button>
         )}
       </div>
@@ -157,16 +159,15 @@ export function StudyNotes({
                 )
               }
             >
-              {'+ 插入时间戳'}
-              {clock(position)}
+              {ui.studyNotesInsertTimestamp(clock(position))}
             </button>
             <span role="status" className="muted">
-              {status || '已恢复的草稿'}
+              {status || ui.studyNotesRestoredDraft}
             </span>
           </div>
           <textarea
             className="study-note-editor"
-            aria-label="课堂笔记"
+            aria-label={ui.studyNotesEditorLabel}
             value={draft}
             disabled={saving}
             maxLength={100000}
@@ -179,9 +180,9 @@ export function StudyNotes({
               onClick={async () => {
                 if (
                   !(await confirm({
-                    title: '放弃这份草稿？',
-                    body: '已保存的笔记和历史版本会保留。',
-                    action: '放弃草稿',
+                    title: ui.studyNotesDiscardDraftTitle,
+                    body: ui.studyNotesDiscardDraftBody,
+                    action: ui.studyNotesDiscardDraft,
                     danger: true,
                   }))
                 )
@@ -210,14 +211,14 @@ export function StudyNotes({
                 }
               }}
             >
-              {'放弃草稿'}
+              {ui.studyNotesDiscardDraft}
             </button>
             <button
               className="button primary"
               disabled={saving}
               onClick={() => void save()}
             >
-              {saving ? '正在保存…' : '保存笔记'}
+              {saving ? ui.saving : ui.saveNotes}
             </button>
           </div>
         </>
@@ -225,28 +226,28 @@ export function StudyNotes({
         <>
           {draft !== (note?.body ?? '') && !selected && (
             <p className="notice">
-              {'有一份尚未保存为正式笔记的草稿。'}{' '}
+              {ui.studyNotesUnsavedDraftNotice}{' '}
               <button className="text-button" onClick={() => setEditing(true)}>
-                {'继续编辑'}
+                {ui.studyNotesContinueEditing}
               </button>
             </p>
           )}
           {study.versions.length > 0 && (
             <label className="version-picker">
-              {'历史版本'}
+              {ui.studyNotesVersionHistory}
               <select
-                aria-label="笔记版本"
+                aria-label={ui.studyNotesVersionLabel}
                 value={version}
                 onChange={(e) => setVersion(e.target.value)}
               >
-                <option value="">{'当前笔记'}</option>
+                <option value="">{ui.studyNotesCurrentVersion}</option>
                 {study.versions.map((v) => (
                   <option key={v.id} value={v.id}>
                     {v.origin === 'local'
-                      ? '本地 AI 草稿'
+                      ? ui.studyNotesLocalAiDraft
                       : v.origin === 'cloud'
-                        ? '云端 AI 草稿'
-                        : '此前的笔记'}{' '}
+                        ? ui.studyNotesCloudAiDraft
+                        : ui.studyNotesEarlierNotes}{' '}
                     · {languageName(v.language)} · {dateText(v.createdAt)}
                   </option>
                 ))}
@@ -257,8 +258,8 @@ export function StudyNotes({
             <div className="notice">
               <span>
                 {selected.sourceVersion !== study.sourceVersion
-                  ? '此版本生成后，转录文本已修改，请重新核对引用。'
-                  : '此版本单独保存，不会覆盖你的笔记。'}
+                  ? ui.studyNotesVersionStale
+                  : ui.studyNotesVersionSeparate}
               </span>
               <button
                 className="button secondary"
@@ -266,15 +267,15 @@ export function StudyNotes({
                 onClick={async () => {
                   if (
                     await confirm({
-                      title: '将此版本设为当前笔记？',
-                      body: '当前已保存的笔记会保留在历史版本中，尚未保存的草稿会被替换。',
-                      action: '采用此版本',
+                      title: ui.studyNotesUseVersionTitle,
+                      body: ui.studyNotesUseVersionBody,
+                      action: ui.studyNotesUseVersion,
                     })
                   )
                     await save(selected.body);
                 }}
               >
-                {'采用此版本'}
+                {ui.studyNotesUseVersion}
               </button>
             </div>
           )}
@@ -282,7 +283,7 @@ export function StudyNotes({
             <MarkdownBody body={selected?.body ?? note!.body} onSeek={onSeek} />
           ) : (
             <div className="empty-state">
-              <h3>{'我的笔记'}</h3>
+              <h3>{ui.studyMyNotes}</h3>
             </div>
           )}
         </>

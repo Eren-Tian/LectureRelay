@@ -9,29 +9,24 @@ mod study_workspace;
 fn runtime_preferences_upgrade_and_persist() {
     let legacy: crate::domain::AppSettings =
         serde_json::from_str(r#"{"assistanceLanguage":"ja"}"#).unwrap();
-    assert_eq!(legacy.theme, "light");
+    assert_eq!(legacy.theme, Theme::Light);
     assert!(legacy.quiet_mode);
     let fixture = Fixture::new();
     let db = fixture.db();
     let settings = crate::domain::AppSettings {
-        theme: "dark".into(),
+        theme: Theme::Dark,
         quiet_mode: false,
         ..legacy
     };
     db.save_settings(settings.clone()).unwrap();
     drop(db);
     let db = fixture.db();
-    assert_eq!(db.settings().unwrap().theme, "dark");
+    assert_eq!(db.settings().unwrap().theme, Theme::Dark);
     assert!(!db.settings().unwrap().quiet_mode);
     assert_eq!(db.settings().unwrap().assistance_language, "ja");
-    assert!(
-        db.save_settings(crate::domain::AppSettings {
-            theme: "invalid".into(),
-            ..settings
-        })
-        .is_err()
-    );
-    assert_eq!(db.settings().unwrap().theme, "dark");
+    // Unknown choices are rejected at the IPC boundary and cannot be saved.
+    assert!(serde_json::from_str::<crate::domain::AppSettings>(r#"{"theme":"invalid"}"#).is_err());
+    assert_eq!(db.settings().unwrap().theme, Theme::Dark);
 }
 
 use crate::{database::Storage, domain::*, storage::AppPaths};
@@ -81,7 +76,8 @@ fn migrations_reopen_and_preserve_full_learning_data() {
     let lecture = db
         .create_lecture(&fixture.paths, &course.id, "Genetics lecture")
         .unwrap();
-    db.finish_lecture(&lecture.id, 120.0, "completed").unwrap();
+    db.finish_lecture(&lecture.id, 120.0, LectureStatus::Completed)
+        .unwrap();
     db.save_segment(
         &lecture.id,
         None,
@@ -105,7 +101,7 @@ fn migrations_reopen_and_preserve_full_learning_data() {
     db.save_answer(&lecture.id, &answer).unwrap();
     db.save_settings(AppSettings {
         assistance_language: "ko".into(),
-        provider: "none".into(),
+        provider: CloudChoice::None,
         chat_model: "gpt-4o-mini".into(),
         ..Default::default()
     })
@@ -178,7 +174,10 @@ fn upgrades_real_v1_schema_and_old_preferences_without_changing_content() {
     assert_eq!(detail.segments[0].translated_text, "原来的中文");
     assert_eq!(detail.segments[0].provider, "legacy");
     assert_eq!(upgraded.settings().unwrap().assistance_language, "ja");
-    assert_eq!(upgraded.settings().unwrap().speech_provider, "none");
+    assert_eq!(
+        upgraded.settings().unwrap().speech_provider,
+        SpeechEngine::None
+    );
     upgraded
         .save_segment(
             &lecture,
@@ -232,7 +231,7 @@ fn interruption_recovers_checkpointed_wav_and_cleans_recovery_marker() {
     std::fs::write(&marker, b"{}").unwrap();
     assert_eq!(db.recover(&fixture.paths).unwrap(), 1);
     let recovered = db.lecture(&lecture.id).unwrap();
-    assert_eq!(recovered.status, "interrupted");
+    assert_eq!(recovered.status, LectureStatus::Interrupted);
     assert_eq!(recovered.duration_seconds, 2.0);
     assert!(!marker.exists());
     writer.finalize().unwrap();
@@ -249,7 +248,8 @@ fn trash_preserves_courses_lectures_and_files_and_can_restore() {
         .unwrap();
     let path = fixture.paths.recording(&course.id, &lecture.id).unwrap();
     std::fs::write(&path, b"synthetic audio fixture").unwrap();
-    db.finish_lecture(&lecture.id, 1.0, "completed").unwrap();
+    db.finish_lecture(&lecture.id, 1.0, LectureStatus::Completed)
+        .unwrap();
     db.save_note(&lecture.id, "User note", "manual").unwrap();
     db.snapshot(&fixture.paths, &lecture.id).unwrap();
     db.delete_course(&course.id).unwrap();
@@ -273,7 +273,8 @@ fn rejects_invalid_timeline_language_and_path_traversal() {
     let lecture = db
         .create_lecture(&fixture.paths, &course.id, "Validation")
         .unwrap();
-    db.finish_lecture(&lecture.id, 10.0, "completed").unwrap();
+    db.finish_lecture(&lecture.id, 10.0, LectureStatus::Completed)
+        .unwrap();
     assert!(
         db.save_segment(
             &lecture.id,
@@ -325,7 +326,8 @@ fn cloud_chunks_commit_progress_without_overwriting_manual_corrections() {
     let lecture = db
         .create_lecture(&fixture.paths, &course.id, "Chunk persistence")
         .unwrap();
-    db.finish_lecture(&lecture.id, 120.0, "completed").unwrap();
+    db.finish_lecture(&lecture.id, 120.0, LectureStatus::Completed)
+        .unwrap();
     let segment = TranscriptSegment {
         id: new_id(),
         lecture_id: lecture.id.clone(),
@@ -333,7 +335,7 @@ fn cloud_chunks_commit_progress_without_overwriting_manual_corrections() {
         end_seconds: 9.0,
         source_text: "Genetics".into(),
         translated_text: String::new(),
-        origin: "cloud".into(),
+        origin: SegmentOrigin::Cloud,
         provider: "legacy".into(),
         status: "final".into(),
         transcript_version: "original".into(),

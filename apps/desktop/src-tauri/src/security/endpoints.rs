@@ -1,9 +1,8 @@
-use crate::error::AppResult;
+use crate::domain::CloudProvider;
 
-pub(crate) fn provider_base(provider: &str) -> AppResult<&'static str> {
-    Ok(match provider {
-        "openai" => "https://api.openai.com/v1",
-        "groq" => "https://api.groq.com/openai/v1",
-        _ => return Err("Choose an AI provider and add a key in Settings.".into()),
-    })
+pub(crate) fn provider_base(provider: CloudProvider) -> &'static str {
+    match provider {
+        CloudProvider::OpenAi => "https://api.openai.com/v1",
+        CloudProvider::Groq => "https://api.groq.com/openai/v1",
+    }
 }

@@ -30,7 +30,7 @@ fn repeated_stop_preserves_saved_lecture_and_does_not_finalize_other_work() {
         .unwrap();
     state
         .storage
-        .finish_lecture(&lecture.id, 7.95, "completed")
+        .finish_lecture(&lecture.id, 7.95, LectureStatus::Completed)
         .unwrap();
     let before = serde_json::to_value(state.storage.lecture(&lecture.id).unwrap()).unwrap();
     let stopped = crate::commands::stop_recording(&state, &lecture.id).unwrap();
@@ -46,7 +46,7 @@ fn repeated_stop_preserves_saved_lecture_and_does_not_finalize_other_work() {
     assert!(crate::commands::stop_recording(&state, &unfinished.id).is_err());
     assert_eq!(
         state.storage.lecture(&unfinished.id).unwrap().status,
-        "recording"
+        LectureStatus::Recording
     );
 }
 
@@ -138,7 +138,7 @@ fn committed_import_survives_a_database_finalization_failure() {
     db.execute_batch("CREATE TRIGGER fail_import_finish BEFORE UPDATE OF status ON lectures WHEN NEW.status='completed' BEGIN SELECT RAISE(FAIL,'fixture'); END;").unwrap();
     assert!(crate::app::media::import(&state, &c.id, "Import persistence fault", &source).is_err());
     let lecture = state.storage.lectures(&c.id).unwrap().remove(0);
-    assert_eq!(lecture.status, "recording");
+    assert_eq!(lecture.status, LectureStatus::Recording);
     assert!(f.paths.recording(&c.id, &lecture.id).unwrap().is_file());
     db.execute_batch("DROP TRIGGER fail_import_finish;")
         .unwrap();
@@ -149,7 +149,7 @@ fn committed_import_survives_a_database_finalization_failure() {
     );
     assert_eq!(
         state.storage.lecture(&lecture.id).unwrap().audio_source,
-        "import"
+        LectureSource::Import
     );
     assert_eq!(hound::WavReader::open(source).unwrap().duration(), 16000);
 }

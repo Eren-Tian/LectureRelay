@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import { useEffect, useRef, useState } from 'react';
 import {
   getDocument,
@@ -121,11 +122,11 @@ export default function PdfPanel({
     <div className="pdf-panel">
       <div className="study-toolbar">
         <select
-          aria-label="课程 PDF"
+          aria-label={ui.pdfCourseDocumentLabel}
           value={id}
           onChange={(e) => setId(e.target.value)}
         >
-          <option value="">{'选择 PDF'}</option>
+          <option value="">{ui.pdfChoose}</option>
           {documents.map((d) => (
             <option key={d.id} value={d.id}>
               {d.name}
@@ -133,7 +134,7 @@ export default function PdfPanel({
           ))}
         </select>
         <button className="button secondary" onClick={onAttach}>
-          {'添加 PDF'}
+          {ui.pdfAdd}
         </button>
       </div>
       {pdf && (
@@ -146,9 +147,9 @@ export default function PdfPanel({
             ←
           </button>
           <label>
-            {'页码'}
+            {ui.pdfPageLabel}
             <input
-              aria-label="PDF 页码"
+              aria-label={ui.pdfPageNumberLabel}
               type="number"
               min={1}
               max={pdf.numPages}
@@ -172,13 +173,13 @@ export default function PdfPanel({
             →
           </button>
           <select
-            aria-label="PDF 缩放"
+            aria-label={ui.pdfZoomLabel}
             value={zoom}
             onChange={(e) => setZoom(Number(e.target.value))}
           >
             {[0.75, 1, 1.25, 1.5].map((n) => (
               <option key={n} value={n}>
-                {n === 1 ? '适应宽度' : Math.round(n * 100) + '%'}
+                {n === 1 ? ui.pdfFitWidth : Math.round(n * 100) + '%'}
               </option>
             ))}
           </select>
@@ -189,26 +190,19 @@ export default function PdfPanel({
           {error}
         </p>
       )}
-      {loading && <p role="status">{'正在打开本地 PDF…'}</p>}
+      {loading && <p role="status">{ui.pdfOpening}</p>}
       <div ref={view} className="pdf-canvas-scroll">
         <canvas
           ref={canvas}
-          aria-label={`课程 PDF，第 ${page} 页`}
+          aria-label={ui.pdfCanvasLabel(page)}
           hidden={!pdf}
         />
-        {!id && (
-          <p className="empty-state">
-            {'添加课程讲义，边回顾课堂边阅读。文件保存在本机。'}
-          </p>
-        )}
+        {!id && <p className="empty-state">{ui.pdfEmpty}</p>}
       </div>
       {pdf && (
         <details>
-          <summary>第 {page} 页文字</summary>
-          <p className="pdf-text">
-            {text ||
-              '此页没有可提取的文字。扫描页会作为图片显示，不会用于 AI 引用。'}
-          </p>
+          <summary>{ui.pdfPageText(page)}</summary>
+          <p className="pdf-text">{text || ui.pdfNoText}</p>
         </details>
       )}
     </div>

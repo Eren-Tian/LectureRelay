@@ -1,3 +1,4 @@
+import { ui } from '../../i18n';
 import type { TranslationPreview } from '../../types/domain';
 
 export function TranslationLine({
@@ -17,7 +18,9 @@ export function TranslationLine({
         {preview.translatedText}
       </p>
       <small className="translation-preview-label">
-        {preview.kind === 'draft' ? '临时译文 · 将随原文调整' : '翻译中…'}
+        {preview.kind === 'draft'
+          ? ui.captionsPreviewDraftLabel
+          : ui.captionsPreviewTranslatingLabel}
       </small>
     </div>
   );

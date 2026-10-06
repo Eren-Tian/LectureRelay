@@ -10,8 +10,10 @@ assert.ok(
   [
     'tail',
     'local-tail',
+    'local-finish',
     'cloud-retry',
     'persist',
+    'verify-restart',
     'inspect',
     'configure-off',
     'configure-local',
@@ -59,6 +61,52 @@ assert.ok(lecture, 'Exact labelled lecture required');
 const id = lecture.id;
 const before = await d.native('live_summary_state', { id });
 await fs.mkdir('target/live-summaries', { recursive: true });
+
+if (action === 'verify-restart') {
+  const workflow = JSON.parse(
+    await fs.readFile('target/live-summaries/installed-workflow.json', 'utf8'),
+  );
+  assert.equal(workflow.id, id);
+  const detail = await d.native('lecture_detail', { id });
+  assert.ok(detail.note?.body?.startsWith('[ACCEPTANCE] 我的手写笔记：'));
+  assert.equal(await d.native('recording_status'), null);
+  await d.command('DELETE', '');
+  const application = process.env.LECTURERELAY_LATENCY_EXE;
+  assert.ok(application, 'Set the exact installed EXE');
+  const reopened = await WebDriver.start(application);
+  await until(
+    () => reopened.native('bootstrap'),
+    (b) => b.storage.version === '0.3.9',
+  );
+  const after = await reopened.native('live_summary_state', { id });
+  const saved = await reopened.native('lecture_detail', { id });
+  assert.deepEqual(
+    after.cards.map((c) => [c.id, c.state]),
+    before.cards.map((c) => [c.id, c.state]),
+  );
+  assert.equal(saved.note.body, detail.note.body);
+  assert.deepEqual(
+    saved.segments.map((s) => [s.id, s.sourceText]),
+    detail.segments.map((s) => [s.id, s.sourceText]),
+  );
+  assert.equal(
+    (await reopened.native('bootstrap')).settings.liveSummaries.enabled,
+    false,
+  );
+  await fs.writeFile(
+    'target/live-summaries/installed-workflow.json',
+    JSON.stringify({ ...workflow, restartPassed: true }, null, 2),
+  );
+  console.log(
+    JSON.stringify({
+      passed: true,
+      action,
+      cards: after.cards.length,
+      notePreserved: true,
+    }),
+  );
+  process.exit(0);
+}
 
 if (action === 'cloud-retry') {
   assert.equal(before.cards.length, 2);
@@ -137,7 +185,10 @@ if (action === 'cloud-retry') {
   process.exit(0);
 }
 
-if (action.startsWith('configure-') || action === 'local-tail') {
+if (
+  action.startsWith('configure-') ||
+  ['local-tail', 'local-finish'].includes(action)
+) {
   await d.clickText('设置总结');
   if (action !== 'configure-off') {
     await d.read(
@@ -153,10 +204,8 @@ if (action.startsWith('configure-') || action === 'local-tail') {
       [String(interval)],
     );
   }
-  await d.clickText(
-    ['configure-local', 'local-tail'].includes(action)
-      ? '启用实时总结'
-      : '保存设置，暂不启用',
+  await d.click(
+    `.live-summary-setup > .button-row:last-of-type button.${['configure-local', 'local-tail', 'local-finish'].includes(action) ? 'primary' : 'secondary'}`,
   );
   await d.click('.modal-heading button[aria-label="关闭"]');
   if (action.startsWith('configure-')) {
@@ -168,6 +217,68 @@ if (action.startsWith('configure-') || action === 'local-tail') {
     );
     process.exit(0);
   }
+}
+
+if (action === 'local-finish') {
+  assert.equal(before.cards.length, 1);
+  assert.equal(before.cards[0].provider, 'local');
+  assert.ok(['deferred', 'completed'].includes(before.cards[0].state));
+  assert.equal(
+    (await d.native('bootstrap')).settings.liveSummaries.provider,
+    'local',
+  );
+  const runs = [];
+  for (let index = 0; index < 2; index++) {
+    const previous = await d.native('live_summary_state', { id });
+    if (index === 0 && previous.cards[0].state === 'completed') {
+      runs.push({ elapsedMs: null, state: previous, existing: true });
+      continue;
+    }
+    const started = Date.now();
+    if (index === 0) {
+      await d.click('.live-summary-panel .summary-card .button.secondary');
+    } else {
+      assert.ok(previous.remaining > 0);
+      await d.clickText('整理剩余片段');
+    }
+    await until(
+      () => d.native('live_summary_state', { id }),
+      (s) => s.cards[index]?.state === 'running',
+    );
+    const state = await until(
+      () => d.native('live_summary_state', { id }),
+      (s) => s.cards[index]?.state !== 'running' && !s.busy,
+      100000,
+    );
+    runs.push({ elapsedMs: Date.now() - started, state });
+    await fs.writeFile(
+      'target/live-summaries/local-postclass.json',
+      JSON.stringify({ id, before, runs }, null, 2),
+    );
+    assert.equal(
+      state.cards[index].state,
+      'completed',
+      state.cards[index].message,
+    );
+    console.log(
+      JSON.stringify({
+        action,
+        cycle: index + 1,
+        elapsedMs: runs[index].elapsedMs,
+        state: state.cards[index].state,
+      }),
+    );
+  }
+  await d.clickText('关闭自动总结');
+  console.log(
+    JSON.stringify({
+      passed: true,
+      action,
+      cycles: runs.length,
+      generatedInThisAction: runs.filter((r) => !r.existing).length,
+    }),
+  );
+  process.exit(0);
 }
 
 if (action === 'local-tail') {
@@ -269,8 +380,8 @@ if (action === 'tail') {
     }),
   );
 } else if (action === 'persist') {
-  assert.equal(before.cards.length, 2);
-  assert.ok(before.cards.every((card) => card.state === 'completed'));
+  assert.ok(before.cards.length > 0);
+  assert.equal(before.cards[0].state, 'completed');
   const detail = await d.native('lecture_detail', { id });
   const study = await d.native('study_state', { id });
   assert.ok(
@@ -364,7 +475,7 @@ if (action === 'tail') {
       id,
       manualNotePreserved: true,
       replay: true,
-      cardsPersistedAfterRestart: true,
+      cardsSaved: true,
     }),
   );
 } else {

@@ -6,13 +6,13 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 
 ## 下载与安装
 
-**[下载已发布的预览版：LectureRelay 0.3.8 · Windows x64 安装包](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe)**
+**[下载最新预览版：LectureRelay 0.3.10 · Windows x64 安装包](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.10/LectureRelay_0.3.10_x64-setup.exe)**
 
-[更新说明与下载列表](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.8) · [SHA-256 校验文件](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe.sha256)
+[更新说明与下载列表](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.10) · [SHA-256 校验文件](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.10/LectureRelay_0.3.10_x64-setup.exe.sha256)
 
-目前 GitHub 已发布的安装版为 **0.3.8**。[`main` 源码分支](https://github.com/Eren-Tian/LectureRelay/tree/main) 已更新至 **0.3.10**，包含实时分段总结、停用本地 Qwen 实时总结等调整，见已合并的 [PR #5](https://github.com/Eren-Tian/LectureRelay/pull/5)。0.3.10 尚未发布到 GitHub Release，上面的下载链接不包含这些新功能。
+当前已发布安装版为 **0.3.10**，包含可选实时分段总结，已停用本地 Qwen 实时总结，并精简了课堂界面的常驻说明。运行新安装包即可升级，课堂资料和已下载模型会保留。Release 附件来自 GitHub 干净 Windows 构建；源码版本、资源校验和安装包哈希记录在随附的 `build-metadata.json` 中。
 
-1. 在 Release 页面的 **Assets** 中下载 **`LectureRelay_0.3.8_x64-setup.exe`**。普通用户无需下载 **Source code** 源码压缩包。
+1. 在 Release 页面的 **Assets** 中下载 **`LectureRelay_0.3.10_x64-setup.exe`**。普通用户无需下载 **Source code** 源码压缩包。
 2. 运行安装程序，按提示完成安装。若电脑缺少 Microsoft WebView2，安装器会联网下载。
 3. 从开始菜单或桌面快捷方式打开 **LectureRelay**。
 4. 进入 **设置 → 首次使用**，按清单完成配置。到 **本地 AI** 下载 **Nemotron**，用于英文字幕；需要本地翻译时再下载 **Hy-MT2**，返回首次设置启用相应字幕。模型只需下载一次，所有课程共用。
@@ -37,18 +37,18 @@ LectureRelay 是一款 **Windows 课堂录音与学习辅助应用**。它将录
 
 英文识别、翻译、课后学习工具与实时总结分别配置。LectureRelay 不提供共享 API Key，也不运营推理服务器。
 
-| 用途                           | 本地模型或服务                           | 运行时机                            |
-| ------------------------------ | ---------------------------------------- | ----------------------------------- |
-| 英文转录                       | Nemotron Streaming EN 0.6B               | 录音期间                            |
-| 翻译                           | Hy-MT2-1.8B Q4_K_M；也可选择 Qwen3.5-4B  | 上课期间，或课后按需补全            |
-| 课后总结、深度复习与问答       | Qwen3.5-4B Q4_K_M，使用 Unsloth 转换版本 | 实时处理结束后，由用户发起          |
-| 实时分段总结，限 0.3.10 开发版 | Groq 或 OpenAI，使用用户自己的 API Key   | 可选开启，每 2、4 或 5 分钟整理一次 |
+| 用途                     | 本地模型或服务                           | 运行时机                            |
+| ------------------------ | ---------------------------------------- | ----------------------------------- |
+| 英文转录                 | Nemotron Streaming EN 0.6B               | 录音期间                            |
+| 翻译                     | Hy-MT2-1.8B Q4_K_M；也可选择 Qwen3.5-4B  | 上课期间，或课后按需补全            |
+| 课后总结、深度复习与问答 | Qwen3.5-4B Q4_K_M，使用 Unsloth 转换版本 | 实时处理结束后，由用户发起          |
+| 实时分段总结             | Groq 或 OpenAI，使用用户自己的 API Key   | 可选开启，每 2、4 或 5 分钟整理一次 |
 
 按需下载即可：Nemotron 约 **667 MiB**，Hy-MT2 约 **1,081 MiB**，Qwen 约 **2,614 MiB**。全部下载约占 **4.3 GiB**，录音和应用文件另计。本地推理没有按次 API 费用，但会使用你电脑的内存、存储与电力。
 
 **安静模式**为本地 AI 设置共享 CPU 预算；关闭后允许使用应用可用的全部 CPU 核心。字幕速度、风扇噪音和功耗仍取决于设备。本地 AI 失败时，不会自动改用云端服务。
 
-### 可选实时总结：0.3.10 开发版
+### 可选实时总结
 
 课堂右侧可以将新定稿英文整理成简短卡片，保留时间范围、原文引用和回听入口。**Groq 是优先提供的可选服务**，初始模型为 `openai/gpt-oss-120b`；也可以使用 OpenAI。更换总结服务不会改变英文识别或翻译设置。
 
@@ -68,7 +68,7 @@ LectureRelay 仍处于开发预览阶段。英文转录可能漏词，翻译可�
 
 0.3.8 的安装版短时测试使用了真实 MIT 讲师音频、本地模型与安静模式。此前 0.3.3 使用合成探针完成了超过 90 分钟的录音连续性测试；结果只适用于对应版本与测试素材，不能替代自然语音准确率或新版长时验收。普通笔记本的功耗、噪音以及实际设备断开场景仍待验证。
 
-0.3.10 开发版已通过原生回归、真实 React 总结组件测试，以及安装版的静默设置和资源完整性检查。此前 0.3.9 已用真实 Groq 请求验证过课堂总结；本次停用本地实时总结的验证没有新增 API 请求或播放音频，也没有重新进行 90 分钟测试。具体证据见 [实时总结验收](docs/testing/live-summaries-v0.3.9.md)、[本地 AI 评测](docs/testing/local-ai-v0.3.md) 和 [录音连续性记录](docs/testing/audio-continuity-v0.3.3.md)。
+0.3.10 发布源码已通过原生回归、中文界面与实时总结 React 组件测试，以及干净 Windows 安装包和资源完整性检查。界面测试使用隔离的原生响应，不代表真实音频或模型推理验收。此前 0.3.9 已用真实 Groq 请求验证过课堂总结；本次更新没有新增 API 请求或播放音频，也没有重新进行 90 分钟测试。具体证据见 [实时总结验收](docs/testing/live-summaries-v0.3.9.md)、[本地 AI 评测](docs/testing/local-ai-v0.3.md) 和 [录音连续性记录](docs/testing/audio-continuity-v0.3.3.md)。
 
 ## 数据与隐私
 
@@ -80,7 +80,7 @@ LectureRelay 仍处于开发预览阶段。英文转录可能漏词，翻译可�
 
 ## 参与开发
 
-以下内容仅供开发者使用，**普通用户安装 EXE 无需执行这些步骤**。如需复现已发布安装版，请检出对应 tag，例如 `v0.3.8`；默认分支和功能分支可能与 Release 不同。
+以下内容仅供开发者使用，**普通用户安装 EXE 无需执行这些步骤**。如需复现已发布安装版，请检出对应 tag，例如 `v0.3.10`；默认分支和功能分支可能与 Release 不同。
 
 项目使用 Tauri 2、React、TypeScript、Rust、SQLite 和原生语音 worker。开发环境需要 Windows x64、Node 24.15.x、pnpm 11.25.0、Rust 1.98.1 MSVC、C++ Build Tools／Windows SDK 与 WebView2。
 

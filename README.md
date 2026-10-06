@@ -6,13 +6,13 @@ LectureRelay is a **Windows desktop app** that records classes, displays English
 
 ## Download and install
 
-**[Download the latest published preview: 0.3.8 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe)**
+**[Download the latest published preview: 0.3.10 for Windows x64 (.exe)](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.10/LectureRelay_0.3.10_x64-setup.exe)**
 
-[Release notes and downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.8) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.8/LectureRelay_0.3.8_x64-setup.exe.sha256)
+[Release notes and downloads](https://github.com/Eren-Tian/LectureRelay/releases/tag/v0.3.10) · [SHA-256 checksum](https://github.com/Eren-Tian/LectureRelay/releases/download/v0.3.10/LectureRelay_0.3.10_x64-setup.exe.sha256)
 
-The latest published installer is **0.3.8**. The [`main` source branch](https://github.com/Eren-Tian/LectureRelay/tree/main) is now **0.3.10**, with optional live summary cards and local Qwen live summaries disabled; [PR #5](https://github.com/Eren-Tian/LectureRelay/pull/5) has been merged. Version 0.3.10 has not been published as a GitHub Release; the download above does not include those changes.
+The published installer is **0.3.10**, including optional live summary cards, disabled local Qwen live summaries and a cleaner classroom interface. Upgrade by running the new installer; classroom data and downloaded models are preserved. The published package comes from a clean GitHub Windows build; its source revision, payload checks and installer hash are recorded in the release's `build-metadata.json`.
 
-1. Download **`LectureRelay_0.3.8_x64-setup.exe`** from the release's **Assets**. The **Source code** archives are for developers.
+1. Download **`LectureRelay_0.3.10_x64-setup.exe`** from the release's **Assets**. The **Source code** archives are for developers.
 2. Run the installer. It installs for your Windows user and downloads Microsoft WebView2 if needed, which requires internet access.
 3. Open **LectureRelay** from the Start menu or desktop shortcut.
 4. Open **设置 → 首次使用**. In **本地 AI**, download **Nemotron** for English captions. Add **Hy-MT2** if you want local translation, then enable the corresponding captions in the setup checklist. Models are downloaded once and shared across courses.
@@ -37,18 +37,18 @@ For a walkthrough, see [getting started](docs/user-guide/getting-started.md) and
 
 Speech, translation, postclass study and live summaries have separate settings. LectureRelay does not run a hosted inference service or supply a shared API key.
 
-| Task                                                | Local model                             | When it runs                          |
-| --------------------------------------------------- | --------------------------------------- | ------------------------------------- |
-| English transcription                               | Nemotron Streaming EN 0.6B              | During recording                      |
-| Translation                                         | Hy-MT2-1.8B Q4_K_M; optional Qwen3.5-4B | During class or on request afterward  |
-| Postclass summary, deep review and Q&A              | Qwen3.5-4B Q4_K_M (Unsloth conversion)  | On request after live processing ends |
-| Live summary cards, in the 0.3.10 development build | Groq or OpenAI, using your own key      | Optional, every 2, 4 or 5 minutes     |
+| Task                                   | Local model                             | When it runs                          |
+| -------------------------------------- | --------------------------------------- | ------------------------------------- |
+| English transcription                  | Nemotron Streaming EN 0.6B              | During recording                      |
+| Translation                            | Hy-MT2-1.8B Q4_K_M; optional Qwen3.5-4B | During class or on request afterward  |
+| Postclass summary, deep review and Q&A | Qwen3.5-4B Q4_K_M (Unsloth conversion)  | On request after live processing ends |
+| Live summary cards                     | Groq or OpenAI, using your own key      | Optional, every 2, 4 or 5 minutes     |
 
 Download only what you need: Nemotron is about **667 MiB**, Hy-MT2 **1,081 MiB**, and Qwen **2,614 MiB**; all three total about **4.3 GiB**, before recordings and app files. Local inference has no per-request API charge, but uses your computer's memory, electricity and storage.
 
 **Quiet Mode** gives local AI a shared CPU budget. Turning it off allows use of all CPUs available to the app; practical latency, fan noise and power use depend on the computer. Local AI errors do not automatically switch processing to cloud services.
 
-### Optional live summaries: 0.3.10 development build
+### Optional live summaries
 
 The right-hand classroom panel can turn newly finalized English into short, timestamped cards with source references. **Groq is the preferred optional provider**, with `openai/gpt-oss-120b` as the initial model; OpenAI remains available. Summary selection does not change speech or translation settings.
 
@@ -68,7 +68,7 @@ LectureRelay is a development preview. Transcription can omit words, translation
 
 Installed 0.3.8 tests used real MIT lectures with local models and Quiet Mode. Earlier 0.3.3 audio continuity tests ran for more than 90 minutes with synthetic probes; those results apply to that specific build and fixture. They do not establish natural-speech accuracy or long-session behavior for a newer version. Ordinary-laptop power/noise and physical device-unplug behavior remain unverified.
 
-For the 0.3.10 development build, native regressions, the summary React component suite and silent installed-app settings/payload checks passed. Earlier 0.3.9 tests exercised actual Groq summaries; disabling local live summaries was checked without additional API requests or audio playback. No new 90-minute test was run. See [live-summary acceptance](docs/testing/live-summaries-v0.3.9.md), [local AI evaluation](docs/testing/local-ai-v0.3.md) and [audio continuity evidence](docs/testing/audio-continuity-v0.3.3.md).
+The 0.3.10 release source passed native regressions, Chinese UI and live-summary React component tests, and clean Windows installer/payload checks. The UI fixtures use isolated native responses; they do not test real audio or model inference. Earlier 0.3.9 tests exercised actual Groq summaries; this update used no additional API requests or audio playback. No new 90-minute test was run. See [live-summary acceptance](docs/testing/live-summaries-v0.3.9.md), [local AI evaluation](docs/testing/local-ai-v0.3.md) and [audio continuity evidence](docs/testing/audio-continuity-v0.3.3.md).
 
 ## Data and privacy
 
@@ -80,7 +80,7 @@ Uninstalling the app preserves classroom data. Exit the app before backing up th
 
 ## Contributing and building
 
-These instructions are for developers. **Installing the EXE does not require them.** To reproduce a published installer, check out its release tag, such as `v0.3.8`; the default and feature branches may differ from a release.
+These instructions are for developers. **Installing the EXE does not require them.** To reproduce a published installer, check out its release tag, such as `v0.3.10`; the default and feature branches may differ from a release.
 
 The app uses Tauri 2, React, TypeScript, Rust, SQLite and a native speech worker. Development requires Windows x64, Node 24.15.x, pnpm 11.25.0, Rust 1.98.1 MSVC, C++ Build Tools/Windows SDK and WebView2.
 

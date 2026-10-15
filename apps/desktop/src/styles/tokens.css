@@ -1,0 +1,36 @@
+/* Design tokens. Every themed color is one light-dark() pair; the dark theme only switches color-scheme. */
+:root {
+  font-family:
+    'Segoe UI', 'Microsoft YaHei', 'Yu Gothic UI', 'Malgun Gothic', sans-serif;
+  color: var(--ink);
+  background: var(--canvas);
+  font-size: 14px;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --sage: light-dark(#3f643f, #afc89d);
+  --sage-soft: light-dark(#e9efe4, #29352b);
+  --gold: light-dark(#806327, #d7bd80);
+  --line: light-dark(#b4bfb0, #566653);
+  --control-line: light-dark(#788674, #859780);
+  --muted: light-dark(#505e54, #b8c6b4);
+  --ink: light-dark(#202e25, #f1f5ee);
+  --secondary: light-dark(#3b5540, #d1e0c9);
+  --canvas: light-dark(#f4f5ef, #171c19);
+  --paper: light-dark(#ffffff, #202822);
+  --sidebar: light-dark(#e9eee2, #1b221d);
+  --soft: light-dark(#edf2e6, #29352b);
+  --hover: light-dark(#dfe8d5, #364835);
+  --warning-bg: light-dark(#f8f1df, #393222);
+  --warning: light-dark(#806231, #e1c793);
+  --danger: light-dark(#965144, #9c4c40);
+  --danger-text: light-dark(#915348, #f1afa0);
+  --on-accent: light-dark(#fffefa, #182115);
+  --accent-hover: light-dark(#435c42, #c2d9b3);
+  --switch-track: light-dark(#788674, #63725e);
+  --switch-thumb: light-dark(#fffefa, #f1f5ed);
+  color-scheme: light;
+}
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}

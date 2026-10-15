@@ -6,7 +6,7 @@ import { StudyNotes } from '../../src/features/study/StudyNotes';
 import { useAction } from '../../src/hooks/useAction';
 import { api } from '../../src/api/client';
 import type { Bootstrap, Note, StudyState } from '../../src/types/domain';
-import '../../src/styles/app.css';
+import '../../src/styles/index.css';
 
 const fixture = {
   calls: [] as string[],

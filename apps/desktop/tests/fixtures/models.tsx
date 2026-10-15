@@ -11,7 +11,7 @@ import type {
   ModelStatus,
   RecordingStatus,
 } from '../../src/types/domain';
-import '../../src/styles/app.css';
+import '../../src/styles/index.css';
 
 const mode = new URLSearchParams(location.search).get('mode');
 mockIPC(

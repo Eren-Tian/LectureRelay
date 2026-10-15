@@ -2,8 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { FloatingCaptions } from './features/live-lecture/FloatingCaptions';
 import { App } from './app/App';
-import './styles/app.css';
-import './styles/workspace.css';
+import './styles/index.css';
 
 try {
   if (localStorage.getItem('lecturerelay-theme') === 'dark')

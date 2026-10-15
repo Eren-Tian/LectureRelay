@@ -11,7 +11,7 @@ import type {
   StudyState,
   LiveStatus,
 } from '../../src/types/domain';
-import '../../src/styles/app.css';
+import '../../src/styles/index.css';
 
 const study: StudyState = {
   sections: Array.from({ length: 17 }, (_, n) => ({

@@ -11,7 +11,10 @@ apps/desktop/
     types/                   serialized domain/IPC contracts
     components/              shared Icon, Modal, Markdown and resource-state UI
     hooks/                   shared async action/resource hooks
-    lib/, styles/             presentation helpers, shared theme and layout CSS
+    lib/                     presentation helpers
+    styles/                  index.css imports, in cascade order: tokens
+                             (light-dark() theme pairs), base, shell,
+                             components, then one file per feature
     i18n/                    zh-CN UI catalog (runtime), matching English catalog,
                              native English→Chinese message catalog
   src-tauri/

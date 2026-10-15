@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { LiveCaptions } from '../../src/features/live-lecture/LiveCaptions';
 import { nextLiveStatus } from '../../src/lib/live-status';
-import '../../src/styles/app.css';
+import '../../src/styles/index.css';
 import type {
   AppSettings,
   AssistanceLanguage,

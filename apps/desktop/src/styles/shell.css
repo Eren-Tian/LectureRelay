@@ -1,0 +1,310 @@
+/* Application frame: sidebar, main content area and startup screens. */
+.app-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+.sidebar {
+  width: 216px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 22px 17px 20px;
+  background: var(--sidebar);
+  border-right: 1px solid var(--line);
+  position: relative;
+  transition:
+    width 0.18s ease,
+    padding 0.18s ease;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  padding: 0 3px;
+}
+.brand img {
+  width: 42px;
+  height: 42px;
+}
+.brand strong {
+  font-size: 17px;
+  letter-spacing: -0.6px;
+}
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  margin-top: 12px;
+  gap: 4px;
+}
+.sidebar nav button {
+  border-radius: 12px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  color: var(--secondary);
+  padding: 10px 12px;
+}
+.sidebar nav button:hover {
+  background: var(--soft);
+}
+.sidebar nav .selected {
+  background: var(--hover);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: inset 3px 0 var(--sage);
+}
+.sidebar-bottom {
+  margin-top: auto;
+  padding: 18px 13px 0;
+}
+.sidebar-bottom > div {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: var(--muted);
+  border-top: 1px solid var(--line);
+  padding-top: 15px;
+}
+.sidebar-version {
+  margin-left: auto;
+}
+.sidebar-recording,
+.sidebar-job {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 13px 10px;
+  margin-top: 25px;
+  font-size: 12px;
+  text-align: left;
+}
+.sidebar-recording small,
+.sidebar-job small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-top: 4px;
+}
+.sidebar-recording > svg {
+  margin-left: auto;
+}
+.sidebar-job {
+  margin-top: 12px;
+  color: var(--sage);
+}
+.main-content {
+  flex: 1;
+  min-width: 0;
+  padding: 40px 40px 30px;
+  overflow-y: auto;
+  scrollbar-gutter: stable;
+}
+.page-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+.page-heading > div:first-child {
+  min-width: 0;
+}
+.page-heading p {
+  color: var(--muted);
+  margin-bottom: 0;
+}
+.eyebrow {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1.8px;
+  margin-bottom: 12px;
+}
+.startup,
+.desktop-only {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 50px;
+  text-align: center;
+}
+.startup h1,
+.desktop-only h1 {
+  font-size: 36px;
+}
+.startup .spinner {
+  margin-top: 20px;
+  margin-bottom: 13px;
+}
+.desktop-only h2 {
+  font-weight: 500;
+}
+.desktop-only > p {
+  color: var(--muted);
+}
+@media (width <= 1080px) {
+  .sidebar {
+    width: 196px;
+    padding-left: 13px;
+    padding-right: 13px;
+  }
+  .brand strong {
+    font-size: 15px;
+  }
+  .brand img {
+    width: 36px;
+    height: 36px;
+  }
+  .main-content {
+    padding: 33px 27px 27px;
+  }
+  .page-heading {
+    gap: 14px;
+  }
+  .page-heading h1 {
+    font-size: 28px;
+  }
+}
+.main-content {
+  padding: 28px 30px 24px;
+}
+.page-heading {
+  gap: 20px;
+}
+.sidebar-toggle {
+  align-self: flex-end;
+  border: 1px solid var(--control-line);
+  background: var(--paper);
+  border-radius: 8px;
+  margin-top: 14px;
+  width: 30px;
+  height: 28px;
+  font-size: 22px;
+  line-height: 20px;
+}
+.sidebar-courses {
+  overflow: auto;
+  min-height: 0;
+  margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sidebar-courses button {
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  text-align: left;
+  padding: 8px;
+  color: var(--secondary);
+  min-height: 38px;
+  flex-shrink: 0;
+}
+.sidebar-courses button:hover,
+.sidebar-courses button.active {
+  background: var(--hover);
+}
+.course-initial {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.sidebar-course-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.sidebar-collapsed .sidebar {
+  width: 74px;
+  padding: 22px 12px 18px;
+}
+.sidebar-collapsed .brand span,
+.sidebar-collapsed .sidebar nav button > span,
+.sidebar-collapsed .sidebar-course-name,
+.sidebar-collapsed .sidebar-job span,
+.sidebar-collapsed .sidebar-recording > span:not(.record-dot),
+.sidebar-collapsed .sidebar-recording > svg,
+.sidebar-collapsed .sidebar-version {
+  display: none;
+}
+.sidebar-collapsed .sidebar-courses button {
+  padding: 8px 10px;
+}
+.sidebar-collapsed .sidebar-toggle {
+  align-self: center;
+}
+.sidebar-collapsed .sidebar-job,
+.sidebar-collapsed .sidebar-recording {
+  justify-content: center;
+}
+.sidebar-collapsed .sidebar-bottom {
+  padding: 0;
+}
+.replay-workspace,
+.live-workspace {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding-bottom: 18px;
+}
+@media (width <= 1050px) {
+  .main-content {
+    padding: 22px;
+  }
+  .sidebar:not(.sidebar-collapsed .sidebar) {
+    width: 190px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  .brand strong {
+    font-size: 15px;
+  }
+}
+@media (width <= 800px) {
+  .main-content {
+    padding: 16px;
+  }
+  .page-heading {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .sidebar {
+    width: 160px;
+  }
+  .brand strong {
+    font-size: 13px;
+  }
+  .brand img {
+    width: 32px;
+    height: 32px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
+  }
+}

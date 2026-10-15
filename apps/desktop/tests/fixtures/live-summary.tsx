@@ -9,7 +9,7 @@ import {
 } from '../../src/features/study/LiveSummarySetup';
 import { api } from '../../src/api/client';
 import type { Bootstrap, SummaryState } from '../../src/types/domain';
-import '../../src/styles/app.css';
+import '../../src/styles/index.css';
 
 const data = {
   settings: {

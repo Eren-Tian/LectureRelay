@@ -12,8 +12,7 @@ import type {
   InputDevice,
   StudyState,
 } from '../../src/types/domain';
-import '../../src/styles/app.css';
-import '../../src/styles/workspace.css';
+import '../../src/styles/index.css';
 
 const course = {
   id: 'localization-course',

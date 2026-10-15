@@ -16,7 +16,9 @@ pub struct LocalSpeech {
     // Windows closes this non-inherited handle on app crash, killing the helper.
     _job: windows::Win32::Foundation::HANDLE,
 }
-// HANDLE is owned here, never shared and closed once in Drop.
+// SAFETY: HANDLE wraps a raw pointer, so it is not Send by default. The Job
+// Object handle is owned here, never shared and closed once in Drop; kernel
+// handles may be used and closed from any thread.
 unsafe impl Send for LocalSpeech {}
 #[derive(serde::Deserialize)]
 pub struct SpeechUpdate {
@@ -80,8 +82,9 @@ impl LocalSpeech {
                     output.read_exact(&mut head).user_error(
                         crate::error::ErrorCode::LocalRecognitionStoppedRecordingIsPreserved,
                     )?;
-                    let code = i32::from_le_bytes(head[..4].try_into().unwrap());
-                    let size = u32::from_le_bytes(head[4..].try_into().unwrap()) as usize;
+                    let [c0, c1, c2, c3, s0, s1, s2, s3] = head;
+                    let code = i32::from_le_bytes([c0, c1, c2, c3]);
+                    let size = u32::from_le_bytes([s0, s1, s2, s3]) as usize;
                     if size > 20000 {
                         return Err(
                             crate::error::ErrorCode::LocalSpeechResponseExceedsTheLimit.into()
@@ -186,6 +189,8 @@ impl LocalSpeech {
 }
 impl Drop for LocalSpeech {
     fn drop(&mut self) {
+        // SAFETY: `_job` came from CreateJobObjectW, is owned by this value and
+        // is closed only here.
         unsafe {
             let _ = windows::Win32::Foundation::CloseHandle(self._job);
         }
@@ -198,6 +203,10 @@ pub(crate) fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundat
         Foundation::{CloseHandle, HANDLE},
         System::JobObjects::*,
     };
+    // SAFETY: `job` is a fresh handle owned here: closed on failure, returned
+    // to the caller on success. `limits` outlives SetInformationJobObject and its
+    // exact size is passed. The child's process handle stays open while `child`
+    // is borrowed.
     unsafe {
         let job = CreateJobObjectW(None, None)
             .user_error(crate::error::ErrorCode::CannotContainLocalSpeechWorker)?;
@@ -206,7 +215,7 @@ pub(crate) fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundat
         let result = SetInformationJobObject(
             job,
             JobObjectExtendedLimitInformation,
-            &limits as *const _ as *const std::ffi::c_void,
+            (&raw const limits).cast::<std::ffi::c_void>(),
             std::mem::size_of_val(&limits) as u32,
         )
         .and_then(|_| AssignProcessToJobObject(job, HANDLE(child.as_raw_handle())));
@@ -233,6 +242,8 @@ mod tests {
         let mut engine = LocalSpeech::open(&runtime, &model, &performance).unwrap();
         let affinity = || {
             let (mut mask, mut system) = (0usize, 0usize);
+            // SAFETY: The handle belongs to the live worker process and both
+            // out-parameters are live locals.
             unsafe {
                 windows::Win32::System::Threading::GetProcessAffinityMask(
                     windows::Win32::Foundation::HANDLE(engine.child.as_raw_handle()),

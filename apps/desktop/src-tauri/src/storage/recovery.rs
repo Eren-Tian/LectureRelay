@@ -6,9 +6,9 @@ impl Storage {
         let unfinished = self.unfinished_recordings()?;
         for lecture in &unfinished {
             let path = paths.recording(&lecture.course_id, &lecture.id)?;
-            let duration = hound::WavReader::open(&path)
-                .map(|reader| reader.duration() as f64 / reader.spec().sample_rate as f64)
-                .unwrap_or(0.0);
+            let duration = hound::WavReader::open(&path).map_or(0.0, |reader| {
+                reader.duration() as f64 / reader.spec().sample_rate as f64
+            });
             self.finish_lecture(&lecture.id, duration, LectureStatus::Interrupted)?;
             self.snapshot(paths, &lecture.id)?;
             let _ = std::fs::remove_file(

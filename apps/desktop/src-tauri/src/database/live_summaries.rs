@@ -203,7 +203,7 @@ impl Storage {
         }
         card.sources = sources;
         card.provider = preferences.provider.as_str().into();
-        card.model = preferences.model.clone();
+        card.model.clone_from(&preferences.model);
         card.language = self
             .course(&self.lecture(lecture)?.course_id)?
             .assistance_language;

@@ -268,8 +268,7 @@ fn record<R: tauri::Runtime>(
         current.source = source;
         current.device_name = device
             .description()
-            .map(|d| d.name().to_owned())
-            .unwrap_or_else(|_| "Selected audio device".into());
+            .map_or_else(|_| "Selected audio device".into(), |d| d.name().to_owned());
     }
     let config = (if source == InputSource::System {
         device.default_output_config()
@@ -485,7 +484,7 @@ fn record<R: tauri::Runtime>(
         let buffered = samples.len();
         for sample in samples {
             if writer.write_sample(sample).is_err() {
-                error.get_or_insert("Cannot save the end of the recording.".into());
+                error.get_or_insert_with(|| "Cannot save the end of the recording.".into());
                 break;
             }
             count += 1;
@@ -493,9 +492,9 @@ fn record<R: tauri::Runtime>(
         health.consumed(buffered);
     }
     if writer.finalize().is_err() || checkpoint.sync_all().is_err() {
-        error.get_or_insert(
-            "Recording could not finish normally. Saved audio will be recovered on restart.".into(),
-        );
+        error.get_or_insert_with(|| {
+            "Recording could not finish normally. Saved audio will be recovered on restart.".into()
+        });
     }
     health.trace.written.store(count, Ordering::Relaxed);
     health

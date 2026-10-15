@@ -217,8 +217,7 @@ impl LiveSession {
             .recorder
             .status()?
             .filter(|r| r.lecture_id == self.id)
-            .map(|r| state.live.backlog(r.duration_seconds))
-            .unwrap_or(backlog);
+            .map_or(backlog, |r| state.live.backlog(r.duration_seconds));
         let mut measurements = self
             .monitor
             .lock()
@@ -303,7 +302,9 @@ fn run(state: &Arc<AppState>, emit: &Emit, id: &str) -> AppResult<()> {
         ProcessingMode::None => false,
     };
     if let Ok(mut status) = state.live.status.lock() {
-        status.target_language = course.assistance_language.clone();
+        status
+            .target_language
+            .clone_from(&course.assistance_language);
         status.translation.enabled =
             settings.live_translation && settings.translation_mode != ProcessingMode::None;
         status.translation.configured = translation_configured;

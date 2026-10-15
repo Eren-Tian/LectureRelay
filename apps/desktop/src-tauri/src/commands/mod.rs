@@ -263,8 +263,9 @@ pub(crate) fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
         ),
         Err(_) => {
             let duration = hound::WavReader::open(state.paths.recording(&lecture.course_id, id)?)
-                .map(|reader| reader.duration() as f64 / reader.spec().sample_rate as f64)
-                .unwrap_or(0.0);
+                .map_or(0.0, |reader| {
+                    reader.duration() as f64 / reader.spec().sample_rate as f64
+                });
             (duration, LectureStatus::Interrupted)
         }
     };

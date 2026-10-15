@@ -1,4 +1,5 @@
 use crate::{domain::TranscriptSegment, error::AppResult};
+use std::fmt::Write as _;
 
 fn stamp(ms: u64, vtt: bool) -> String {
     format!(
@@ -57,13 +58,13 @@ pub fn subtitles(segments: &[TranscriptSegment], vtt: bool, language: &str) -> A
             continue;
         }
         index += 1;
-        output.push_str(&format!(
-            "{}\n{} --> {}\n{}\n\n",
-            index,
+        // Writing to a String cannot fail.
+        let _ = write!(
+            output,
+            "{index}\n{} --> {}\n{text}\n\n",
             stamp(start, vtt),
-            stamp(end, vtt),
-            text
-        ));
+            stamp(end, vtt)
+        );
     }
     if index == 0 {
         return Err(crate::error::ErrorCode::NoSubtitlesAreAvailableInThisLanguage.into());

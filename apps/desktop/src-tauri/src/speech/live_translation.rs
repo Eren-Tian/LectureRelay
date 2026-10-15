@@ -60,7 +60,7 @@ impl StablePrefix {
             .zip(&self.previous)
             .take_while(|(a, b)| a == b)
             .count();
-        self.previous = words.clone();
+        self.previous.clone_from(&words);
         // Twenty seconds of continuous speech can exceed 32 words. Capping the
         // prefix there froze the last half of an utterance until finalization.
         // Bound work by bytes, but keep advancing through the agreed hypothesis.
@@ -81,7 +81,7 @@ impl StablePrefix {
         {
             return None;
         }
-        self.proposed = candidate.clone();
+        self.proposed.clone_from(&candidate);
         self.proposed_at_ms = Some(now_ms);
         self.revision += 1;
         Some((candidate, self.revision))
@@ -133,8 +133,7 @@ impl TranslationQueue {
     pub fn preview_should_yield(&self) -> bool {
         self.pending
             .lock()
-            .map(|p| p.closed || !p.finals.is_empty())
-            .unwrap_or(true)
+            .map_or(true, |p| p.closed || !p.finals.is_empty())
     }
     pub fn next(&self) -> AppResult<Option<Request>> {
         let mut pending = self

@@ -361,11 +361,10 @@ fn classroom_translation_comparison() {
 #[ignore = "requires pinned speech/text weights and a documented real lecturer WAV; runs the full live session"]
 fn live_session_transcribes_and_translates_a_real_lecture() {
     let project = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
-    let audio = std::env::var_os("LECTURERELAY_LIVE_AUDIO")
-        .map(std::path::PathBuf::from)
-        .unwrap_or_else(|| {
-            project.join("target/local-latency/audio/MIT9_00F04_lec01-60s-150s.wav")
-        });
+    let audio = std::env::var_os("LECTURERELAY_LIVE_AUDIO").map_or_else(
+        || project.join("target/local-latency/audio/MIT9_00F04_lec01-60s-150s.wav"),
+        std::path::PathBuf::from,
+    );
     let fixture = Fixture::new();
     let state = Arc::new(state(&fixture));
     let speech = crate::models::manager::path(&state);

@@ -119,7 +119,7 @@ impl TranslationWorker {
             || recording.as_ref().is_some_and(|r| {
                 translation_is_stale(
                     r.duration_seconds,
-                    batch.last().map(|s| s.end_seconds).unwrap_or(0.0),
+                    batch.last().map_or(0.0, |s| s.end_seconds),
                 ) || live.backlog(r.duration_seconds) > 6.0
             })
     }

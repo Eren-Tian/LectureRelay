@@ -7,7 +7,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-fn play(project: &Path, root: &Path, source: &str, log: &str) -> Child {
+fn play(project: &Path, root: &Path, source: &str, log: &str) -> std::io::Result<Child> {
     use std::os::windows::process::CommandExt;
     std::process::Command::new("python.exe")
         .arg(project.join("tests/e2e/continuity-play.py"))
@@ -17,7 +17,6 @@ fn play(project: &Path, root: &Path, source: &str, log: &str) -> Child {
         .arg(root.join(log))
         .creation_flags(0x08000000)
         .spawn()
-        .unwrap()
 }
 
 #[test]
@@ -68,7 +67,8 @@ fn real_record_only_continuity_lifecycle() {
             &root,
             "source.wav",
             &format!("native-{scenario}{suffix}-playback.jsonl"),
-        );
+        )
+        .unwrap();
         if scenario == "pause-idle" {
             sleep(Duration::from_secs(10));
             recorder.pause(scenario, true).unwrap();
@@ -85,6 +85,7 @@ fn real_record_only_continuity_lifecycle() {
                     "tail.wav",
                     &format!("native-{scenario}{suffix}-playback.jsonl")
                 )
+                .unwrap()
                 .wait()
                 .unwrap()
                 .success()

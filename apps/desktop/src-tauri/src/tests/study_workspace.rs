@@ -136,7 +136,7 @@ fn subtitle_exports_are_ordered_nonoverlapping_and_language_specific() {
     b.start_seconds = 4.;
     b.end_seconds = 6.;
     b.source_text = "<script> -->".into();
-    let srt = crate::app::exports::subtitles(&[b.clone(), a.clone()], false, "bilingual").unwrap();
+    let srt = crate::app::exports::subtitles(&[b, a.clone()], false, "bilingual").unwrap();
     assert!(srt.contains("00:00:01,250 --> 00:00:04,000"));
     assert!(!srt.contains("<script>"));
     assert!(srt.contains("字幕"));

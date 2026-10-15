@@ -1,0 +1,5 @@
+# Tests may fail fast; production code must not (see [workspace.lints]).
+allow-dbg-in-tests = true
+allow-expect-in-tests = true
+allow-panic-in-tests = true
+allow-unwrap-in-tests = true

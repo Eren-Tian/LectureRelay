@@ -20,7 +20,7 @@ impl Storage {
         self.courses()?
             .into_iter()
             .find(|course| course.id == id)
-            .ok_or(crate::error::ErrorCode::TheCourseDoesNotExist.into())
+            .ok_or_else(|| crate::error::ErrorCode::TheCourseDoesNotExist.into())
     }
 
     pub fn save_course(&self, id: Option<String>, input: CourseInput) -> AppResult<Course> {

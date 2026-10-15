@@ -222,7 +222,7 @@ pub(crate) fn parse(text: &str, card: &SummaryCard) -> AppResult<(String, Vec<Su
                 .and_then(|i| i.checked_sub(1))
                 .filter(|i| *i < card.sources.len())
                 .ok_or(crate::error::ErrorCode::TheSummaryCitesSourceTextThatDoesNot)?;
-            *reference = card.sources[index].id.clone();
+            reference.clone_from(&card.sources[index].id);
         }
         point.source_ids.sort();
         point.source_ids.dedup();
@@ -411,8 +411,7 @@ pub fn snapshot(state: &AppState, lecture: &str) -> AppResult<SummaryState> {
     let collecting_seconds = sources
         .first()
         .zip(sources.last())
-        .map(|(a, b)| (b.end_seconds - a.start_seconds).max(0.0))
-        .unwrap_or(0.0);
+        .map_or(0.0, |(a, b)| (b.end_seconds - a.start_seconds).max(0.0));
     Ok(SummaryState {
         cards,
         busy: state.summaries.busy(),

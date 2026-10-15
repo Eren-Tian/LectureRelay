@@ -183,16 +183,16 @@ fn classroom_outline_covers_full_source_and_persists_summary_ranges() {
     assert_eq!(study.sections.len(), 17);
     assert_eq!(study.sections[0].start_seconds, 0.125);
     assert_eq!(study.sections.last().unwrap().end_seconds, 1949.875);
-    let expected = source
-        .iter()
-        .map(|s| {
-            format!(
-                "[{}] {}\n",
-                crate::app::assistance::timestamp(s.start_seconds),
-                s.source_text
-            )
-        })
-        .collect::<String>();
+    let expected = source.iter().fold(String::new(), |mut expected, s| {
+        use std::fmt::Write as _;
+        let _ = writeln!(
+            expected,
+            "[{}] {}",
+            crate::app::assistance::timestamp(s.start_seconds),
+            s.source_text
+        );
+        expected
+    });
     assert_eq!(
         study
             .sections
@@ -284,7 +284,7 @@ fn fractional_times_roundtrip_and_invalid_bounds_are_rejected() {
     };
     db.save_segment(&l.id, None, input(0., 7.95)).unwrap();
     let s = db.segments(&l.id).unwrap().remove(0);
-    db.save_segment(&l.id, Some(s.id.clone()), input(0.001234, 7.94987))
+    db.save_segment(&l.id, Some(s.id), input(0.001234, 7.94987))
         .unwrap();
     let s = db.segments(&l.id).unwrap().remove(0);
     assert_eq!(s.start_seconds, 0.001234);
@@ -417,7 +417,7 @@ fn persisted_review_publication_is_idempotent_and_preserves_manual_work() {
     assert_eq!(resumed.parts[0].body, review.parts[0].body);
     db.publish_review(&mut resumed, "All sections").unwrap();
     let version = resumed.published_version.clone();
-    let mut old = review.clone();
+    let mut old = review;
     db.publish_review(&mut old, "Duplicate must not save")
         .unwrap();
     assert_eq!(old.published_version, version);

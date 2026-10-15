@@ -14,6 +14,29 @@ tauri-build = { version = "=2.7.0", features = [] }
 serde = { version = "1", features = ["derive"] }
 rusqlite = { version = "=0.40.2", features = ["bundled"] }
 
+# Lints follow the Apollo Rust best-practices handbook: fix rather than silence,
+# keep unwrap/expect/panic out of production paths (clippy.toml allows them in
+# tests) and document every unsafe block. CI denies warnings.
+[workspace.lints.clippy]
+allow_attributes = "warn"
+allow_attributes_without_reason = "warn"
+assigning_clones = "warn"
+dbg_macro = "warn"
+expect_used = "warn"
+format_collect = "warn"
+format_push_string = "warn"
+manual_ok_or = "warn"
+map_unwrap_or = "warn"
+needless_collect = "warn"
+or_fun_call = "warn"
+panic = "warn"
+ptr_as_ptr = "warn"
+redundant_clone = "warn"
+todo = "warn"
+undocumented_unsafe_blocks = "warn"
+unnecessary_wraps = "warn"
+unwrap_used = "warn"
+
 [profile.release]
 codegen-units = 1
 lto = "thin"

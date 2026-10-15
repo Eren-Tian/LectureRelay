@@ -94,8 +94,7 @@ fn split(part: &ReviewPart) -> Option<[ReviewPart; 2]> {
         .char_indices()
         .filter(|(i, ch)| *ch == '\n' && *i > middle / 2 && *i < middle + middle / 2)
         .min_by_key(|(i, _)| i.abs_diff(middle))
-        .map(|(i, _)| i + 1)
-        .unwrap_or(middle);
+        .map_or(middle, |(i, _)| i + 1);
     while !part.source.is_char_boundary(at) {
         at -= 1;
     }

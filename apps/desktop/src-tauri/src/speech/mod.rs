@@ -39,7 +39,7 @@ pub fn configured(
         let provider = settings
             .speech_provider
             .cloud()
-            .or(settings.provider.cloud())
+            .or_else(|| settings.provider.cloud())
             .ok_or(crate::error::ErrorCode::ChooseAnAiProviderAndAddAKey)?;
         Ok(Box::new(OfficialProvider::new(
             provider,

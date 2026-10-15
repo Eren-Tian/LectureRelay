@@ -148,9 +148,8 @@ pub fn cancel_live_processing(state: App<'_>) -> AppResult<()> {
 }
 
 #[tauri::command]
-pub fn pause_live_translation(state: App<'_>, paused: bool) -> AppResult<()> {
+pub fn pause_live_translation(state: App<'_>, paused: bool) {
     state.live.pause_translation(paused);
-    Ok(())
 }
 
 #[tauri::command]

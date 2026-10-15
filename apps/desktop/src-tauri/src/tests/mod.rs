@@ -18,7 +18,7 @@ fn runtime_preferences_upgrade_and_persist() {
         quiet_mode: false,
         ..legacy
     };
-    db.save_settings(settings.clone()).unwrap();
+    db.save_settings(settings).unwrap();
     drop(db);
     let db = fixture.db();
     assert_eq!(db.settings().unwrap().theme, Theme::Dark);

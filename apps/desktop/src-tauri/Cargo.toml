@@ -6,6 +6,9 @@ rust-version.workspace = true
 publish.workspace = true
 description = "LectureRelay local-first lecture companion"
 
+[lints]
+workspace = true
+
 [lib]
 name = "lecturerelay_desktop_lib"
 crate-type = ["rlib"]

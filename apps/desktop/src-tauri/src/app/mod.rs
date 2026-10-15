@@ -51,7 +51,7 @@ pub fn run() {
                 storage: storage.clone(),
                 paths: paths.clone(),
                 recorder: Default::default(),
-                jobs: jobs::Jobs::persistent(storage.clone()),
+                jobs: jobs::Jobs::persistent(storage),
                 live: Default::default(),
                 summaries: Default::default(),
                 models: Default::default(),
@@ -214,6 +214,8 @@ pub fn run() {
             Win32::UI::WindowsAndMessaging::{MB_ICONERROR, MB_OK, MessageBoxW},
             core::w,
         };
+        // SAFETY: Both strings are static NUL-terminated wide literals from w!,
+        // and a null owner window is allowed.
         unsafe {
             MessageBoxW(
                 None,

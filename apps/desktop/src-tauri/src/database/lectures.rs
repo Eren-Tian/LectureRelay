@@ -58,7 +58,7 @@ impl Storage {
     }
 
     pub fn lecture(&self, id: &str) -> AppResult<Lecture> {
-        self.lock()?.query_row("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until,audio_source FROM lectures WHERE id=?1", [id], lecture_from_row).optional().user_error(crate::error::ErrorCode::CannotReadLecture)?.ok_or(crate::error::ErrorCode::TheLectureDoesNotExist.into())
+        self.lock()?.query_row("SELECT id,course_id,title,started_at,ended_at,duration_seconds,status,recording_path,transcribed_until,audio_source FROM lectures WHERE id=?1", [id], lecture_from_row).optional().user_error(crate::error::ErrorCode::CannotReadLecture)?.ok_or_else(|| crate::error::ErrorCode::TheLectureDoesNotExist.into())
     }
 
     pub fn finish_lecture(&self, id: &str, duration: f64, status: LectureStatus) -> AppResult<()> {

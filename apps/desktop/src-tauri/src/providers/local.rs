@@ -349,7 +349,9 @@ pub(crate) struct Worker {
     threads: usize,
     context_size: usize,
 }
-// The Job Object handle is owned and closed exactly once by this worker.
+// SAFETY: HANDLE wraps a raw pointer, so it is not Send by default. The Job
+// Object handle is owned and closed exactly once by this worker; kernel handles
+// may be used and closed from any thread.
 unsafe impl Send for Worker {}
 impl Worker {
     fn open(
@@ -471,6 +473,8 @@ impl Worker {
 }
 impl Drop for Worker {
     fn drop(&mut self) {
+        // SAFETY: `job` came from CreateJobObjectW, is owned by this worker and
+        // is closed only here.
         unsafe {
             let _ = windows::Win32::Foundation::CloseHandle(self.job);
         }
@@ -655,6 +659,8 @@ mod tests {
         .unwrap();
         let mask = |child: &Child| {
             let (mut available, mut system) = (0usize, 0usize);
+            // SAFETY: The handle belongs to the live worker process and both
+            // out-parameters are live locals.
             unsafe {
                 GetProcessAffinityMask(HANDLE(child.as_raw_handle()), &mut available, &mut system)
                     .unwrap();

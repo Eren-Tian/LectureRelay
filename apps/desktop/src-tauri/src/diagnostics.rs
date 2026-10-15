@@ -82,6 +82,9 @@ pub struct Monitor {
     translation_sum: f64,
 }
 fn process(pid: Option<u32>) -> Option<(u64, usize)> {
+    // SAFETY: An opened process handle is closed below; the current-process
+    // pseudo-handle needs no close. Every out-parameter is a live local and
+    // `memory.cb` is its exact size.
     unsafe {
         let handle = if let Some(pid) = pid {
             OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, pid).ok()?
@@ -124,9 +127,7 @@ impl Monitor {
         let parent = process(None).unwrap_or_default();
         let child = pid.and_then(|p| process(Some(p))).unwrap_or_default();
         let cpu = parent.0 + child.0;
-        let cores = std::thread::available_parallelism()
-            .map(|v| v.get())
-            .unwrap_or(1) as f64;
+        let cores = std::thread::available_parallelism().map_or(1, std::num::NonZero::get) as f64;
         let percent = ((cpu.saturating_sub(self.last_cpu) as f64 / 10_000_000.0)
             / self.last.elapsed().as_secs_f64()
             / cores

@@ -23,11 +23,13 @@ struct Policy {
 }
 impl Performance {
     pub fn threads(&self) -> usize {
-        let quiet = self.state.lock().map(|p| p.quiet).unwrap_or(true);
+        let quiet = self.state.lock().map_or(true, |p| p.quiet);
         self.affinity(quiet).count_ones() as usize
     }
     pub fn new(quiet: bool) -> AppResult<Self> {
         let (mut available, mut system) = (0, 0);
+        // SAFETY: The current-process pseudo-handle is always valid and both
+        // out-parameters are live locals.
         unsafe { GetProcessAffinityMask(GetCurrentProcess(), &mut available, &mut system) }
             .user_error(crate::error::ErrorCode::CannotReadAvailableCpuResources)?;
         Ok(Self {
@@ -41,6 +43,8 @@ impl Performance {
     }
     pub fn register(&self, child: &Child) -> AppResult<Arc<OwnedHandle>> {
         let handle = Arc::new(
+            // SAFETY: `child` owns this open process handle and outlives the
+            // borrow, which is immediately duplicated into an owned handle.
             unsafe { BorrowedHandle::borrow_raw(child.as_raw_handle()) }
                 .try_clone_to_owned()
                 .user_error(crate::error::ErrorCode::CannotManageLocalSpeechPerformance)?,
@@ -86,14 +90,20 @@ fn physical_cores() -> Vec<usize> {
     use windows::Win32::System::SystemInformation::{
         GetLogicalProcessorInformation, RelationProcessorCore, SYSTEM_LOGICAL_PROCESSOR_INFORMATION,
     };
+    let entry = std::mem::size_of::<SYSTEM_LOGICAL_PROCESSOR_INFORMATION>();
     let mut bytes = 0;
+    // SAFETY: The first call passes no buffer and only reports the required
+    // length. The second passes the exact byte length of `entries`, which
+    // Windows treats as the buffer capacity; it fails instead of overrunning
+    // when the processor set grew in between. `bytes` is a live local.
     unsafe {
         let _ = GetLogicalProcessorInformation(None, &mut bytes);
-        let count = bytes as usize / std::mem::size_of::<SYSTEM_LOGICAL_PROCESSOR_INFORMATION>();
+        let count = bytes as usize / entry;
         if count == 0 {
             return Vec::new();
         }
         let mut entries = vec![SYSTEM_LOGICAL_PROCESSOR_INFORMATION::default(); count];
+        bytes = (count * entry) as u32;
         if GetLogicalProcessorInformation(Some(entries.as_mut_ptr()), &mut bytes).is_err() {
             return Vec::new();
         }
@@ -147,6 +157,8 @@ fn mask(available: usize, quiet: bool) -> usize {
 }
 fn apply(process: &OwnedHandle, affinity: usize) -> AppResult<()> {
     let handle = HANDLE(process.as_raw_handle());
+    // SAFETY: `process` is an open, owned handle kept alive by the borrow for
+    // both calls, and `exit` is a live out-parameter.
     unsafe {
         let mut exit = 0;
         GetExitCodeProcess(handle, &mut exit)

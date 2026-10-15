@@ -15,7 +15,7 @@ impl CompletionStream {
         // overhead while the decoded-text limit remains the non-stream limit.
         self.received = self.received.saturating_add(bytes.len());
         if self.received > 2_000_000 {
-            return Err("Local AI response exceeds the limit.".into());
+            return Err(crate::error::ErrorCode::LocalAiResponseExceedsTheLimit.into());
         }
         self.pending.extend_from_slice(bytes);
         let before = self.text.len();
@@ -27,7 +27,7 @@ impl CompletionStream {
     }
     fn line(&mut self, bytes: &[u8]) -> AppResult<()> {
         let line = std::str::from_utf8(bytes)
-            .user_error("Local AI returned invalid data.")?
+            .user_error(crate::error::ErrorCode::LocalAiReturnedInvalidData)?
             .trim();
         let Some(data) = line.strip_prefix("data:").map(str::trim) else {
             return Ok(());
@@ -37,20 +37,20 @@ impl CompletionStream {
             return Ok(());
         }
         if self.done {
-            return Err("Local AI returned invalid data.".into());
+            return Err(crate::error::ErrorCode::LocalAiReturnedInvalidData.into());
         }
-        let value: serde_json::Value =
-            serde_json::from_str(data).user_error("Local AI returned invalid data.")?;
+        let value: serde_json::Value = serde_json::from_str(data)
+            .user_error(crate::error::ErrorCode::LocalAiReturnedInvalidData)?;
         if value.get("error").is_some() {
-            return Err("Local AI request failed. Saved audio and text are preserved; retry or choose a smaller task.".into());
+            return Err(crate::error::ErrorCode::LocalAiRequestFailedSavedAudioAndText.into());
         }
         if let Some(text) = value["choices"][0]["delta"]["content"].as_str() {
             if self.finish.is_some() {
-                return Err("Local AI returned invalid data.".into());
+                return Err(crate::error::ErrorCode::LocalAiReturnedInvalidData.into());
             }
             self.text.push_str(text);
             if self.text.len() > 256_000 {
-                return Err("Local AI response exceeds the limit.".into());
+                return Err(crate::error::ErrorCode::LocalAiResponseExceedsTheLimit.into());
             }
         }
         if let Some(reason) = value["choices"][0]["finish_reason"].as_str() {
@@ -67,13 +67,11 @@ impl CompletionStream {
             return Err(super::local::OUTPUT_LIMIT.into());
         }
         if !self.done || self.finish.as_deref() != Some("stop") {
-            return Err(
-                "Local AI did not complete its response. Saved results are preserved.".into(),
-            );
+            return Err(crate::error::ErrorCode::LocalAiDidNotCompleteItsResponseSaved.into());
         }
         let text = self.text.trim();
         if text.is_empty() {
-            return Err("Local AI returned no text. Try again.".into());
+            return Err(crate::error::ErrorCode::LocalAiReturnedNoTextTryAgain.into());
         }
         Ok(text.into())
     }
@@ -111,7 +109,7 @@ mod tests {
         let mut stream = CompletionStream::default();
         stream.feed(b"data: {\"choices\":[{\"delta\":{\"content\":\"partial\"},\"finish_reason\":\"length\"}]}\ndata: [DONE]\n").unwrap();
         assert_eq!(
-            stream.finish().unwrap_err(),
+            stream.finish().unwrap_err().code,
             super::super::local::OUTPUT_LIMIT
         );
         assert!(

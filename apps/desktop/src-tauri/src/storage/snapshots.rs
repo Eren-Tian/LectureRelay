@@ -11,7 +11,7 @@ impl Storage {
         let _snapshot = self
             .snapshots
             .lock()
-            .user_error("Cannot save lecture snapshot.")?;
+            .user_error(crate::error::ErrorCode::CannotSaveLectureSnapshot)?;
         let detail = self.detail(id)?;
         paths.snapshot(&detail.lecture, &detail.segments, detail.note.as_ref())
     }

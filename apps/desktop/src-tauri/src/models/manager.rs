@@ -52,7 +52,7 @@ pub fn downloading(state: &AppState) -> AppResult<bool> {
         .models
         .active
         .lock()
-        .user_error("Model manager unavailable.")?
+        .user_error(crate::error::ErrorCode::ModelManagerUnavailable)?
         .as_ref()
         .is_some_and(|m| m.downloading))
 }
@@ -65,7 +65,7 @@ pub fn status_for(state: &AppState, id: &str) -> AppResult<ModelStatus> {
         .models
         .active
         .lock()
-        .user_error("Model manager unavailable.")?
+        .user_error(crate::error::ErrorCode::ModelManagerUnavailable)?
         .clone()
         .filter(|m| m.id == id)
     {
@@ -149,7 +149,7 @@ pub(crate) async fn download_model_from(
             .models
             .active
             .lock()
-            .user_error("Model manager unavailable.")? = Some(value.clone());
+            .user_error(crate::error::ErrorCode::ModelManagerUnavailable)? = Some(value.clone());
         value
     };
     // Announce the connecting phase before waiting for headers or data. The
@@ -157,44 +157,44 @@ pub(crate) async fn download_model_from(
     on_status(&value);
     let part = path_for(state, id)?.with_extension("part");
     let _ = rustls::crypto::ring::default_provider().install_default();
-    let result = async {
+    let result: AppResult<()> = async {
         let client = reqwest::Client::builder()
             .use_rustls_tls()
             .connect_timeout(std::time::Duration::from_secs(15))
             .timeout(std::time::Duration::from_secs(1800))
             .build()
-            .user_error("Cannot initialize model download.")?;
-        std::fs::create_dir_all(state.paths.data.join("models")).user_error("Cannot create model folder.")?;
+            .user_error(crate::error::ErrorCode::CannotInitializeModelDownload)?;
+        std::fs::create_dir_all(state.paths.data.join("models")).user_error(crate::error::ErrorCode::CannotCreateModelFolder)?;
         let mut response = cancellable(&state.models.cancel, client.get(url).send(),
-            "Cannot download model. Check your connection.").await?
-            .error_for_status().user_error("Model download unavailable.")?;
+            crate::error::ErrorCode::CannotDownloadModelCheckYourConnection).await?
+            .error_for_status().user_error(crate::error::ErrorCode::ModelDownloadUnavailable)?;
         let mut file = File::create(&part)
-            .user_error("Cannot create model file. Check disk space.")?;
+            .user_error(crate::error::ErrorCode::CannotCreateModelFileCheckDiskSpace)?;
         let mut hash = Sha256::new();
         let mut last = std::time::Instant::now();
         while let Some(chunk) = cancellable(&state.models.cancel, response.chunk(),
-            "Model download interrupted. Try again.").await? {
+            crate::error::ErrorCode::ModelDownloadInterruptedTryAgain).await? {
             value.downloaded_bytes += chunk.len() as u64;
             if value.downloaded_bytes > model.size {
-                return Err("Model exceeds the expected size.".into());
+                return Err(crate::error::ErrorCode::ModelExceedsTheExpectedSize.into());
             }
-            file.write_all(&chunk).user_error("Cannot write model. Check disk space.")?;
+            file.write_all(&chunk).user_error(crate::error::ErrorCode::CannotWriteModelCheckDiskSpace)?;
             hash.update(&chunk);
             if last.elapsed().as_millis() > 250 {
-                *state.models.active.lock().user_error("Model manager unavailable.")? = Some(value.clone());
+                *state.models.active.lock().user_error(crate::error::ErrorCode::ModelManagerUnavailable)? = Some(value.clone());
                 on_status(&value);
                 last = std::time::Instant::now();
             }
         }
         if state.models.cancel.load(Ordering::Relaxed) {
-            return Err("Model download cancelled.".into());
+            return Err(crate::error::ErrorCode::ModelDownloadCancelled.into());
         }
         if value.downloaded_bytes != model.size || format!("{:x}", hash.finalize()) != model.sha256 {
-            return Err("Model integrity check failed. Download again.".into());
+            return Err(crate::error::ErrorCode::ModelIntegrityCheckFailedDownloadAgain.into());
         }
-        file.sync_all().user_error("Cannot save model.")?;
+        file.sync_all().user_error(crate::error::ErrorCode::CannotSaveModel)?;
         drop(file);
-        std::fs::rename(&part, path_for(state, id)?).user_error("Cannot install model.")?;
+        std::fs::rename(&part, path_for(state, id)?).user_error(crate::error::ErrorCode::CannotInstallModel)?;
         let manifest = serde_json::json!({"id":id,"revision":model.revision,"sha256":model.sha256,"size":model.size,"runtimeVersion":model.runtime,"installedAt":now()});
         if id == MODEL_ID {
         for (source, target) in [
@@ -202,11 +202,11 @@ pub(crate) async fn download_model_from(
             ("licenses/NVIDIA-Model-NOTICE.txt", "NOTICE.txt"),
         ] {
             std::fs::copy(state.runtime.join(source), state.paths.data.join("models").join(target))
-                .user_error("Cannot save model license. Reinstall LectureRelay.")?;
+                .user_error(crate::error::ErrorCode::CannotSaveModelLicenseReinstallLecturerelay)?;
         }
         } else {
             let license = if id == catalog::TRANSLATION { "LICENSE-Hy-MT2.txt" } else { "LICENSE-Qwen3.5.txt" };
-            std::fs::copy(state.runtime.with_file_name("local-text").join(license), state.paths.data.join("models").join(license)).user_error("Cannot save model license. Reinstall LectureRelay.")?;
+            std::fs::copy(state.runtime.with_file_name("local-text").join(license), state.paths.data.join("models").join(license)).user_error(crate::error::ErrorCode::CannotSaveModelLicenseReinstallLecturerelay)?;
         }
         state.storage.install_model(id, model.revision, model.sha256, model.size)?;
         // The manifest marks a complete installation, including its required license.
@@ -220,9 +220,9 @@ pub(crate) async fn download_model_from(
         .models
         .active
         .lock()
-        .user_error("Model manager unavailable.")? = None;
+        .user_error(crate::error::ErrorCode::ModelManagerUnavailable)? = None;
     let mut final_status = status_for(state, id)?;
-    final_status.error = result.as_ref().err().cloned();
+    final_status.error = result.as_ref().err().map(ToString::to_string);
     on_status(&final_status);
     result
 }
@@ -238,7 +238,7 @@ pub fn remove_model(state: &AppState, id: &str) -> AppResult<()> {
         state.paths.data.join(format!("models/{id}.json")),
     ] {
         if p.exists() {
-            std::fs::remove_file(p).user_error("Cannot remove model.")?;
+            std::fs::remove_file(p).user_error(crate::error::ErrorCode::CannotRemoveModel)?;
         }
     }
     state.storage.remove_model(id)
@@ -247,19 +247,19 @@ pub fn remove_model(state: &AppState, id: &str) -> AppResult<()> {
 async fn cancellable<T, E>(
     cancel: &AtomicBool,
     future: impl std::future::Future<Output = Result<T, E>>,
-    message: &str,
+    message: crate::error::ErrorCode,
 ) -> AppResult<T> {
     // Keep the same pending network future: timeout polling must not reconnect
     // or discard a partially read response while checking cancellation.
     let mut pending = std::pin::pin!(future);
     loop {
         if cancel.load(Ordering::Relaxed) {
-            return Err("Model download cancelled.".into());
+            return Err(crate::error::ErrorCode::ModelDownloadCancelled.into());
         }
         if let Ok(result) =
             tokio::time::timeout(std::time::Duration::from_millis(250), pending.as_mut()).await
         {
-            return result.user_error(message);
+            return result.map_err(|_| crate::error::AppError::from(message));
         }
     }
 }
@@ -279,10 +279,13 @@ mod tests {
         let result = tauri::async_runtime::block_on(cancellable(
             &cancel,
             std::future::pending::<Result<(), ()>>(),
-            "Network error.",
+            crate::error::ErrorCode::OperationFailed,
         ));
         thread.join().unwrap();
-        assert_eq!(result.unwrap_err(), "Model download cancelled.");
+        assert_eq!(
+            result.unwrap_err().code,
+            crate::error::ErrorCode::ModelDownloadCancelled
+        );
         assert!(start.elapsed() < std::time::Duration::from_secs(2));
     }
 }

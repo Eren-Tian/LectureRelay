@@ -51,6 +51,6 @@ pub fn get(id: &str) -> AppResult<Model> {
             runtime: TEXT_RUNTIME,
             license: "Apache 2.0 · Unsloth GGUF of Qwen",
         },
-        _ => return Err("Unknown local model.".into()),
+        _ => return Err(crate::error::ErrorCode::UnknownLocalModel.into()),
     })
 }

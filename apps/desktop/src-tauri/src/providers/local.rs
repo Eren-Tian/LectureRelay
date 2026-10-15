@@ -20,14 +20,16 @@ use std::{
 };
 use tokio::sync::Mutex;
 
-pub(super) const OUTPUT_LIMIT: &str = "Local AI reached its output limit. Completed review sections are saved; retry the remaining work.";
+pub(super) const OUTPUT_LIMIT: crate::error::ErrorCode =
+    crate::error::ErrorCode::LocalAiReachedItsOutputLimitCompletedReview;
 // i18n-exempt: internal cancellation sentinel, filtered before display
-pub(crate) const SUPERSEDED: &str = "Live translation preview superseded.";
-const CONTEXT_LIMIT: &str =
-    "This text exceeds the local model context. Shorten the requested focus or course background.";
-pub(crate) fn is_generation_limit(error: &str) -> bool {
+pub(crate) const SUPERSEDED: crate::error::ErrorCode =
+    crate::error::ErrorCode::LiveTranslationPreviewSuperseded;
+const CONTEXT_LIMIT: crate::error::ErrorCode =
+    crate::error::ErrorCode::ThisTextExceedsTheLocalModelContextShorten;
+pub(crate) fn is_generation_limit(error: &crate::error::AppError) -> bool {
     matches!(
-        error,
+        error.code,
         OUTPUT_LIMIT | CONTEXT_LIMIT | super::official::OUTPUT_LIMIT
     )
 }
@@ -65,10 +67,7 @@ pub fn configured_text(
                 Role::Study => role.model(),
             })?;
             if !manager::status_for(state, model.id)?.installed {
-                return Err(format!(
-                    "Download {} in Settings → AI & models → Local models first. No text has been uploaded.",
-                    model.name
-                ));
+                return Err(crate::error::AppError::model_required(model.name));
             }
             Ok(Box::new(LocalProvider {
                 state,
@@ -78,9 +77,7 @@ pub fn configured_text(
             }))
         }
         ProcessingMode::Cloud => Ok(Box::new(configured(&settings)?)),
-        ProcessingMode::None => {
-            Err("This AI feature is off. Choose a model in Settings → AI & models.".into())
-        }
+        ProcessingMode::None => Err(crate::error::ErrorCode::ThisAiFeatureIsOffChooseAModel.into()),
     }
 }
 
@@ -94,10 +91,14 @@ impl LocalProvider<'_> {
     fn checkpoint(&self) -> AppResult<()> {
         if self.live {
             if self.state.live.cancelled() {
-                return Err("Local translation cancelled. Recording is preserved.".into());
+                return Err(
+                    crate::error::ErrorCode::LocalTranslationCancelledRecordingIsPreserved.into(),
+                );
             }
             if self.state.live.translation_paused() {
-                return Err("Live translation paused. English and audio are saved; translate missing sentences after class.".into());
+                return Err(
+                    crate::error::ErrorCode::LiveTranslationPausedEnglishAndAudioAreSaved.into(),
+                );
             }
             if self
                 .state
@@ -105,7 +106,10 @@ impl LocalProvider<'_> {
                 .status()?
                 .is_some_and(|r| self.state.live.backlog(r.duration_seconds) > 6.0)
             {
-                return Err("Translation deferred while English captions catch up. Saved text can be translated after class.".into());
+                return Err(
+                    crate::error::ErrorCode::TranslationDeferredWhileEnglishCaptionsCatchUpSaved
+                        .into(),
+                );
             }
             Ok(())
         } else {
@@ -161,7 +165,7 @@ impl LocalProvider<'_> {
         if result.is_ok()
             || result
                 .as_ref()
-                .is_err_and(|error| is_generation_limit(error) || error == SUPERSEDED)
+                .is_err_and(|error| is_generation_limit(error) || error.code == SUPERSEDED)
         {
             // Closing a superseded HTTP stream cancels decoding. Keep the model warm
             // for the higher-priority final request, rather than reloading its weights.
@@ -180,13 +184,15 @@ impl LocalProvider<'_> {
             if worker
                 .child
                 .try_wait()
-                .user_error("Cannot check local model process.")?
+                .user_error(crate::error::ErrorCode::CannotCheckLocalModelProcess)?
                 .is_some()
             {
-                return Err("Local AI could not load the model. Check available memory or reinstall the model. Recording is preserved.".into());
+                return Err(crate::error::ErrorCode::LocalAiCouldNotLoadTheModelCheck.into());
             }
             if start.elapsed() > Duration::from_secs(180) {
-                return Err("Local model loading timed out. Recording is preserved.".into());
+                return Err(
+                    crate::error::ErrorCode::LocalModelLoadingTimedOutRecordingIsPreserved.into(),
+                );
             }
             if worker
                 .client
@@ -224,11 +230,11 @@ impl LocalProvider<'_> {
             )
             .await?
             .error_for_status()
-            .user_error("Local tokenizer unavailable.")?;
+            .user_error(crate::error::ErrorCode::LocalTokenizerUnavailable)?;
         let count: serde_json::Value = self.wait(token_response.json(), control).await?;
         if count["tokens"]
             .as_array()
-            .ok_or("Invalid local token count.")?
+            .ok_or(crate::error::ErrorCode::InvalidLocalTokenCount)?
             .len()
             + tokens
             + 512
@@ -248,7 +254,7 @@ impl LocalProvider<'_> {
             )
             .await?;
         if !response.status().is_success() {
-            return Err("Local AI request failed. Saved audio and text are preserved; retry or choose a smaller task.".into());
+            return Err(crate::error::ErrorCode::LocalAiRequestFailedSavedAudioAndText.into());
         }
         let mut response = response;
         if let Some(control) = control {
@@ -267,27 +273,25 @@ impl LocalProvider<'_> {
         let mut bytes = Vec::new();
         while let Some(part) = self.wait(response.chunk(), None).await? {
             if bytes.len() + part.len() > 256_000 {
-                return Err("Local AI response exceeds the limit.".into());
+                return Err(crate::error::ErrorCode::LocalAiResponseExceedsTheLimit.into());
             }
             bytes.extend_from_slice(&part);
         }
         self.checkpoint()?;
-        let value: serde_json::Value =
-            serde_json::from_slice(&bytes).user_error("Local AI returned invalid data.")?;
+        let value: serde_json::Value = serde_json::from_slice(&bytes)
+            .user_error(crate::error::ErrorCode::LocalAiReturnedInvalidData)?;
         if value["choices"][0]["finish_reason"] == "length" {
             return Err(OUTPUT_LIMIT.into());
         }
         if value["choices"][0]["finish_reason"] != "stop" {
-            return Err(
-                "Local AI did not complete its response. Saved results are preserved.".into(),
-            );
+            return Err(crate::error::ErrorCode::LocalAiDidNotCompleteItsResponseSaved.into());
         }
         let text = value["choices"][0]["message"]["content"]
             .as_str()
             .unwrap_or_default()
             .trim();
         if text.is_empty() {
-            return Err("Local AI returned no text. Try again.".into());
+            return Err(crate::error::ErrorCode::LocalAiReturnedNoTextTryAgain.into());
         }
         Ok(text.to_owned())
     }
@@ -302,7 +306,9 @@ impl LocalProvider<'_> {
             if let Ok(result) =
                 tokio::time::timeout(Duration::from_millis(200), pending.as_mut()).await
             {
-                return result.user_error("Local AI connection stopped or timed out. Recording and saved results are preserved.");
+                return result.user_error(
+                    crate::error::ErrorCode::LocalAiConnectionStoppedOrTimedOutRecording,
+                );
             }
         }
     }
@@ -314,21 +320,21 @@ pub(crate) fn verify_file(
     checkpoint: impl Fn() -> AppResult<()>,
 ) -> AppResult<()> {
     let mut file = std::fs::File::open(path)
-        .user_error("Local model or runtime is missing. Download again or reinstall the app.")?;
+        .user_error(crate::error::ErrorCode::LocalModelOrRuntimeIsMissingDownloadAgain)?;
     let mut hash = Sha256::new();
     let mut buffer = vec![0u8; 1024 * 1024];
     loop {
         checkpoint()?;
         let size = file
             .read(&mut buffer)
-            .user_error("Cannot read local model. Check disk space and permissions.")?;
+            .user_error(crate::error::ErrorCode::CannotReadLocalModelCheckDiskSpaceAnd)?;
         if size == 0 {
             break;
         }
         hash.update(&buffer[..size]);
     }
     if format!("{:x}", hash.finalize()) != expected {
-        return Err("Local model integrity check failed. Remove it and download again.".into());
+        return Err(crate::error::ErrorCode::LocalModelIntegrityCheckFailedRemoveItAnd.into());
     }
     Ok(())
 }
@@ -354,32 +360,33 @@ impl Worker {
     ) -> AppResult<Self> {
         let manifest: serde_json::Value = serde_json::from_slice(
             &std::fs::read(runtime.join("runtime-manifest.json"))
-                .user_error("Local AI runtime missing. Reinstall LectureRelay.")?,
+                .user_error(crate::error::ErrorCode::LocalAiRuntimeMissingReinstallLecturerelay)?,
         )
-        .user_error("Invalid local AI runtime manifest.")?;
+        .user_error(crate::error::ErrorCode::InvalidLocalAiRuntimeManifest)?;
         for (name, hash) in manifest["files"]
             .as_object()
-            .ok_or("Invalid runtime manifest.")?
+            .ok_or(crate::error::ErrorCode::InvalidRuntimeManifest)?
         {
             if name.contains(['/', '\\']) || name == ".." {
-                return Err("Invalid runtime file name.".into());
+                return Err(crate::error::ErrorCode::InvalidRuntimeFileName.into());
             }
             verify_file(
                 &runtime.join(name),
-                hash.as_str().ok_or("Invalid runtime checksum.")?,
+                hash.as_str()
+                    .ok_or(crate::error::ErrorCode::InvalidRuntimeChecksum)?,
                 || Ok(()),
             )?;
         }
         let listener = TcpListener::bind("127.0.0.1:0")
-            .user_error("Cannot allocate a local AI connection.")?;
+            .user_error(crate::error::ErrorCode::CannotAllocateALocalAiConnection)?;
         let port = listener
             .local_addr()
-            .user_error("Cannot read local AI connection.")?
+            .user_error(crate::error::ErrorCode::CannotReadLocalAiConnection)?
             .port();
         let secret = uuid::Uuid::new_v4().to_string();
         let mut headers = reqwest::header::HeaderMap::new();
         let mut auth = reqwest::header::HeaderValue::from_str(&format!("Bearer {secret}"))
-            .user_error("Cannot initialize local AI.")?;
+            .user_error(crate::error::ErrorCode::CannotInitializeLocalAi)?;
         auth.set_sensitive(true);
         headers.insert(reqwest::header::AUTHORIZATION, auth);
         let _ = rustls::crypto::ring::default_provider().install_default();
@@ -390,7 +397,7 @@ impl Worker {
             .connect_timeout(Duration::from_secs(2))
             .timeout(Duration::from_secs(600))
             .build()
-            .user_error("Cannot initialize local AI client.")?;
+            .user_error(crate::error::ErrorCode::CannotInitializeLocalAiClient)?;
         let mut command = Command::new(runtime.join("llama-server.exe"));
         let threads = performance.threads();
         for (name, _) in std::env::vars_os() {
@@ -438,7 +445,7 @@ impl Worker {
         drop(listener);
         let mut child = command
             .spawn()
-            .user_error("Cannot start local AI. Reinstall LectureRelay.")?;
+            .user_error(crate::error::ErrorCode::CannotStartLocalAiReinstallLecturerelay)?;
         let setup = performance.register(&child).and_then(|policy| {
             crate::speech::local::worker::contain_worker(&child).map(|job| (policy, job))
         });
@@ -504,7 +511,7 @@ fn language(code: &str) -> AppResult<&'static str> {
         "zh" => Ok("Simplified Chinese"),
         "ja" => Ok("Japanese"),
         "ko" => Ok("Korean"),
-        _ => Err("Unsupported translation language.".into()),
+        _ => Err(crate::error::ErrorCode::UnsupportedTranslationLanguage.into()),
     }
 }
 fn translation_prompt(context: &str, text: &str, target: &str) -> String {
@@ -517,7 +524,7 @@ fn translation_prompt(context: &str, text: &str, target: &str) -> String {
 #[async_trait]
 impl TranscriptionProvider for LocalProvider<'_> {
     async fn transcribe(&self, _: Vec<u8>, _: &str) -> AppResult<Vec<SpeechSegment>> {
-        Err("Use Local English for transcription.".into())
+        Err(crate::error::ErrorCode::UseLocalEnglishForTranscription.into())
     }
 }
 #[async_trait]

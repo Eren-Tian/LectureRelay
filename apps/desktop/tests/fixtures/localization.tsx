@@ -178,6 +178,23 @@ const fixture = {
   failCleanup: false,
   failTrash: false,
 };
+const parameters = new URLSearchParams(location.search);
+const speech = parameters.get('speech');
+if (
+  speech === 'groq' ||
+  speech === 'openai' ||
+  speech === 'local' ||
+  speech === 'none'
+) {
+  data.settings.speechProvider = speech;
+}
+const text = parameters.get('text');
+if (text === 'groq' || text === 'openai' || text === 'none')
+  data.settings.provider = text;
+for (const provider of data.providers)
+  provider.hasKey =
+    (provider.provider === speech || provider.provider === text) &&
+    provider.provider !== parameters.get('missing');
 Object.assign(window, { localizationFixture: fixture, isTauri: true });
 mockIPC(
   (command, args) => {
@@ -209,6 +226,14 @@ mockIPC(
         };
       case 'lecture_detail':
         return structuredClone(detail);
+      case 'transcribe_lecture':
+        if (parameters.has('reject'))
+          throw {
+            code: 'provider_unavailable_try_again_later',
+            params: [],
+            message: 'untrusted-private-canary',
+          };
+        return null;
       case 'study_state':
         return structuredClone(study);
       case 'local_model_status':

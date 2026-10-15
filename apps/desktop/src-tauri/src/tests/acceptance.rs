@@ -68,7 +68,10 @@ fn model_download_announces_connection_and_allows_cancellation_before_network() 
     done.store(true, Ordering::Relaxed);
     let connections = server_thread.join().unwrap();
     watchdog.join().unwrap();
-    assert_eq!(result.unwrap().unwrap_err(), "Model download cancelled.");
+    assert_eq!(
+        result.unwrap().unwrap_err().code,
+        crate::error::ErrorCode::ModelDownloadCancelled
+    );
     assert_eq!(*events.lock().unwrap(), vec![(true, 0), (false, 0)]);
     assert_eq!(
         connections, 0,
@@ -139,7 +142,10 @@ fn official_model_download_cancel_install_and_remove() {
                 state.models.cancel.store(true, Ordering::Relaxed);
             }
         }));
-    assert_eq!(cancelled.unwrap_err(), "Model download cancelled.");
+    assert_eq!(
+        cancelled.unwrap_err().code,
+        crate::error::ErrorCode::ModelDownloadCancelled
+    );
     assert!(!crate::models::manager::status(&state).unwrap().installed);
     assert!(
         !crate::models::manager::path(&state)

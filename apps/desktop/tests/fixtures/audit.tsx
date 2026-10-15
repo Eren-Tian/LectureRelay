@@ -11,6 +11,10 @@ import '../../src/styles/app.css';
 const fixture = {
   calls: [] as string[],
   note: 'Initial manual note',
+  draft: '',
+  showNotes: (_show: boolean) => {},
+  holdDrafts: false,
+  finishDraft: () => {},
   settle: (_fail = false) => {},
 };
 Object.assign(window, { auditFixture: fixture });
@@ -25,8 +29,14 @@ api.saveNote = async (_id, body) => {
   await deferred('saveNote');
   fixture.note = body;
 };
-api.saveDraft = async () => {
+api.saveDraft = async (_id, body) => {
   fixture.calls.push('saveDraft');
+  if (fixture.holdDrafts)
+    await new Promise<void>((resolve) => {
+      fixture.finishDraft = resolve;
+    });
+  fixture.draft = body;
+  study.draft = body;
 };
 api.clearDraft = async () => deferred('clearDraft');
 const data: Bootstrap = {
@@ -98,6 +108,8 @@ function Actions() {
   );
 }
 function Fixture() {
+  const [showNotes, setShowNotes] = useState(true);
+  fixture.showNotes = setShowNotes;
   const [note, setNote] = useState<Note>({
     body: fixture.note,
     updatedAt: 0,
@@ -119,16 +131,18 @@ function Fixture() {
       <main style={{ padding: 24 }}>
         <p>Isolated component fixture · synthetic content</p>
         <Actions />
-        <StudyNotes
-          id="audit-fixture"
-          note={note}
-          study={study}
-          position={12}
-          blocked={false}
-          onSaved={async () => {
-            setNote({ body: fixture.note, updatedAt: 0, origin: 'manual' });
-          }}
-        />
+        {showNotes && (
+          <StudyNotes
+            id="audit-fixture"
+            note={note}
+            study={study}
+            position={12}
+            blocked={false}
+            onSaved={async () => {
+              setNote({ body: fixture.note, updatedAt: 0, origin: 'manual' });
+            }}
+          />
+        )}
       </main>
     </WorkspaceProvider>
   );

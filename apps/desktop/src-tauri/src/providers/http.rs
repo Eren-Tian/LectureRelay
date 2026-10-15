@@ -1,13 +1,21 @@
 use crate::error::{AppResult, UserFacing};
 
 pub(crate) struct SummaryFailure {
-    pub message: String,
+    pub message: crate::error::AppError,
     pub retry_after: u64,
 }
 impl From<String> for SummaryFailure {
     fn from(message: String) -> Self {
         Self {
-            message,
+            message: message.into(),
+            retry_after: 0,
+        }
+    }
+}
+impl From<crate::error::AppError> for SummaryFailure {
+    fn from(error: crate::error::AppError) -> Self {
+        Self {
+            message: error,
             retry_after: 0,
         }
     }
@@ -57,14 +65,14 @@ pub(super) async fn read_summary_response(
     })
 }
 
-pub fn provider_http_error(status: u16) -> String {
+pub fn provider_http_error(status: u16) -> crate::error::AppError {
     match status {
-        401 | 403 => "Authorization rejected. Check your API key and account permissions.",
-        404 => "Model or endpoint unavailable. Check the model name.",
-        413 => "Audio chunk exceeds the provider limit.",
-        429 => "Provider quota or rate limit reached. Try again later.",
-        500..=599 => "Provider unavailable. Try again later.",
-        _ => "The provider could not process this request. Check the model, account and input.",
+        401 | 403 => crate::error::ErrorCode::AuthorizationRejectedCheckYourApiKeyAndAccount,
+        404 => crate::error::ErrorCode::ModelOrEndpointUnavailableCheckTheModelName,
+        413 => crate::error::ErrorCode::AudioChunkExceedsTheProviderLimit,
+        429 => crate::error::ErrorCode::ProviderQuotaOrRateLimitReachedTryAgain,
+        500..=599 => crate::error::ErrorCode::ProviderUnavailableTryAgainLater,
+        _ => crate::error::ErrorCode::TheProviderCouldNotProcessThisRequestCheck,
     }
     .into()
 }
@@ -77,14 +85,15 @@ pub(super) async fn read_response(mut response: reqwest::Response) -> AppResult<
     while let Some(chunk) = response
         .chunk()
         .await
-        .user_error("Provider response interrupted. Try again.")?
+        .user_error(crate::error::ErrorCode::ProviderResponseInterruptedTryAgain)?
     {
         if bytes.len() + chunk.len() > 2 * 1024 * 1024 {
-            return Err("Provider response exceeds the size limit.".into());
+            return Err(crate::error::ErrorCode::ProviderResponseExceedsTheSizeLimit.into());
         }
         bytes.extend_from_slice(&chunk);
     }
-    serde_json::from_slice(&bytes).user_error("Provider response could not be parsed.")
+    serde_json::from_slice(&bytes)
+        .user_error(crate::error::ErrorCode::ProviderResponseCouldNotBeParsed)
 }
 
 #[cfg(test)]

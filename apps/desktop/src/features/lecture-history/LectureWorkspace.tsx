@@ -12,6 +12,7 @@ import { api, recordingUrl } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { useResource } from '../../hooks/useResource';
 import { useAction } from '../../hooks/useAction';
+import { aiReadiness } from '../../lib/ai-readiness';
 import { ResourceState } from '../../components/ResourceState';
 import { Icon } from '../../components/Icon';
 import { StudyWorkspace } from '../../components/StudyWorkspace';
@@ -72,11 +73,8 @@ export function LecturePage({ id }: { id: string }) {
   if (!data) return <ResourceState error={error} reload={reload} />;
   const { lecture, course, segments, answers } = data;
   const cloud = providerName(workspace.data.settings.provider);
-  const configured =
-    workspace.data.settings.provider !== 'none' &&
-    workspace.data.providers.some(
-      (p) => p.provider === workspace.data.settings.provider && p.hasKey,
-    );
+  const readiness = (task: 'transcription' | 'translation' | 'study') =>
+    aiReadiness(workspace.data.settings, workspace.data.providers, task);
   const seek = (value: number) => {
     const seconds = Math.max(0, Math.min(lecture.durationSeconds, value));
     setPosition(seconds);
@@ -91,28 +89,14 @@ export function LecturePage({ id }: { id: string }) {
     void el.play().catch(() => workspace.notify(ui.replayPressPlay));
   };
   const beginAI = async (kind: 'transcription' | 'translation' | 'notes') => {
-    const local =
-      kind === 'transcription'
-        ? workspace.data.settings.speechProvider === 'local'
-        : (kind === 'translation'
-            ? workspace.data.settings.translationMode
-            : workspace.data.settings.studyMode) === 'local';
-    const off =
-      kind === 'transcription'
-        ? false
-        : (kind === 'translation'
-            ? workspace.data.settings.translationMode
-            : workspace.data.settings.studyMode) === 'none';
-    if (off || (!local && !configured)) {
+    const task = readiness(kind === 'notes' ? 'study' : kind);
+    const local = task.mode === 'local';
+    if (!task.configured) {
       workspace.notify(ui.chooseAiServiceFirst, true);
       workspace.navigate({ view: 'settings', entry: 'services' });
       return;
     }
-    const speechName = providerName(
-      workspace.data.settings.speechProvider === 'none'
-        ? workspace.data.settings.provider
-        : (workspace.data.settings.speechProvider as 'openai' | 'groq'),
-    );
+    const speechName = providerName(task.provider);
     if (
       !local &&
       !(await workspace.confirm({
@@ -154,10 +138,7 @@ export function LecturePage({ id }: { id: string }) {
   };
   const ask = (e: FormEvent) => {
     e.preventDefault();
-    if (
-      workspace.data.settings.studyMode === 'none' ||
-      (workspace.data.settings.studyMode === 'cloud' && !configured)
-    ) {
+    if (!readiness('study').configured) {
       workspace.notify(ui.configureTextAiFirst, true);
       return;
     }

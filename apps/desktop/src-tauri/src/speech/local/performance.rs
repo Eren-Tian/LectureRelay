@@ -29,7 +29,7 @@ impl Performance {
     pub fn new(quiet: bool) -> AppResult<Self> {
         let (mut available, mut system) = (0, 0);
         unsafe { GetProcessAffinityMask(GetCurrentProcess(), &mut available, &mut system) }
-            .user_error("Cannot read available CPU resources.")?;
+            .user_error(crate::error::ErrorCode::CannotReadAvailableCpuResources)?;
         Ok(Self {
             available,
             quiet_mask: core_budget(available, &physical_cores()),
@@ -43,12 +43,12 @@ impl Performance {
         let handle = Arc::new(
             unsafe { BorrowedHandle::borrow_raw(child.as_raw_handle()) }
                 .try_clone_to_owned()
-                .user_error("Cannot manage local speech performance.")?,
+                .user_error(crate::error::ErrorCode::CannotManageLocalSpeechPerformance)?,
         );
         let mut policy = self
             .state
             .lock()
-            .user_error("Speech preferences are busy.")?;
+            .user_error(crate::error::ErrorCode::SpeechPreferencesAreBusy)?;
         apply(&handle, self.affinity(policy.quiet))?;
         policy.workers.retain(|worker| worker.strong_count() > 0);
         policy.workers.push(Arc::downgrade(&handle));
@@ -58,7 +58,7 @@ impl Performance {
         let mut policy = self
             .state
             .lock()
-            .user_error("Speech preferences are busy.")?;
+            .user_error(crate::error::ErrorCode::SpeechPreferencesAreBusy)?;
         let workers: Vec<_> = policy.workers.iter().filter_map(Weak::upgrade).collect();
         let result = workers
             .iter()
@@ -149,12 +149,13 @@ fn apply(process: &OwnedHandle, affinity: usize) -> AppResult<()> {
     let handle = HANDLE(process.as_raw_handle());
     unsafe {
         let mut exit = 0;
-        GetExitCodeProcess(handle, &mut exit).user_error("Cannot check local speech worker.")?;
+        GetExitCodeProcess(handle, &mut exit)
+            .user_error(crate::error::ErrorCode::CannotCheckLocalSpeechWorker)?;
         if exit != 259 {
             return Ok(());
         } // STILL_ACTIVE; a completed worker needs no update.
         SetProcessAffinityMask(handle, affinity)
-            .user_error("Cannot change local speech performance.")
+            .user_error(crate::error::ErrorCode::CannotChangeLocalSpeechPerformance)
     }
 }
 

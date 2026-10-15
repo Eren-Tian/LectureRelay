@@ -21,6 +21,7 @@ Older, version-specific acceptance scripts and their reports were removed from t
 | `localization.mjs`            | Full app in Chinese: settings, replay, live, processing, deletion confirmations and translated warnings |
 | `settings-components.mjs`     | Grouped settings, draft preservation, device enumeration and cleanup errors                             |
 | `live-summary-components.mjs` | Live summary opt-in, duplicates, source replay, stale cards and manual notes                            |
+| `workflow-reliability.mjs`    | Independent speech keys, out-of-order summary reads, draft recovery and structured errors               |
 
 Evidence goes to ignored folders under `target/`. These suites do not establish installed WebView2, real audio or model inference behavior.
 

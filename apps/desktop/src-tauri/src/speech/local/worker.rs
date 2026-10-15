@@ -38,7 +38,9 @@ impl LocalSpeech {
             .stderr(Stdio::null())
             .creation_flags(0x08000000)
             .spawn()
-            .user_error("Cannot start local speech recognition. Reinstall LectureRelay.")?;
+            .user_error(
+                crate::error::ErrorCode::CannotStartLocalSpeechRecognitionReinstallLecturerelay,
+            )?;
         let (job, performance) = match performance
             .register(&child)
             .and_then(|policy| contain_worker(&child).map(|job| (job, policy)))
@@ -53,11 +55,11 @@ impl LocalSpeech {
         let mut input = child
             .stdin
             .take()
-            .ok_or("Local speech input unavailable.")?;
+            .ok_or(crate::error::ErrorCode::LocalSpeechInputUnavailable)?;
         let mut output = child
             .stdout
             .take()
-            .ok_or("Local speech output unavailable.")?;
+            .ok_or(crate::error::ErrorCode::LocalSpeechOutputUnavailable)?;
         let (sender, replies) = mpsc::sync_channel(1);
         let (requests, packets) = mpsc::sync_channel::<Vec<u8>>(1);
         std::thread::spawn(move || {
@@ -75,22 +77,25 @@ impl LocalSpeech {
             loop {
                 let result = (|| {
                     let mut head = [0u8; 8];
-                    output
-                        .read_exact(&mut head)
-                        .user_error("Local recognition stopped. Recording is preserved.")?;
+                    output.read_exact(&mut head).user_error(
+                        crate::error::ErrorCode::LocalRecognitionStoppedRecordingIsPreserved,
+                    )?;
                     let code = i32::from_le_bytes(head[..4].try_into().unwrap());
                     let size = u32::from_le_bytes(head[4..].try_into().unwrap()) as usize;
                     if size > 20000 {
-                        return Err("Local speech response exceeds the limit.".into());
+                        return Err(
+                            crate::error::ErrorCode::LocalSpeechResponseExceedsTheLimit.into()
+                        );
                     }
                     let mut bytes = vec![0; size];
                     output
                         .read_exact(&mut bytes)
-                        .user_error("Local speech response interrupted.")?;
+                        .user_error(crate::error::ErrorCode::LocalSpeechResponseInterrupted)?;
                     if code != 0 {
-                        return Err("Local recognition failed. Recording is preserved; transcribe after class.".into());
+                        return Err(crate::error::ErrorCode::LocalRecognitionFailedRecordingIsPreservedTranscribeAfter.into());
                     }
-                    String::from_utf8(bytes).user_error("Local speech returned invalid text.")
+                    String::from_utf8(bytes)
+                        .user_error(crate::error::ErrorCode::LocalSpeechReturnedInvalidText)
                 })();
                 let failed = result.is_err();
                 if sender.send(result).is_err() || failed {
@@ -137,22 +142,24 @@ impl LocalSpeech {
         packet.extend(bytes);
         self.input
             .try_send(packet)
-            .user_error("Cannot set speech glossary.")?;
+            .user_error(crate::error::ErrorCode::CannotSetSpeechGlossary)?;
         self.receive().map(|_| ())
     }
     pub fn feed(&mut self, samples: &[i16], rate: u32) -> AppResult<SpeechUpdate> {
         let text = self.send(samples, rate, 1)?;
-        serde_json::from_str(&text).user_error("Invalid local streaming response.")
+        serde_json::from_str(&text)
+            .user_error(crate::error::ErrorCode::InvalidLocalStreamingResponse)
     }
     pub fn finish(&mut self) -> AppResult<SpeechUpdate> {
         self.input
             .try_send((2u32 << 30).to_le_bytes().to_vec())
-            .user_error("Local speech stopped.")?;
-        serde_json::from_str(&self.receive()?).user_error("Invalid local streaming response.")
+            .user_error(crate::error::ErrorCode::LocalSpeechStopped)?;
+        serde_json::from_str(&self.receive()?)
+            .user_error(crate::error::ErrorCode::InvalidLocalStreamingResponse)
     }
     fn send(&mut self, samples: &[i16], rate: u32, command: u32) -> AppResult<String> {
         if rate == 0 || samples.len() as u64 > rate as u64 * 60 {
-            return Err("Invalid local speech chunk.".into());
+            return Err(crate::error::ErrorCode::InvalidLocalSpeechChunk.into());
         }
         let count = (samples.len() as u64 * 16000 / rate as u64) as usize;
         if count == 0 {
@@ -170,7 +177,7 @@ impl LocalSpeech {
         }
         self.input
             .try_send(bytes)
-            .user_error("Local recognition stopped. Recording is preserved.")?;
+            .user_error(crate::error::ErrorCode::LocalRecognitionStoppedRecordingIsPreserved)?;
         self.receive()
     }
     pub fn process_id(&self) -> u32 {
@@ -192,7 +199,8 @@ pub(crate) fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundat
         System::JobObjects::*,
     };
     unsafe {
-        let job = CreateJobObjectW(None, None).user_error("Cannot contain local speech worker.")?;
+        let job = CreateJobObjectW(None, None)
+            .user_error(crate::error::ErrorCode::CannotContainLocalSpeechWorker)?;
         let mut limits = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
         limits.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
         let result = SetInformationJobObject(
@@ -204,7 +212,7 @@ pub(crate) fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundat
         .and_then(|_| AssignProcessToJobObject(job, HANDLE(child.as_raw_handle())));
         if result.is_err() {
             let _ = CloseHandle(job);
-            return Err("Cannot safely start local speech worker.".into());
+            return Err(crate::error::ErrorCode::CannotSafelyStartLocalSpeechWorker.into());
         }
         Ok(job)
     }

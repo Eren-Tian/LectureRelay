@@ -140,7 +140,7 @@ impl TranslationQueue {
         let mut pending = self
             .pending
             .lock()
-            .user_error("Live translation queue unavailable.")?;
+            .user_error(crate::error::ErrorCode::LiveTranslationQueueUnavailable)?;
         loop {
             if let Some(batch) = pending.finals.pop_front() {
                 return Ok(Some(Request::Final(batch)));
@@ -154,7 +154,7 @@ impl TranslationQueue {
             pending = self
                 .wake
                 .wait(pending)
-                .user_error("Live translation queue unavailable.")?;
+                .user_error(crate::error::ErrorCode::LiveTranslationQueueUnavailable)?;
         }
     }
     pub fn close(&self) {

@@ -630,3 +630,117 @@ fn prepare_reliability_ui_fixture() {
     )
     .unwrap();
 }
+#[test]
+fn translation_delivery_preserves_english_and_finishes_evicted_saved_and_abandoned_work() {
+    use crate::{providers::Translation, speech::delivery::TranslationDelivery};
+    let fixture = super::Fixture::new();
+    let db = fixture.db();
+    let course = fixture.course(&db);
+    let lecture = db
+        .create_lecture(&fixture.paths, &course.id, "Delivery")
+        .unwrap();
+    let segments: Vec<_> = (0..4)
+        .map(|index| TranscriptSegment {
+            id: new_id(),
+            lecture_id: lecture.id.clone(),
+            start_seconds: index as f64,
+            end_seconds: index as f64 + 1.0,
+            source_text: format!("Evidence {index}."),
+            translated_text: String::new(),
+            origin: SegmentOrigin::Local,
+            provider: "fixture".into(),
+            status: "final".into(),
+            transcript_version: "live".into(),
+            revision: 0,
+        })
+        .collect();
+    db.append_cloud_chunk(&lecture.id, &segments, 4.0).unwrap();
+    let delivery = TranslationDelivery::new(true, true);
+    for segment in &segments[..3] {
+        delivery.enqueue(vec![segment.clone()], false);
+    }
+    delivery.enqueue(vec![segments[3].clone()], true);
+    assert_eq!(delivery.snapshot().unwrap().0, 2);
+    let request = delivery.next().unwrap().unwrap();
+    assert_eq!(request.batch()[0].id, segments[1].id);
+    request.save(
+        &db,
+        &lecture.id,
+        &[Translation {
+            id: segments[1].id.clone(),
+            text: "已保存的译文。".into(),
+        }],
+        "zh",
+    );
+    drop(request);
+    // Cancellation, timeout and an early consumer exit all drop the same request guard.
+    drop(delivery.next().unwrap().unwrap());
+    delivery.close();
+    assert!(delivery.next().unwrap().is_none());
+    delivery.finish();
+    let (count, progress) = delivery.snapshot().unwrap();
+    assert_eq!(count, 0);
+    assert!(progress.pending_ids.is_empty());
+    for index in [0, 2, 3] {
+        assert!(progress.deferred_ids.contains(&segments[index].id));
+    }
+    assert!(!progress.deferred_ids.contains(&segments[1].id));
+    let saved = db.segments(&lecture.id).unwrap();
+    assert_eq!(saved.len(), 4);
+    assert!(saved.iter().all(|s| s.source_text.starts_with("Evidence")));
+    assert_eq!(
+        saved
+            .iter()
+            .find(|s| s.id == segments[1].id)
+            .unwrap()
+            .translated_text,
+        "已保存的译文。"
+    );
+}
+
+#[test]
+fn finished_translation_delivery_rejects_late_saves_and_clears_pending_once() {
+    use crate::{providers::Translation, speech::delivery::TranslationDelivery};
+    let fixture = super::Fixture::new();
+    let db = fixture.db();
+    let course = fixture.course(&db);
+    let lecture = db
+        .create_lecture(&fixture.paths, &course.id, "Cancelled delivery")
+        .unwrap();
+    let segment = TranscriptSegment {
+        id: new_id(),
+        lecture_id: lecture.id.clone(),
+        start_seconds: 0.0,
+        end_seconds: 1.0,
+        source_text: "English must survive.".into(),
+        translated_text: String::new(),
+        origin: SegmentOrigin::Local,
+        provider: "fixture".into(),
+        status: "final".into(),
+        transcript_version: "live".into(),
+        revision: 0,
+    };
+    db.append_cloud_chunk(&lecture.id, std::slice::from_ref(&segment), 1.0)
+        .unwrap();
+    let delivery = TranslationDelivery::new(true, true);
+    delivery.enqueue(vec![segment.clone()], false);
+    let request = delivery.next().unwrap().unwrap();
+    delivery.finish();
+    request.save(
+        &db,
+        &lecture.id,
+        &[Translation {
+            id: segment.id.clone(),
+            text: "Late".into(),
+        }],
+        "zh",
+    );
+    drop(request);
+    assert_eq!(delivery.snapshot().unwrap().0, 0);
+    assert_eq!(delivery.snapshot().unwrap().1.deferred_ids, [segment.id]);
+    assert!(
+        db.segments(&lecture.id).unwrap()[0]
+            .translated_text
+            .is_empty()
+    );
+}

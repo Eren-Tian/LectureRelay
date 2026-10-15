@@ -31,16 +31,14 @@ impl Busy {
         })
     }
 
-    fn message(self) -> &'static str {
+    fn message(self) -> crate::error::ErrorCode {
         match self {
-            Self::Recording => "Stop and save the recording first.",
-            Self::LiveCaptions => "Wait for live caption processing to finish.",
-            Self::Job => "Another AI task is running. Wait or cancel it.",
-            Self::Summary => {
-                "A live summary is being processed. Wait for it to finish or turn summaries off."
-            }
-            Self::ModelDownload => "Wait for the model download to finish.",
-            Self::AudioTest => "Wait for the five-second audio test to finish.",
+            Self::Recording => crate::error::ErrorCode::StopAndSaveTheRecordingFirst,
+            Self::LiveCaptions => crate::error::ErrorCode::WaitForLiveCaptionProcessingToFinish,
+            Self::Job => crate::error::ErrorCode::AnotherAiTaskIsRunningWaitOrCancel,
+            Self::Summary => crate::error::ErrorCode::ALiveSummaryIsBeingProcessedWaitFor,
+            Self::ModelDownload => crate::error::ErrorCode::WaitForTheModelDownloadToFinish,
+            Self::AudioTest => crate::error::ErrorCode::WaitForTheFiveSecondAudioTestTo,
         }
     }
 }

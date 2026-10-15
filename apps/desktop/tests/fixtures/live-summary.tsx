@@ -44,9 +44,24 @@ const fixture = {
   refresh: () => {},
   live: (_live: boolean) => {},
   preferences: () => structuredClone(data.settings.liveSummaries),
+  holdReads: false,
+  reads: [] as (() => void)[],
+  failGeneration: false,
+  readCount: 0,
 };
+if (new URLSearchParams(location.search).has('race')) {
+  data.settings.liveSummaries.enabled = true;
+  data.settings.liveSummaries.uploadConsent = true;
+}
 Object.assign(window, { liveSummaryFixture: fixture });
-api.summaryState = async () => structuredClone(state);
+api.summaryState = async () => {
+  fixture.readCount++;
+  const snapshot = structuredClone(state);
+  if (!fixture.holdReads) return snapshot;
+  return new Promise<SummaryState>((resolve) => {
+    fixture.reads.push(() => resolve(snapshot));
+  });
+};
 api.summarySetup = async () => ({
   preferences: { ...data.settings.liveSummaries },
   providers: [
@@ -81,6 +96,7 @@ api.testSummaryProvider = async () => {
   fixture.tested = true;
 };
 api.summarizeNow = async (_id, cardId) => {
+  if (fixture.failGeneration) throw Error('Connection unavailable. Try again.');
   fixture.calls.push(`generate:${cardId ?? 'new'}`);
   state.busy = true;
   await new Promise<void>((resolve) => {

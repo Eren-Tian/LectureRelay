@@ -423,7 +423,10 @@ impl LiveSummaryPreferences {
             );
         }
         if self.enabled && self.provider.cloud().is_some() && !self.upload_consent {
-            return Err("Before enabling cloud summaries, allow the selected provider to receive the matching English transcript and course background.".into());
+            return Err(
+                crate::error::ErrorCode::BeforeEnablingCloudSummariesAllowTheSelectedProvider
+                    .into(),
+            );
         }
         Ok(())
     }

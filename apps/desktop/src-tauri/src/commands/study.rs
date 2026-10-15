@@ -55,7 +55,7 @@ pub async fn import_media(
         crate::app::media::import(&state, &course_id, &title, &source).map(Some)
     })
     .await
-    .user_error("Media import could not finish.")?
+    .user_error(crate::error::ErrorCode::MediaImportCouldNotFinish)?
 }
 #[tauri::command]
 pub async fn attach_document(
@@ -83,7 +83,8 @@ pub async fn attach_document(
             .join("Courses")
             .join(&course_id)
             .join("Documents");
-        std::fs::create_dir_all(&dir).user_error("Cannot create course documents folder.")?;
+        std::fs::create_dir_all(&dir)
+            .user_error(crate::error::ErrorCode::CannotCreateCourseDocumentsFolder)?;
         let path = dir.join(format!("{id}.pdf"));
         crate::storage::write_atomic(&path, &bytes)?;
         let name = source
@@ -107,7 +108,7 @@ pub async fn attach_document(
         }))
     })
     .await
-    .user_error("Cannot attach course PDF.")?
+    .user_error(crate::error::ErrorCode::CannotAttachCoursePdf)?
 }
 #[tauri::command]
 pub async fn read_document(
@@ -120,23 +121,27 @@ pub async fn read_document(
         .documents(&course_id)?
         .into_iter()
         .find(|d| d.id == id)
-        .ok_or("Course document not found.")?;
+        .ok_or(crate::error::ErrorCode::CourseDocumentNotFound)?;
     tauri::async_runtime::spawn_blocking(move || {
         crate::app::media::read_pdf(std::path::Path::new(&document.path))
             .map(tauri::ipc::Response::new)
     })
     .await
-    .user_error("Cannot read course PDF.")?
+    .user_error(crate::error::ErrorCode::CannotReadCoursePdf)?
 }
 
 #[tauri::command]
 pub fn print_document(window: tauri::WebviewWindow) -> AppResult<()> {
-    window.print().user_error("Cannot open the print dialog.")
+    window
+        .print()
+        .user_error(crate::error::ErrorCode::CannotOpenThePrintDialog)
 }
 #[tauri::command]
 pub fn cancel_live_processing(state: App<'_>) -> AppResult<()> {
     if state.recorder.status()?.is_some() {
-        return Err("Stop and save recording before cancelling final processing.".into());
+        return Err(
+            crate::error::ErrorCode::StopAndSaveRecordingBeforeCancellingFinalProcessing.into(),
+        );
     }
     state.live.cancel();
     Ok(())
@@ -154,7 +159,9 @@ pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppRe
     // Windows WebView2 creation must run outside a synchronous IPC callback.
     // Otherwise build() blocks the event loop that must finish creating it.
     if let Some(window) = app.get_webview_window("captions") {
-        window.show().user_error("Cannot show captions.")?;
+        window
+            .show()
+            .user_error(crate::error::ErrorCode::CannotShowCaptions)?;
         return Ok(());
     }
     let window = tauri::WebviewWindowBuilder::new(
@@ -172,7 +179,7 @@ pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppRe
     .data_directory(state.paths.data.join("state").join("webview2"))
     .theme(Some(state.storage.settings()?.theme.into()))
     .build()
-    .user_error("Cannot open caption window.")?;
+    .user_error(crate::error::ErrorCode::CannotOpenCaptionWindow)?;
     // Place it beside the main window on the same display, including portrait screens.
     if let Some(main) = app.get_webview_window("main")
         && let Ok(Some(monitor)) = main.current_monitor()
@@ -182,7 +189,9 @@ pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppRe
             monitor.position().y + 48,
         ));
     }
-    window.show().user_error("Cannot show captions.")?;
+    window
+        .show()
+        .user_error(crate::error::ErrorCode::CannotShowCaptions)?;
     Ok(())
 }
 
@@ -190,7 +199,9 @@ pub async fn open_caption_window(app: tauri::AppHandle, state: App<'_>) -> AppRe
 pub fn close_caption_window(app: tauri::AppHandle) -> AppResult<()> {
     use tauri::Manager;
     if let Some(window) = app.get_webview_window("captions") {
-        window.close().user_error("Cannot close captions.")?;
+        window
+            .close()
+            .user_error(crate::error::ErrorCode::CannotCloseCaptions)?;
     }
     Ok(())
 }

@@ -5,6 +5,7 @@ mod database;
 mod diagnostics;
 mod domain;
 mod error;
+mod error_codes;
 mod models;
 mod providers;
 mod security;

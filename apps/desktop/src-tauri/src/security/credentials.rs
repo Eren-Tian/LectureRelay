@@ -24,7 +24,7 @@ pub fn save(provider: CloudProvider, key: String) -> AppResult<()> {
         || !key.is_ascii()
         || key.chars().any(char::is_whitespace)
     {
-        return Err("Paste a valid API key without spaces or newlines.".into());
+        return Err(crate::error::ErrorCode::PasteAValidApiKeyWithoutSpacesOr.into());
     }
     save_target(&target(provider), key.as_str())
 }
@@ -44,7 +44,7 @@ fn save_target(name: &str, key: &str) -> AppResult<()> {
     };
     // Credential Manager copies the blob. The plaintext buffer is then zeroized.
     unsafe { CredWriteW(&credential, 0) }
-        .user_error("Windows Credential Manager could not save the key.")
+        .user_error(crate::error::ErrorCode::WindowsCredentialManagerCouldNotSaveTheKey)
 }
 
 pub fn load(provider: CloudProvider) -> AppResult<Option<Zeroizing<String>>> {
@@ -60,7 +60,7 @@ fn load_target(name: &str) -> AppResult<Option<Zeroizing<String>>> {
             let credential = unsafe { &mut *pointer };
             if credential.CredentialBlob.is_null() || credential.CredentialBlobSize == 0 {
                 unsafe { CredFree(pointer.cast()) };
-                return Err("The saved key is empty. Add it again.".into());
+                return Err(crate::error::ErrorCode::TheSavedKeyIsEmptyAddItAgain.into());
             }
             let blob = unsafe {
                 std::slice::from_raw_parts_mut(
@@ -69,13 +69,13 @@ fn load_target(name: &str) -> AppResult<Option<Zeroizing<String>>> {
                 )
             };
             let value = String::from_utf8(blob.to_vec())
-                .user_error("The saved key cannot be read. Add it again.");
+                .user_error(crate::error::ErrorCode::TheSavedKeyCannotBeReadAddIt);
             blob.zeroize();
             unsafe { CredFree(pointer.cast()) };
             value.map(|value| Some(Zeroizing::new(value)))
         }
         Err(error) if error.code() == ERROR_NOT_FOUND.to_hresult() => Ok(None),
-        Err(_) => Err("Windows Credential Manager could not read the key.".into()),
+        Err(_) => Err(crate::error::ErrorCode::WindowsCredentialManagerCouldNotReadTheKey.into()),
     }
 }
 
@@ -88,7 +88,7 @@ fn remove_target(name: &str) -> AppResult<()> {
     match unsafe { CredDeleteW(PCWSTR(name.as_ptr()), CRED_TYPE_GENERIC, None) } {
         Ok(()) => Ok(()),
         Err(error) if error.code() == ERROR_NOT_FOUND.to_hresult() => Ok(()),
-        Err(_) => Err("Windows Credential Manager could not remove the key.".into()),
+        Err(_) => Err(crate::error::ErrorCode::WindowsCredentialManagerCouldNotRemoveTheKey.into()),
     }
 }
 

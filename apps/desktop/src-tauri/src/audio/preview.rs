@@ -42,16 +42,16 @@ pub fn test(
         host.device_by_id(
             &device_id
                 .parse()
-                .user_error("Invalid audio device. Select it again.")?,
+                .user_error(crate::error::ErrorCode::InvalidAudioDeviceSelectItAgain)?,
         )
     }
-    .ok_or("Audio device unavailable. Connect it and refresh devices.")?;
+    .ok_or(crate::error::ErrorCode::AudioDeviceUnavailableConnectItAndRefreshDevices)?;
     let config = (if source == InputSource::System {
         device.default_output_config()
     } else {
         device.default_input_config()
     })
-    .user_error("Cannot open this audio input. Check Windows audio permissions.")?;
+    .user_error(crate::error::ErrorCode::CannotOpenThisAudioInputCheckWindowsAudio)?;
     let (sender, receiver) = mpsc::sync_channel(64);
     let paused = Arc::new(AtomicBool::new(false));
     let health = Arc::new(CaptureHealth::default());
@@ -97,18 +97,22 @@ pub fn test(
             health,
             failed.clone(),
         ),
-        _ => return Err("This audio format is unsupported. Choose another device.".into()),
+        _ => {
+            return Err(
+                crate::error::ErrorCode::ThisAudioFormatIsUnsupportedChooseAnotherDevice.into(),
+            );
+        }
     }?;
     stream
         .play()
-        .user_error("Cannot start the audio test. Close apps holding the device.")?;
+        .user_error(crate::error::ErrorCode::CannotStartTheAudioTestCloseAppsHolding)?;
     let started = Instant::now();
     let mut event_at = Instant::now();
     let mut peak = 0.0f32;
     let mut level = 0.0f32;
     while started.elapsed() < Duration::from_secs(5) {
         if failed.load(Ordering::Relaxed) {
-            return Err("Audio device disconnected during the test.".into());
+            return Err(crate::error::ErrorCode::AudioDeviceDisconnectedDuringTheTest.into());
         }
         if let Ok(samples) = receiver.recv_timeout(Duration::from_millis(50)) {
             for sample in samples {

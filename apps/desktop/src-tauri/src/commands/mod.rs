@@ -81,12 +81,12 @@ pub fn delete_course(state: App<'_>, id: String) -> AppResult<()> {
     if let Some(recording) = state.recorder.status()?
         && state.storage.lecture(&recording.lecture_id)?.course_id == id
     {
-        return Err("Stop recording this course first.".into());
+        return Err(crate::error::ErrorCode::StopRecordingThisCourseFirst.into());
     }
     if let Some(job) = state.jobs.status()?
         && state.storage.lecture(&job.lecture_id)?.course_id == id
     {
-        return Err("A task is running for this course. Cancel it or wait for completion.".into());
+        return Err(crate::error::ErrorCode::ATaskIsRunningForThisCourseCancel.into());
     }
     state.storage.delete_course(&id)
 }
@@ -115,7 +115,7 @@ pub fn delete_term(state: App<'_>, course_id: String, id: String) -> AppResult<(
 pub async fn input_devices() -> AppResult<Vec<InputDevice>> {
     tauri::async_runtime::spawn_blocking(crate::audio::input_devices)
         .await
-        .user_error("Cannot check audio devices.")?
+        .user_error(crate::error::ErrorCode::CannotCheckAudioDevices)?
 }
 
 #[tauri::command]
@@ -131,11 +131,11 @@ pub async fn test_audio_input(
     {
         let _gate = state.lock_gate();
         if id.len() > 64 || device_id.len() > 2048 {
-            return Err("Choose a valid audio source and device.".into());
+            return Err(crate::error::ErrorCode::ChooseAValidAudioSourceAndDevice.into());
         }
         state.ensure_idle(Operation::AudioTest)?;
         if state.audio_preview.swap(true, Ordering::Relaxed) {
-            return Err("An audio test is already running. It finishes after five seconds.".into());
+            return Err(crate::error::ErrorCode::AnAudioTestIsAlreadyRunningItFinishes.into());
         }
     }
     struct Reset(Arc<AppState>);
@@ -150,7 +150,7 @@ pub async fn test_audio_input(
         crate::audio::preview::test(&app, id, source, device_id)
     })
     .await
-    .user_error("Cannot test the audio input.")?
+    .user_error(crate::error::ErrorCode::CannotTestTheAudioInput)?
 }
 
 #[tauri::command]
@@ -178,7 +178,7 @@ pub async fn start_lecture(
         if let Some(provider) = settings.speech_provider.cloud()
             && !credentials::status(provider)?.has_key
         {
-            return Err("Add your speech provider key in Settings before class.".into());
+            return Err(crate::error::ErrorCode::AddYourSpeechProviderKeyInSettingsBefore.into());
         }
         let mut lecture = state
             .storage
@@ -222,7 +222,7 @@ pub async fn start_lecture(
         Ok(lecture)
     })
     .await
-    .user_error("Cannot start lecture recording.")?
+    .user_error(crate::error::ErrorCode::CannotStartLectureRecording)?
 }
 
 #[tauri::command]
@@ -235,7 +235,7 @@ pub async fn stop_lecture(state: App<'_>, id: String) -> AppResult<Lecture> {
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || stop_recording(&state, &id))
         .await
-        .user_error("Cannot save the lecture. Written audio is preserved.")?
+        .user_error(crate::error::ErrorCode::CannotSaveTheLectureWrittenAudioIsPreserved)?
 }
 
 pub(crate) fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
@@ -244,11 +244,11 @@ pub(crate) fn stop_recording(state: &AppState, id: &str) -> AppResult<Lecture> {
     match state.recorder.status()? {
         Some(recording) if recording.lecture_id == id => {}
         Some(_) => {
-            return Err("Another lecture is recording. Open that lecture to stop it.".into());
+            return Err(crate::error::ErrorCode::AnotherLectureIsRecordingOpenThatLectureTo.into());
         }
         None if lecture.status != LectureStatus::Recording => return Ok(lecture),
         None => {
-            return Err("This recording is not active. Restart to recover its saved audio.".into());
+            return Err(crate::error::ErrorCode::ThisRecordingIsNotActiveRestartToRecover.into());
         }
     }
     let summary = state.recorder.stop(id);
@@ -400,7 +400,7 @@ pub async fn test_provider(
 
 fn ensure_ended(state: &AppState, id: &str) -> AppResult<()> {
     if state.storage.lecture(id)?.status == LectureStatus::Recording {
-        return Err("Stop and save the lecture first.".into());
+        return Err(crate::error::ErrorCode::StopAndSaveTheLectureFirst.into());
     }
     Ok(())
 }
@@ -439,7 +439,7 @@ pub async fn generate_notes(state: App<'_>, id: String) -> AppResult<()> {
 #[tauri::command]
 pub async fn generate_review(state: App<'_>, id: String, request: String) -> AppResult<()> {
     if request.trim().is_empty() {
-        return Err("Describe what you want to review.".into());
+        return Err(crate::error::ErrorCode::DescribeWhatYouWantToReview.into());
     }
     let job = begin_job(&state, &id, "review")?;
     let result = ai::review(&state, &id, &request).await;
@@ -508,7 +508,9 @@ pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<Str
     let (extension, content) = match kind.as_str() {
         "srt-source" | "srt-translation" | "srt-bilingual" | "vtt-source" | "vtt-translation"
         | "vtt-bilingual" => {
-            let (format, language) = kind.split_once('-').ok_or("Invalid subtitle format.")?;
+            let (format, language) = kind
+                .split_once('-')
+                .ok_or(crate::error::ErrorCode::InvalidSubtitleFormat)?;
             (
                 format,
                 crate::app::exports::subtitles(&detail.segments, format == "vtt", language)?,
@@ -516,12 +518,15 @@ pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<Str
         }
         "notes" => (
             "md",
-            detail.note.ok_or("This lecture has no notes yet.")?.body,
+            detail
+                .note
+                .ok_or(crate::error::ErrorCode::ThisLectureHasNoNotesYet)?
+                .body,
         ),
         "transcript-json" => (
             "json",
             serde_json::to_string_pretty(&detail.segments)
-                .user_error("Cannot encode transcript export.")?,
+                .user_error(crate::error::ErrorCode::CannotEncodeTranscriptExport)?,
         ),
         "transcript-markdown" => {
             let body = detail
@@ -539,7 +544,7 @@ pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<Str
                 .join("\n");
             ("md", format!("# {}\n\n{}", detail.lecture.title, body))
         }
-        _ => return Err("Unsupported export format.".into()),
+        _ => return Err(crate::error::ErrorCode::UnsupportedExportFormat.into()),
     };
     let path =
         state
@@ -557,19 +562,19 @@ pub fn open_data_folder(state: App<'_>, kind: String) -> AppResult<()> {
         "library" => state.paths.library.clone(),
         "exports" => state.paths.library.join("Exports"),
         "state" => state.paths.data.clone(),
-        _ => return Err("Invalid storage folder.".into()),
+        _ => return Err(crate::error::ErrorCode::InvalidStorageFolder.into()),
     };
     std::process::Command::new("explorer.exe")
         .arg(path)
         .spawn()
-        .user_error("Cannot open File Explorer.")?;
+        .user_error(crate::error::ErrorCode::CannotOpenFileExplorer)?;
     Ok(())
 }
 
 #[tauri::command]
 pub fn quit_app(app: tauri::AppHandle, state: App<'_>) -> AppResult<()> {
     if state.recorder.status()?.is_some() {
-        return Err("Stop and save the recording first.".into());
+        return Err(crate::error::ErrorCode::StopAndSaveTheRecordingFirst.into());
     }
     state.jobs.cancel();
     app.exit(0);
@@ -580,7 +585,7 @@ pub fn quit_app(app: tauri::AppHandle, state: App<'_>) -> AppResult<()> {
 pub async fn audio_devices(source: InputSource) -> AppResult<Vec<InputDevice>> {
     tauri::async_runtime::spawn_blocking(move || crate::audio::devices(source))
         .await
-        .user_error("Cannot list audio devices.")?
+        .user_error(crate::error::ErrorCode::CannotListAudioDevices)?
 }
 #[tauri::command]
 pub fn live_status(state: App<'_>) -> AppResult<crate::speech::streaming::LiveStatus> {
@@ -639,7 +644,7 @@ pub async fn permanently_delete_lecture(
     confirmation: String,
 ) -> AppResult<()> {
     if confirmation != "DELETE" {
-        return Err("Type DELETE to confirm permanent deletion.".into());
+        return Err(crate::error::ErrorCode::TypeDeleteToConfirmPermanentDeletion.into());
     }
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -655,7 +660,7 @@ pub async fn permanently_delete_lecture(
         result
     })
     .await
-    .user_error("Lecture deletion was interrupted. Restart to recover cleanup.")?
+    .user_error(crate::error::ErrorCode::LectureDeletionWasInterruptedRestartToRecoverCleanup)?
 }
 
 #[tauri::command]
@@ -665,7 +670,7 @@ pub async fn permanently_delete_course(
     confirmation: String,
 ) -> AppResult<Vec<String>> {
     if confirmation != "DELETE" {
-        return Err("Type DELETE to confirm permanent deletion.".into());
+        return Err(crate::error::ErrorCode::TypeDeleteToConfirmPermanentDeletion.into());
     }
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -681,12 +686,12 @@ pub async fn permanently_delete_course(
         result
     })
     .await
-    .user_error("Permanent deletion was interrupted. Restart to recover cleanup.")?
+    .user_error(crate::error::ErrorCode::PermanentDeletionWasInterruptedRestartToRecoverCleanup)?
 }
 #[tauri::command]
 pub async fn free_all_storage(state: App<'_>, confirmation: String) -> AppResult<Vec<String>> {
     if confirmation != "DELETE ALL" {
-        return Err("Type DELETE ALL to confirm freeing all class storage.".into());
+        return Err(crate::error::ErrorCode::TypeDeleteAllToConfirmFreeingAllClass.into());
     }
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || {
@@ -697,12 +702,12 @@ pub async fn free_all_storage(state: App<'_>, confirmation: String) -> AppResult
             .models
             .active
             .lock()
-            .user_error("Model status unavailable.")? = None;
+            .user_error(crate::error::ErrorCode::ModelStatusUnavailable)? = None;
         if let Ok(mut status) = state.live.status.lock() {
             *status = Default::default();
         }
         result
     })
     .await
-    .user_error("Storage cleanup was interrupted. Restart to recover cleanup.")?
+    .user_error(crate::error::ErrorCode::StorageCleanupWasInterruptedRestartToRecoverCleanup)?
 }

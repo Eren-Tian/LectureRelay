@@ -1,6 +1,11 @@
 export type AssistanceLanguage = 'zh' | 'ja' | 'ko';
 export type ProviderName = 'none' | 'openai' | 'groq';
 
+export interface NativeFailure {
+  code: string;
+  params: string[];
+}
+
 export interface Course {
   id: string;
   name: string;

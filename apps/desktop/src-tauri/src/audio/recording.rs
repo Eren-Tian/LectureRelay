@@ -81,7 +81,10 @@ pub struct Recorder(Mutex<Option<Session>>);
 
 impl Recorder {
     pub fn status(&self) -> AppResult<Option<RecordingStatus>> {
-        let sessions = self.0.lock().user_error("Recording status unavailable.")?;
+        let sessions = self
+            .0
+            .lock()
+            .user_error(crate::error::ErrorCode::RecordingStatusUnavailable)?;
         sessions
             .as_ref()
             .map(|session| {
@@ -89,7 +92,7 @@ impl Recorder {
                     .status
                     .lock()
                     .map(|status| status.clone())
-                    .user_error("Recording status unavailable.")
+                    .user_error(crate::error::ErrorCode::RecordingStatusUnavailable)
             })
             .transpose()
     }
@@ -103,9 +106,12 @@ impl Recorder {
         device_id: String,
         source: InputSource,
     ) -> AppResult<()> {
-        let mut sessions = self.0.lock().user_error("Recording status unavailable.")?;
+        let mut sessions = self
+            .0
+            .lock()
+            .user_error(crate::error::ErrorCode::RecordingStatusUnavailable)?;
         if sessions.is_some() {
-            return Err("Another lecture is recording. Stop it first.".into());
+            return Err(crate::error::ErrorCode::AnotherLectureIsRecordingStopItFirst.into());
         }
         let paused = Arc::new(AtomicBool::new(false));
         let status = Arc::new(Mutex::new(RecordingStatus {
@@ -140,7 +146,7 @@ impl Recorder {
                 }
                 result
             })
-            .user_error("Cannot start the recording worker.")?;
+            .user_error(crate::error::ErrorCode::CannotStartTheRecordingWorker)?;
         match ready_rx.recv_timeout(Duration::from_secs(10)) {
             Ok(Ok(())) => {
                 *sessions = Some(Session {
@@ -159,17 +165,20 @@ impl Recorder {
             }
             Err(_) => {
                 let _ = control.send(Control::Stop);
-                Err("Audio startup timed out. Check the device and permissions.".into())
+                Err(crate::error::ErrorCode::AudioStartupTimedOutCheckTheDeviceAnd.into())
             }
         }
     }
 
     pub fn pause(&self, id: &str, paused: bool) -> AppResult<()> {
-        let sessions = self.0.lock().user_error("Recording status unavailable.")?;
+        let sessions = self
+            .0
+            .lock()
+            .user_error(crate::error::ErrorCode::RecordingStatusUnavailable)?;
         let session = sessions
             .as_ref()
             .filter(|session| session.id == id)
-            .ok_or("This lecture is not recording.")?;
+            .ok_or(crate::error::ErrorCode::ThisLectureIsNotRecording)?;
         session.paused.store(paused, Ordering::Relaxed);
         session.health.trace.event(
             if paused {
@@ -184,16 +193,21 @@ impl Recorder {
         session
             .control
             .send(Control::Pause(paused))
-            .user_error("Recording stopped. Save the lecture.")?;
+            .user_error(crate::error::ErrorCode::RecordingStoppedSaveTheLecture)?;
         Ok(())
     }
 
     pub fn stop(&self, id: &str) -> AppResult<AudioSummary> {
-        let mut sessions = self.0.lock().user_error("Recording status unavailable.")?;
+        let mut sessions = self
+            .0
+            .lock()
+            .user_error(crate::error::ErrorCode::RecordingStatusUnavailable)?;
         if sessions.as_ref().is_none_or(|session| session.id != id) {
-            return Err("This lecture is not recording.".into());
+            return Err(crate::error::ErrorCode::ThisLectureIsNotRecording.into());
         }
-        let session = sessions.take().ok_or("Recording already stopped.")?;
+        let session = sessions
+            .take()
+            .ok_or(crate::error::ErrorCode::RecordingAlreadyStopped)?;
         session.health.trace.event(
             "stop_requested",
             session.paused.load(Ordering::Relaxed),
@@ -205,7 +219,7 @@ impl Recorder {
         session
             .thread
             .join()
-            .user_error("Recording worker failed. Restart to recover saved audio.")?
+            .user_error(crate::error::ErrorCode::RecordingWorkerFailedRestartToRecoverSavedAudio)?
     }
 }
 
@@ -246,10 +260,10 @@ fn record<R: tauri::Runtime>(
     } else {
         let device_id = device_id
             .parse()
-            .user_error("Invalid audio device. Select it again.")?;
+            .user_error(crate::error::ErrorCode::InvalidAudioDeviceSelectItAgain)?;
         host.device_by_id(&device_id)
     }
-    .ok_or("No audio device found. Connect it and check Windows audio permissions.")?;
+    .ok_or(crate::error::ErrorCode::NoAudioDeviceFoundConnectItAndCheck)?;
     if let Ok(mut current) = status.lock() {
         current.source = source;
         current.device_name = device
@@ -262,18 +276,18 @@ fn record<R: tauri::Runtime>(
     } else {
         device.default_input_config()
     })
-    .user_error("Cannot open the audio device. Check the device and Windows permissions.")?;
+    .user_error(crate::error::ErrorCode::CannotOpenTheAudioDeviceCheckTheDevice)?;
     let stream_config: cpal::StreamConfig = config.into();
     let rate = stream_config.sample_rate;
     let channels = stream_config.channels as usize;
     if rate == 0 || channels == 0 {
-        return Err("The audio device returned an invalid format.".into());
+        return Err(crate::error::ErrorCode::TheAudioDeviceReturnedAnInvalidFormat.into());
     }
     let file = std::fs::File::create(&path)
-        .user_error("Cannot create the recording file. Check disk space and permissions.")?;
+        .user_error(crate::error::ErrorCode::CannotCreateTheRecordingFileCheckDiskSpace)?;
     let checkpoint = file
         .try_clone()
-        .user_error("Cannot initialize the recording file.")?;
+        .user_error(crate::error::ErrorCode::CannotInitializeTheRecordingFile)?;
     let spec = hound::WavSpec {
         channels: 1,
         sample_rate: rate,
@@ -281,8 +295,10 @@ fn record<R: tauri::Runtime>(
         sample_format: hound::SampleFormat::Int,
     };
     let mut writer = hound::WavWriter::new(BufWriter::new(file), spec)
-        .user_error("Cannot initialize WAV recording.")?;
-    writer.flush().user_error("Cannot save the WAV header.")?;
+        .user_error(crate::error::ErrorCode::CannotInitializeWavRecording)?;
+    writer
+        .flush()
+        .user_error(crate::error::ErrorCode::CannotSaveTheWavHeader)?;
     let (samples_tx, samples_rx) = sample_queue();
     let failed = Arc::new(AtomicBool::new(false));
     let stream = match config.sample_format() {
@@ -326,15 +342,19 @@ fn record<R: tauri::Runtime>(
             health.clone(),
             failed.clone(),
         ),
-        _ => return Err("This audio sample format is unsupported. Choose another device.".into()),
+        _ => {
+            return Err(
+                crate::error::ErrorCode::ThisAudioSampleFormatIsUnsupportedChooseAnother.into(),
+            );
+        }
     }?;
     health.trace.event("start_requested", false, None, None);
     stream
         .play()
-        .user_error("Cannot start audio capture. Close apps holding the device.")?;
+        .user_error(crate::error::ErrorCode::CannotStartAudioCaptureCloseAppsHoldingThe)?;
     ready
         .send(Ok(()))
-        .user_error("Recording startup cancelled.")?;
+        .user_error(crate::error::ErrorCode::RecordingStartupCancelled)?;
     let mut count = 0_u64;
     let mut peak = 0_f32;
     let mut event_at = Instant::now();

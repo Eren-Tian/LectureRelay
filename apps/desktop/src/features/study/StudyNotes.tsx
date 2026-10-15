@@ -1,6 +1,6 @@
 import { ui } from '../../i18n';
-import { useEffect, useRef, useState } from 'react';
-import { api, errorText } from '../../api/client';
+import { useEffect, useState } from 'react';
+import { useNoteDraft } from './useNoteDraft';
 import { useWorkspace } from '../../app/Workspace';
 import { MarkdownBody } from '../../components/MarkdownBody';
 import { clock, dateText, languageName } from '../../lib/presentation';
@@ -27,102 +27,30 @@ export function StudyNotes({
   blocked: boolean;
   append?: { key: string; body: string };
 }) {
-  const key = 'lecturerelay-note-draft:' + id;
-  const { notify, confirm } = useWorkspace();
-  const [draft, setDraft] = useState(() => {
-    try {
-      return localStorage.getItem(key) ?? study.draft ?? note?.body ?? '';
-    } catch {
-      return study.draft ?? note?.body ?? '';
-    }
+  const { confirm } = useWorkspace();
+  const [version, setVersion] = useState('');
+  const {
+    draft,
+    editing,
+    setEditing,
+    status,
+    saving,
+    change,
+    commit,
+    discard,
+  } = useNoteDraft({
+    id,
+    savedBody: note?.body ?? '',
+    databaseDraft: study.draft,
+    append,
+    onSaved,
   });
-  const [editing, setEditing] = useState(() => draft !== (note?.body ?? '')),
-    [status, setStatus] = useState(''),
-    [saving, setSaving] = useState(false),
-    [version, setVersion] = useState('');
-  const queue = useRef(Promise.resolve()),
-    timer = useRef<ReturnType<typeof setTimeout> | null>(null),
-    savingRef = useRef(false),
-    latest = useRef(draft);
-  const appended = useRef('');
-  const persist = (body: string) => {
-    queue.current = queue.current
-      .catch(() => {})
-      .then(() => api.saveDraft(id, body));
-    return queue.current;
-  };
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-    },
-    [],
-  );
-  const change = (value: string) => {
-    if (savingRef.current) return;
-    latest.current = value;
-    setDraft(value);
-    setStatus(ui.studyNotesSavingDraft);
-    try {
-      localStorage.setItem(key, value);
-    } catch {
-      setStatus(ui.studyNotesRecoveryCacheUnavailable);
-    }
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => {
-      void persist(value)
-        .then(() => {
-          if (latest.current === value)
-            setStatus(ui.studyNotesDraftSavedLocally);
-        })
-        .catch((e) => setStatus(errorText(e)));
-    }, 650);
-  };
-  const save = async (body = draft) => {
-    if (savingRef.current) return;
-    savingRef.current = true;
-    setSaving(true);
-    if (timer.current) clearTimeout(timer.current);
-    try {
-      await queue.current.catch(() => {});
-      await api.saveNote(id, body);
-      try {
-        localStorage.removeItem(key);
-      } catch {
-        /* SQLite is authoritative. */
-      }
-      latest.current = body;
-      setDraft(body);
-      setEditing(false);
-      setVersion('');
-      setStatus(ui.saved);
-      await onSaved();
-    } catch (e) {
-      setStatus(errorText(e));
-      notify(errorText(e), true);
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
-    }
+  const save = async (body?: string) => {
+    if (await commit(body)) setVersion('');
   };
   useEffect(() => {
-    if (!append || appended.current === append.key || saving) return;
-    appended.current = append.key;
-    const body = latest.current + append.body;
-    if (body.length > 100000) {
-      notify(ui.studyNotesLengthLimit, true);
-      return;
-    }
-    change(body);
-    // An explicit append should reach SQLite immediately, including a quick exit.
-    if (timer.current) clearTimeout(timer.current);
-    void persist(body)
-      .then(() => {
-        if (latest.current === body) setStatus(ui.studyNotesDraftSavedLocally);
-      })
-      .catch((e) => setStatus(errorText(e)));
-    setEditing(true);
-    setVersion('');
-  }, [append, saving]);
+    if (append) setVersion('');
+  }, [append]);
   const selected = study.versions.find((v) => v.id === version);
   return (
     <div className="study-notes">
@@ -187,28 +115,7 @@ export function StudyNotes({
                   }))
                 )
                   return;
-                if (savingRef.current) return;
-                savingRef.current = true;
-                setSaving(true);
-                if (timer.current) clearTimeout(timer.current);
-                try {
-                  await queue.current.catch(() => {});
-                  await api.clearDraft(id);
-                  try {
-                    localStorage.removeItem(key);
-                  } catch {
-                    /* The database draft has already been cleared. */
-                  }
-                  setDraft(note?.body ?? '');
-                  latest.current = note?.body ?? '';
-                  setEditing(false);
-                  setStatus('');
-                } catch (e) {
-                  notify(errorText(e), true);
-                } finally {
-                  savingRef.current = false;
-                  setSaving(false);
-                }
+                await discard();
               }}
             >
               {ui.studyNotesDiscardDraft}

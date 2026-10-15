@@ -8,7 +8,8 @@ use crate::{
 };
 use sha2::{Digest, Sha256};
 
-const STALE: &str = "The transcript, course context, language or model changed. Saved sections remain available; start a new review to use the current source.";
+const STALE: crate::error::ErrorCode =
+    crate::error::ErrorCode::TheTranscriptCourseContextLanguageOrModelChanged;
 
 pub(crate) fn fingerprint(state: &AppState, id: &str, request: &str) -> AppResult<String> {
     let detail = state.storage.detail(id)?;
@@ -49,7 +50,7 @@ pub(crate) fn fingerprint(state: &AppState, id: &str, request: &str) -> AppResul
             crate::models::catalog::get(crate::models::catalog::STUDY)?.sha256
         },
     ))
-    .user_error("Cannot identify review source.")?;
+    .user_error(crate::error::ErrorCode::CannotIdentifyReviewSource)?;
     Ok(format!("{:x}", Sha256::digest(input)))
 }
 
@@ -113,11 +114,11 @@ fn split(part: &ReviewPart) -> Option<[ReviewPart; 2]> {
 
 pub async fn run(state: &AppState, id: &str, request: &str, resume: Option<&str>) -> AppResult<()> {
     if request.chars().count() > 2000 {
-        return Err("Keep review instructions under 2,000 characters.".into());
+        return Err(crate::error::ErrorCode::KeepReviewInstructionsUnder2000Characters.into());
     }
     let detail = state.storage.detail(id)?;
     if detail.segments.is_empty() {
-        return Err("Add or generate a transcript first.".into());
+        return Err(crate::error::ErrorCode::AddOrGenerateATranscriptFirst.into());
     }
     let mut review = if let Some(saved) = resume {
         state.storage.review_checkpoint(id, saved)?
@@ -174,7 +175,7 @@ pub async fn run(state: &AppState, id: &str, request: &str, resume: Option<&str>
     }
     if review.fingerprint != fingerprint(state, id, &review.request)? {
         review.state = "stale".into();
-        review.message = STALE.into();
+        review.message = STALE.message().into();
         state.storage.save_review_checkpoint(&review)?;
         return Err(STALE.into());
     }
@@ -191,13 +192,13 @@ pub async fn run(state: &AppState, id: &str, request: &str, resume: Option<&str>
     if let Err(error) = &result {
         review.state = if state.jobs.checkpoint().is_err() {
             "paused"
-        } else if error == STALE {
+        } else if error.code == STALE {
             "stale"
         } else {
             "failed"
         }
         .into();
-        review.message = error.clone();
+        review.message = error.to_string();
         // Publication may have committed even if its following snapshot failed.
         if review.published_version.is_none() {
             state.storage.save_review_checkpoint(&review)?;
@@ -247,7 +248,7 @@ async fn generate(
         .levels
         .last()
         .and_then(|v| v.first())
-        .ok_or("Review assembly is incomplete.")?;
+        .ok_or(crate::error::ErrorCode::ReviewAssemblyIsIncomplete)?;
     let sections = review
         .parts
         .iter()
@@ -322,7 +323,8 @@ async fn generate_sections(
                 index += 1;
             }
             Err(error) if local::is_generation_limit(&error) => {
-                let children = split(&review.parts[index]).ok_or("A small review section still exceeds the model limit. Saved sections are preserved; retry or simplify the requested focus.")?;
+                let children = split(&review.parts[index])
+                    .ok_or(crate::error::ErrorCode::ASmallReviewSectionStillExceedsTheModel)?;
                 review.parts.splice(index..=index, children);
                 review.recoveries += 1;
                 save(review)?;
@@ -345,7 +347,11 @@ async fn combine_sections(
             review
                 .parts
                 .iter()
-                .map(|p| p.body.clone().ok_or("Source coverage is incomplete."))
+                .map(|p| {
+                    p.body
+                        .clone()
+                        .ok_or(crate::error::ErrorCode::SourceCoverageIsIncomplete)
+                })
                 .collect::<Result<_, _>>()?,
         );
         save(review)?;
@@ -412,7 +418,9 @@ mod tests {
         async fn notes(&self, _: &str, evidence: &str, _: &str) -> AppResult<String> {
             self.calls.fetch_add(1, Ordering::Relaxed);
             if evidence.len() > self.limit {
-                return Err("Local AI reached its output limit. Completed review sections are saved; retry the remaining work.".into());
+                return Err(
+                    crate::error::ErrorCode::LocalAiReachedItsOutputLimitCompletedReview.into(),
+                );
             }
             Ok(format!("saved {}", evidence.len()))
         }
@@ -470,7 +478,7 @@ mod tests {
             };
             let check = || {
                 if cancel.load(Ordering::Relaxed) {
-                    Err("cancelled".into())
+                    Err(crate::error::ErrorCode::TaskCancelledSavedResultsArePreserved.into())
                 } else {
                     Ok(())
                 }
@@ -478,8 +486,9 @@ mod tests {
             assert_eq!(
                 generate_sections(&provider, &mut review, "", check, save)
                     .await
-                    .unwrap_err(),
-                "cancelled"
+                    .unwrap_err()
+                    .code,
+                crate::error::ErrorCode::TaskCancelledSavedResultsArePreserved
             );
             assert!(review.recoveries > 0);
             review = serde_json::from_str(&persisted.lock().unwrap()).unwrap();

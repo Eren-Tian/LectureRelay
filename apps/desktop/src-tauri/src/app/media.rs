@@ -12,17 +12,23 @@ use symphonia::core::{
 pub(crate) fn read_pdf(path: &Path) -> AppResult<Vec<u8>> {
     use std::io::Read;
     const LIMIT: u64 = 50 * 1024 * 1024;
-    let file = File::open(path).user_error("The local PDF is missing or unreadable.")?;
-    if file.metadata().user_error("Cannot inspect PDF.")?.len() > LIMIT {
-        return Err("Choose a valid PDF smaller than 50 MiB.".into());
+    let file =
+        File::open(path).user_error(crate::error::ErrorCode::TheLocalPdfIsMissingOrUnreadable)?;
+    if file
+        .metadata()
+        .user_error(crate::error::ErrorCode::CannotInspectPdf)?
+        .len()
+        > LIMIT
+    {
+        return Err(crate::error::ErrorCode::ChooseAValidPdfSmallerThan50Mib.into());
     }
     // Bound the read as well: an external editor may grow the file after metadata().
     let mut bytes = Vec::new();
     file.take(LIMIT + 1)
         .read_to_end(&mut bytes)
-        .user_error("Cannot read PDF.")?;
+        .user_error(crate::error::ErrorCode::CannotReadPdf)?;
     if bytes.len() as u64 > LIMIT || !bytes.starts_with(b"%PDF-") {
-        return Err("Choose a valid PDF smaller than 50 MiB.".into());
+        return Err(crate::error::ErrorCode::ChooseAValidPdfSmallerThan50Mib.into());
     }
     Ok(bytes)
 }
@@ -33,9 +39,15 @@ pub fn decode(
     destination: &Path,
     mut checkpoint: impl FnMut(u32, u32) -> AppResult<()>,
 ) -> AppResult<f64> {
-    let file = File::open(source).user_error("Cannot read the selected media file.")?;
-    if file.metadata().user_error("Cannot inspect media.")?.len() > 2 * 1024 * 1024 * 1024 {
-        return Err("Choose a media file smaller than 2 GiB.".into());
+    let file =
+        File::open(source).user_error(crate::error::ErrorCode::CannotReadTheSelectedMediaFile)?;
+    if file
+        .metadata()
+        .user_error(crate::error::ErrorCode::CannotInspectMedia)?
+        .len()
+        > 2 * 1024 * 1024 * 1024
+    {
+        return Err(crate::error::ErrorCode::ChooseAMediaFileSmallerThan2Gib.into());
     }
     let mut hint = Hint::new();
     if let Some(ext) = source.extension().and_then(|s| s.to_str()) {
@@ -48,23 +60,25 @@ pub fn decode(
             &FormatOptions::default(),
             &MetadataOptions::default(),
         )
-        .user_error("This media format is unsupported or damaged.")?
+        .user_error(crate::error::ErrorCode::ThisMediaFormatIsUnsupportedOrDamaged)?
         .format;
     let track = format
         .tracks()
         .iter()
         .find(|t| t.codec_params.sample_rate.is_some() && t.codec_params.channels.is_some())
-        .ok_or("No supported audio track was found.")?;
+        .ok_or(crate::error::ErrorCode::NoSupportedAudioTrackWasFound)?;
     let id = track.id;
     let params = track.codec_params.clone();
-    let rate = params.sample_rate.ok_or("Unknown audio sample rate.")?;
+    let rate = params
+        .sample_rate
+        .ok_or(crate::error::ErrorCode::UnknownAudioSampleRate)?;
     if !(8000..=192000).contains(&rate) {
-        return Err("Unsupported audio sample rate.".into());
+        return Err(crate::error::ErrorCode::UnsupportedAudioSampleRate.into());
     }
     let total = params.n_frames.unwrap_or(0).min(u32::MAX as u64) as u32;
     let mut decoder = symphonia::default::get_codecs()
         .make(&params, &DecoderOptions::default())
-        .user_error("This audio codec is unsupported.")?;
+        .user_error(crate::error::ErrorCode::ThisAudioCodecIsUnsupported)?;
     let mut writer = hound::WavWriter::create(
         destination,
         hound::WavSpec {
@@ -74,7 +88,7 @@ pub fn decode(
             sample_format: hound::SampleFormat::Int,
         },
     )
-    .user_error("Cannot create imported audio. Check disk space.")?;
+    .user_error(crate::error::ErrorCode::CannotCreateImportedAudioCheckDiskSpace)?;
     let mut frames = 0u64;
     let mut last = 0;
     loop {
@@ -83,7 +97,9 @@ pub fn decode(
             Ok(p) => p,
             Err(Error::IoError(e)) if e.kind() == std::io::ErrorKind::UnexpectedEof => break,
             Err(_) => {
-                return Err("Media decoding failed. The original file was not changed.".into());
+                return Err(
+                    crate::error::ErrorCode::MediaDecodingFailedTheOriginalFileWasNot.into(),
+                );
             }
         };
         if packet.track_id() != id {
@@ -91,11 +107,11 @@ pub fn decode(
         }
         let decoded = decoder
             .decode(&packet)
-            .user_error("Audio is damaged or uses an unsupported codec.")?;
+            .user_error(crate::error::ErrorCode::AudioIsDamagedOrUsesAnUnsupportedCodec)?;
         let spec = *decoded.spec();
         let channels = spec.channels.count();
         if spec.rate != rate || channels == 0 || channels > 8 {
-            return Err("Changing audio format is unsupported.".into());
+            return Err(crate::error::ErrorCode::ChangingAudioFormatIsUnsupported.into());
         }
         let mut samples = SampleBuffer::<f32>::new(decoded.capacity() as u64, spec);
         samples.copy_interleaved_ref(decoded);
@@ -103,32 +119,34 @@ pub fn decode(
             let mono = frame.iter().sum::<f32>() / channels as f32;
             writer
                 .write_sample((mono.clamp(-1.0, 1.0) * 32767.0) as i16)
-                .user_error("Cannot write imported audio. Check disk space.")?;
+                .user_error(crate::error::ErrorCode::CannotWriteImportedAudioCheckDiskSpace)?;
             frames += 1;
         }
         if frames > rate as u64 * 5 * 60 * 60 {
-            return Err("Media exceeds the five-hour import limit.".into());
+            return Err(crate::error::ErrorCode::MediaExceedsTheFiveHourImportLimit.into());
         }
         if frames - last > rate as u64 * 10 {
-            writer.flush().user_error("Cannot save imported audio.")?;
+            writer
+                .flush()
+                .user_error(crate::error::ErrorCode::CannotSaveImportedAudio)?;
             last = frames;
         }
     }
     if frames == 0 {
-        return Err("The selected file contains no decodable audio.".into());
+        return Err(crate::error::ErrorCode::TheSelectedFileContainsNoDecodableAudio.into());
     }
     // A declared duration that is substantially longer indicates truncated media.
     if total > 0 && frames + (rate as u64) < total as u64 {
-        return Err("The audio track ended unexpectedly. Original media is preserved.".into());
+        return Err(crate::error::ErrorCode::TheAudioTrackEndedUnexpectedlyOriginalMediaIs.into());
     }
     writer
         .finalize()
-        .user_error("Cannot finalize imported audio.")?;
+        .user_error(crate::error::ErrorCode::CannotFinalizeImportedAudio)?;
     std::fs::OpenOptions::new()
         .write(true)
         .open(destination)
         .and_then(|f| f.sync_all())
-        .user_error("Cannot save imported audio.")?;
+        .user_error(crate::error::ErrorCode::CannotSaveImportedAudio)?;
     Ok(frames as f64 / rate as f64)
 }
 
@@ -157,7 +175,8 @@ pub fn import(state: &AppState, course: &str, title: &str, source: &Path) -> App
             Ok(())
         })?;
         state.jobs.checkpoint()?;
-        std::fs::rename(&pending, &target).user_error("Cannot save imported audio.")?;
+        std::fs::rename(&pending, &target)
+            .user_error(crate::error::ErrorCode::CannotSaveImportedAudio)?;
         audio_committed = true;
         state
             .storage

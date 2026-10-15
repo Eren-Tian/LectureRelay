@@ -8,13 +8,13 @@ use rusqlite::{OptionalExtension, params};
 impl Storage {
     pub fn install_model(&self, id: &str, revision: &str, hash: &str, size: u64) -> AppResult<()> {
         let runtime = crate::models::catalog::get(id)?.runtime;
-        self.lock()?.execute("INSERT OR REPLACE INTO local_models(id,revision,runtime_version,sha256,size_bytes,installed_at) VALUES(?1,?2,?6,?3,?4,?5)",params![id,revision,hash,size as i64,now(),runtime]).user_error("Cannot save model metadata.")?;
+        self.lock()?.execute("INSERT OR REPLACE INTO local_models(id,revision,runtime_version,sha256,size_bytes,installed_at) VALUES(?1,?2,?6,?3,?4,?5)",params![id,revision,hash,size as i64,now(),runtime]).user_error(crate::error::ErrorCode::CannotSaveModelMetadata)?;
         Ok(())
     }
     pub fn remove_model(&self, id: &str) -> AppResult<()> {
         self.lock()?
             .execute("DELETE FROM local_models WHERE id=?1", [id])
-            .user_error("Cannot remove model metadata.")?;
+            .user_error(crate::error::ErrorCode::CannotRemoveModelMetadata)?;
         Ok(())
     }
     pub fn settings(&self) -> AppResult<AppSettings> {
@@ -26,7 +26,7 @@ impl Storage {
                 |r| r.get(0),
             )
             .optional()
-            .user_error("Cannot read settings.")?;
+            .user_error(crate::error::ErrorCode::CannotReadSettings)?;
         match text {
             Some(text) => decode_settings(&text),
             None => Ok(AppSettings::default()),
@@ -40,7 +40,7 @@ impl Storage {
             settings.translation_model.as_str(),
             crate::models::catalog::TRANSLATION | crate::models::catalog::STUDY
         ) {
-            return Err("Choose a supported local translation model.".into());
+            return Err(crate::error::ErrorCode::ChooseASupportedLocalTranslationModel.into());
         }
         if !(16..=44).contains(&settings.english_font_size)
             || !(14..=36).contains(&settings.translation_font_size)
@@ -55,17 +55,20 @@ impl Storage {
                 .chars()
                 .all(|c| c.is_ascii_alphanumeric() || "-._/".contains(c))
         {
-            return Err("Check your language, provider and caption preferences. Keep at least one caption language visible.".into());
+            return Err(
+                crate::error::ErrorCode::CheckYourLanguageProviderAndCaptionPreferencesKeep.into(),
+            );
         }
-        let value = serde_json::to_string(&settings).user_error("Cannot encode settings.")?;
-        self.lock()?.execute("INSERT INTO app_settings(key,value) VALUES('preferences',?1) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [value]).user_error("Cannot save settings.")?;
+        let value = serde_json::to_string(&settings)
+            .user_error(crate::error::ErrorCode::CannotEncodeSettings)?;
+        self.lock()?.execute("INSERT INTO app_settings(key,value) VALUES('preferences',?1) ON CONFLICT(key) DO UPDATE SET value=excluded.value", [value]).user_error(crate::error::ErrorCode::CannotSaveSettings)?;
         Ok(())
     }
 }
 
 fn decode_settings(text: &str) -> AppResult<AppSettings> {
-    let mut value: serde_json::Value =
-        serde_json::from_str(text).user_error("Saved settings could not be read.")?;
+    let mut value: serde_json::Value = serde_json::from_str(text)
+        .user_error(crate::error::ErrorCode::SavedSettingsCouldNotBeRead)?;
     // Also protect settings reads from an old client writing legacy preferences.
     LiveSummaryPreferences::disable_unsupported(&mut value);
     // Only preferences saved before processing modes existed lack these
@@ -81,8 +84,8 @@ fn decode_settings(text: &str) -> AppResult<AppSettings> {
     drop_unknown::<ProcessingMode>(&mut value, "studyMode");
     drop_unknown::<SpeechEngine>(&mut value, "speechProvider");
     drop_unknown::<InputSource>(&mut value, "audioSource");
-    let mut settings: AppSettings =
-        serde_json::from_value(value).user_error("Saved settings could not be read.")?;
+    let mut settings: AppSettings = serde_json::from_value(value)
+        .user_error(crate::error::ErrorCode::SavedSettingsCouldNotBeRead)?;
     // Retain a previous explicit cloud selection when upgrading existing preferences.
     if settings.provider.cloud().is_some() {
         if predates_translation_mode {
@@ -113,22 +116,23 @@ pub(super) fn disable_local_live_summaries(connection: &rusqlite::Connection) ->
             |row| row.get(0),
         )
         .optional()
-        .user_error("Cannot read live summary settings.")?;
+        .user_error(crate::error::ErrorCode::CannotReadLiveSummarySettings)?;
     let Some(text) = text else {
         return Ok(());
     };
-    let mut value: serde_json::Value =
-        serde_json::from_str(&text).user_error("Saved settings could not be read.")?;
+    let mut value: serde_json::Value = serde_json::from_str(&text)
+        .user_error(crate::error::ErrorCode::SavedSettingsCouldNotBeRead)?;
     if !LiveSummaryPreferences::disable_unsupported(&mut value) {
         return Ok(());
     }
-    let updated = serde_json::to_string(&value).user_error("Cannot save live summary settings.")?;
+    let updated = serde_json::to_string(&value)
+        .user_error(crate::error::ErrorCode::CannotSaveLiveSummarySettings)?;
     connection
         .execute(
             "UPDATE app_settings SET value=?1 WHERE key='preferences' AND value=?2",
             params![updated, text],
         )
-        .user_error("Cannot turn off the old local live summary setting.")?;
+        .user_error(crate::error::ErrorCode::CannotTurnOffTheOldLocalLiveSummary)?;
     Ok(())
 }
 

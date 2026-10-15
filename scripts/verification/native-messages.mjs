@@ -56,6 +56,7 @@ function unescape(body) {
 /** String literals with their line, plus the lines that carry an exemption. */
 export function lexRust(source) {
   const literals = [];
+  const braces = [];
   const exempt = new Set();
   const comments = new Set();
   let line = 1;
@@ -103,6 +104,8 @@ export function lexRust(source) {
       });
       line += raw.split('\n').length - 1;
       i = j;
+    } else if (c === '{' || c === '}') {
+      braces.push({ value: c, offset: i });
     } else if (c === "'") {
       // Character literal (possibly escaped: '\'' or '\u{2026}') or lifetime.
       if (source[i + 1] === '\\')
@@ -116,7 +119,64 @@ export function lexRust(source) {
     while (comments.has(next) && !exempt.has(next)) next++;
     exempt.add(next);
   }
-  return { literals, exempt };
+  return { literals, exempt, braces };
+}
+
+/** Remove only test modules: production code can legally follow one in the same file. */
+export function withoutTestModules(source) {
+  const { braces } = lexRust(source);
+  const ranges = [];
+  for (const match of source.matchAll(/#\[cfg\(test\)\]\s*mod\s+\w+\s*\{/g)) {
+    const open = match.index + match[0].length - 1;
+    if (!braces.some((brace) => brace.offset === open && brace.value === '{'))
+      continue;
+    let depth = 0;
+    for (const brace of braces) {
+      if (brace.offset < open) continue;
+      depth += brace.value === '{' ? 1 : -1;
+      if (depth === 0) {
+        ranges.push([match.index, brace.offset + 1]);
+        break;
+      }
+    }
+  }
+  for (const [start, end] of ranges.reverse())
+    source =
+      source.slice(0, start) +
+      source.slice(start, end).replace(/[^\n]/g, ' ') +
+      source.slice(end);
+  return source;
+}
+
+async function errorCodeIssues(root, nativeMessages) {
+  const issues = [];
+  const rust = await readFile(join(root, RUST_DIR, 'error_codes.rs'), 'utf8');
+  const frontend = await readFile(
+    join(root, 'apps/desktop/src/i18n/native-error-codes.ts'),
+    'utf8',
+  );
+  const body =
+    /export const nativeErrorKeys: Record<string, string> = (\{[\s\S]*?\n\});/.exec(
+      frontend,
+    );
+  if (!body) return ['Cannot read stable native error-code translations.'];
+  const keys = Function(`"use strict"; return (${body[1]});`)();
+  const variants = /pub enum ErrorCode\s*\{([\s\S]*?)\}/.exec(rust)?.[1] ?? '';
+  const codes = new Set(
+    [...variants.matchAll(/^\s*(\w+),/gm)].map((m) =>
+      m[1].replace(/([a-z0-9])([A-Z])/g, '$1_$2').toLowerCase(),
+    ),
+  );
+  for (const code of codes)
+    if (code !== 'model_required' && !Object.hasOwn(keys, code))
+      issues.push(`Native error code has no frontend translation: ${code}`);
+  for (const [code, english] of Object.entries(keys)) {
+    if (!codes.has(code))
+      issues.push(`Frontend native error code is unknown to Rust: ${code}`);
+    if (!Object.hasOwn(nativeMessages, english))
+      issues.push(`Native error code has no Chinese catalog entry: ${code}`);
+  }
+  return issues;
 }
 
 const template = (value) => value.replace(/\{[^{}]*\}/g, '{}');
@@ -129,6 +189,7 @@ export async function nativeMessageIssues(root) {
     if (!catalog[name]) issues.push(`${CATALOG}: missing section ${name}`);
   if (issues.length) return issues;
   const { nativeMessages, nativeTemplates, externalMessages } = catalog;
+  issues.push(...(await errorCodeIssues(root, nativeMessages)));
   for (const key of Object.keys(nativeMessages))
     if (Object.hasOwn(externalMessages, key))
       issues.push(
@@ -138,8 +199,7 @@ export async function nativeMessageIssues(root) {
   const emittedTemplates = new Set();
   for (const file of await rustFiles(join(root, RUST_DIR))) {
     let source = (await readFile(file, 'utf8')).replace(/\r\n/g, '\n');
-    const tests = source.indexOf('#[cfg(test)]');
-    if (tests >= 0) source = source.slice(0, tests);
+    source = withoutTestModules(source);
     const name = relative(root, file).replaceAll('\\', '/');
     const { literals, exempt } = lexRust(source);
     for (const { value, line, before } of literals) {

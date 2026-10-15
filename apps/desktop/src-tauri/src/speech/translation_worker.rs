@@ -1,8 +1,9 @@
 //! The live translation thread. It consumes one replaceable preview and up to
-//! two final batches from [`TranslationQueue`]; recording and English captions
+//! two final batches from the delivery module; recording and English captions
 //! never wait on it, and anything it skips stays in SQLite for later.
 
-use super::live_translation::{Request, TranslationPreview, TranslationQueue, prefix_matches};
+use super::delivery::DeliveryRequest;
+use super::live_translation::{TranslationPreview, prefix_matches};
 use super::streaming::{LiveSession, LiveStatus};
 use crate::{
     AppState,
@@ -11,13 +12,12 @@ use crate::{
     providers::{LiveTranslationControl, Provider, Role, Translation, configured_text},
 };
 use std::{
-    sync::{Arc, Mutex, atomic::Ordering},
+    sync::Mutex,
     time::{Duration, Instant},
 };
 
 pub(super) struct TranslationWorker {
     pub session: LiveSession,
-    pub requests: Arc<TranslationQueue>,
     pub context: String,
     pub language: String,
     pub local: bool,
@@ -36,20 +36,14 @@ impl TranslationWorker {
         if self.local {
             self.warm_up(provider.as_ref());
         }
-        while let Ok(Some(request)) = self.requests.next() {
-            let preview = matches!(request, Request::Preview(_));
-            let batch = match request {
-                Request::Preview(segment) => vec![segment],
-                Request::Final(batch) => batch,
-            };
+        while let Ok(Some(request)) = self.session.delivery.next() {
+            let preview = request.preview();
+            let batch = request.batch();
             if state.live.cancelled() {
-                if !preview {
-                    self.release();
-                }
                 break;
             }
-            if self.should_skip(&batch) {
-                self.skip(&batch, preview);
+            if self.should_skip(batch) {
+                self.skip(batch, preview);
                 continue;
             }
             let started = Instant::now();
@@ -59,7 +53,7 @@ impl TranslationWorker {
                 } else {
                     "translation_start"
                 },
-                &batch,
+                batch,
             );
             if !preview
                 && let Ok(mut status) = state.live.status.lock()
@@ -67,14 +61,14 @@ impl TranslationWorker {
             {
                 status.segments = segments;
             }
-            let result = self.translate(provider.as_ref(), &batch, preview);
+            let result = self.translate(provider.as_ref(), batch, preview);
             self.stage(
                 if preview {
                     "preview_done"
                 } else {
                     "translation_done"
                 },
-                &batch,
+                batch,
             );
             if preview {
                 if let Ok(result) = result
@@ -87,11 +81,10 @@ impl TranslationWorker {
             }
             match result {
                 Ok(_) if state.live.cancelled() => {
-                    self.release();
                     break;
                 }
-                Ok(result) => self.save(&batch, &result, started),
-                Err(error) => self.fail(&batch, error),
+                Ok(result) => self.save(&request, &result, started),
+                Err(error) => self.fail(batch, error.to_string()),
             }
         }
     }
@@ -114,7 +107,7 @@ impl TranslationWorker {
         if let Err(error) = warmup
             && let Ok(mut status) = self.session.state.live.status.lock()
         {
-            status.message = Some(error);
+            status.message = Some(error.to_string());
         }
     }
 
@@ -133,15 +126,10 @@ impl TranslationWorker {
 
     fn skip(&self, batch: &[TranscriptSegment], preview: bool) {
         if !preview {
-            self.release();
+            self.session.delivery.defer(batch);
         }
         if let Ok(mut s) = self.session.state.live.status.lock() {
-            if !preview {
-                for segment in batch {
-                    s.translation.complete(&segment.id, false);
-                }
-            }
-            s.translation_queue = self.session.queue.load(Ordering::Relaxed);
+            let _ = self.session.translation_status(&mut s);
             s.sequence += 1;
             (self.session.emit)(&s);
         }
@@ -216,7 +204,7 @@ impl TranslationWorker {
     /// that no longer starts with the previewed text.
     fn superseded(&self, segment: &TranscriptSegment) -> bool {
         let live = &self.session.state.live;
-        self.requests.preview_should_yield()
+        self.session.delivery.preview_should_yield()
             || live.finishing()
             || !live
                 .status
@@ -224,29 +212,20 @@ impl TranslationWorker {
                 .is_ok_and(|status| request_valid(&status, segment, true))
     }
 
-    fn save(&self, batch: &[TranscriptSegment], result: &[Translation], started: Instant) {
+    fn save(&self, request: &DeliveryRequest<'_>, result: &[Translation], started: Instant) {
         let session = &self.session;
-        let saved = super::translation_progress::persist(
-            &session.state.storage,
-            &session.id,
-            batch,
-            result,
-            &self.language,
-        );
+        let batch = request.batch();
+        request.save(&session.state.storage, &session.id, result, &self.language);
         if let Ok(mut m) = session.monitor.lock() {
             m.translation(started.elapsed().as_secs_f64() * 1000.0);
         }
-        self.release();
         if let Ok(mut s) = session.state.live.status.lock() {
-            for (segment_id, saved) in saved {
-                s.translation.complete(&segment_id, saved);
-            }
             if let Ok(segments) = session.state.storage.latest_segments(&session.id) {
                 s.segments = segments;
             }
             s.translation_previews
                 .retain(|p| !batch.iter().any(|s| s.id == p.id));
-            s.translation_queue = session.queue.load(Ordering::Relaxed);
+            let _ = session.translation_status(&mut s);
             s.sequence += 1;
             (session.emit)(&s);
             self.stage("translation_published", batch);
@@ -254,23 +233,15 @@ impl TranslationWorker {
     }
 
     fn fail(&self, batch: &[TranscriptSegment], error: String) {
-        self.release();
+        self.session.delivery.defer(batch);
         if let Ok(mut s) = self.session.state.live.status.lock() {
             s.message = Some(error);
-            for segment in batch {
-                s.translation.complete(&segment.id, false);
-            }
             s.translation_previews
                 .retain(|p| !batch.iter().any(|s| s.id == p.id));
-            s.translation_queue = self.session.queue.load(Ordering::Relaxed);
+            let _ = self.session.translation_status(&mut s);
             s.sequence += 1;
             (self.session.emit)(&s);
         }
-    }
-
-    /// One final batch left the queue.
-    fn release(&self) {
-        self.session.queue.fetch_sub(1, Ordering::Relaxed);
     }
 
     fn show(&self, segment: &TranscriptSegment, text: &str, preview: bool) -> bool {
@@ -292,47 +263,6 @@ impl TranslationWorker {
             batch,
             0.0,
         );
-    }
-}
-
-/// Queue finalized English for translation. Paused or overflowing work is
-/// marked untranslated immediately; English and audio are already saved.
-pub(super) fn enqueue_translation(
-    state: &AppState,
-    sender: &TranslationQueue,
-    queue: &std::sync::atomic::AtomicUsize,
-    segments: Vec<TranscriptSegment>,
-) {
-    if state.live.translation_paused() {
-        if let Ok(mut status) = state.live.status.lock() {
-            for segment in &segments {
-                status.translation.complete(&segment.id, false);
-            }
-        }
-        return;
-    }
-    if let Some(segment) = segments.first() {
-        crate::diagnostics::caption_stage(
-            &state.paths,
-            &segment.lecture_id,
-            "translation_queued",
-            &segments,
-            0.0,
-        );
-    }
-    if let Ok(mut status) = state.live.status.lock() {
-        for segment in &segments {
-            status.translation.pending(&segment.id);
-        }
-    }
-    queue.fetch_add(1, Ordering::Relaxed);
-    if let Some(segments) = sender.final_batch(segments) {
-        queue.fetch_sub(1, Ordering::Relaxed);
-        if let Ok(mut status) = state.live.status.lock() {
-            for segment in &segments {
-                status.translation.complete(&segment.id, false);
-            }
-        }
     }
 }
 

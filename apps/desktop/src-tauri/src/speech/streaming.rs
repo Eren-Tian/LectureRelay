@@ -1,4 +1,5 @@
-use super::live_translation::{TranslationPreview, TranslationQueue};
+use super::delivery::TranslationDelivery;
+use super::live_translation::TranslationPreview;
 use super::recognition::{Progress, Recognition, Recognizer};
 use super::translation_worker::TranslationWorker;
 use crate::{
@@ -16,7 +17,7 @@ use crate::{
 use serde::Serialize;
 use std::sync::{
     Arc, Mutex,
-    atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
+    atomic::{AtomicBool, AtomicU64, Ordering},
 };
 use tauri::Emitter;
 
@@ -113,7 +114,7 @@ impl Live {
                 }
                 status
             })
-            .user_error("Live caption status unavailable.")
+            .user_error(crate::error::ErrorCode::LiveCaptionStatusUnavailable)
     }
     pub fn start(state: Arc<AppState>, app: tauri::AppHandle, id: String) {
         let emit: Emit = Arc::new(move |status| {
@@ -171,7 +172,7 @@ impl Live {
                 status.translation_previews.clear();
                 status.translation_queue = 0;
                 status.translation.finish();
-                status.message = result.err();
+                status.message = result.err().map(Into::into);
                 status.sequence += 1;
                 state.live.running.store(false, Ordering::Relaxed);
                 emit(&status);
@@ -194,10 +195,16 @@ pub(super) struct LiveSession {
     pub id: String,
     pub monitor: Arc<Mutex<Monitor>>,
     /// Final translation batches queued or in flight.
-    pub queue: Arc<AtomicUsize>,
+    pub delivery: Arc<TranslationDelivery>,
 }
 
 impl LiveSession {
+    pub fn translation_status(&self, status: &mut LiveStatus) -> AppResult<()> {
+        let (count, progress) = self.delivery.snapshot()?;
+        status.translation_queue = count;
+        status.translation = progress;
+        Ok(())
+    }
     /// A publication joins recorder-independent state, bounded caption history and diagnostics.
     pub fn publish(
         &self,
@@ -215,18 +222,19 @@ impl LiveSession {
         let mut measurements = self
             .monitor
             .lock()
-            .user_error("Diagnostics unavailable.")?
+            .user_error(crate::error::ErrorCode::DiagnosticsUnavailable)?
             .data
             .clone();
         measurements.speech_backlog_seconds = backlog;
-        measurements.translation_queue = self.queue.load(Ordering::Relaxed);
+        let (translation_queue, translation) = self.delivery.snapshot()?;
+        measurements.translation_queue = translation_queue;
         // Serialize database snapshots with translation publications so an older
         // English-only snapshot cannot replace a newly translated caption.
         let mut status = state
             .live
             .status
             .lock()
-            .user_error("Live status unavailable.")?;
+            .user_error(crate::error::ErrorCode::LiveStatusUnavailable)?;
         let segments = state.storage.latest_segments(&self.id)?;
         let mut previews = status.translation_previews.clone();
         previews.retain(|preview| preview_valid(preview, &segments, draft.as_ref()));
@@ -250,7 +258,7 @@ impl LiveSession {
             backlog_seconds: backlog,
             translation_queue: measurements.translation_queue,
             translation_paused: state.live.translation_paused(),
-            translation: status.translation.clone(),
+            translation,
             translation_previews: previews,
             measurements,
         };
@@ -263,10 +271,11 @@ impl LiveSession {
         let data = self
             .monitor
             .lock()
-            .user_error("Diagnostics unavailable.")?
+            .user_error(crate::error::ErrorCode::DiagnosticsUnavailable)?
             .data
             .clone();
-        let bytes = serde_json::to_vec_pretty(&data).user_error("Cannot encode diagnostics.")?;
+        let bytes = serde_json::to_vec_pretty(&data)
+            .user_error(crate::error::ErrorCode::CannotEncodeDiagnostics)?;
         crate::storage::write_atomic(
             &self
                 .state
@@ -308,15 +317,17 @@ fn run(state: &Arc<AppState>, emit: &Emit, id: &str) -> AppResult<()> {
         emit: emit.clone(),
         id: id.to_owned(),
         monitor: Arc::new(Mutex::new(Monitor::new(pid))),
-        queue: Arc::new(AtomicUsize::new(0)),
+        delivery: Arc::new(TranslationDelivery::new(
+            settings.live_translation && settings.translation_mode != ProcessingMode::None,
+            translation_configured,
+        )),
     };
     let path = state.paths.recording(&lecture.course_id, id)?;
     // One replaceable preview and two final batches; recording never waits on either.
-    let translations = Arc::new(TranslationQueue::default());
+    let translations = session.delivery.clone();
     let translator = (settings.live_translation && translation_configured).then(|| {
         TranslationWorker {
             session: session.clone(),
-            requests: translations.clone(),
             context: context.clone(),
             language: course.assistance_language.clone(),
             local: settings.translation_mode == ProcessingMode::Local,
@@ -342,7 +353,7 @@ fn run(state: &Arc<AppState>, emit: &Emit, id: &str) -> AppResult<()> {
     if let Ok(mut status) = state.live.status.lock() {
         status.state = "finalizing".into();
         status.draft = None;
-        status.translation_queue = session.queue.load(Ordering::Relaxed);
+        session.translation_status(&mut status)?;
         if let Ok(segments) = state.storage.latest_segments(id) {
             status.segments = segments;
         }
@@ -356,7 +367,10 @@ fn run(state: &Arc<AppState>, emit: &Emit, id: &str) -> AppResult<()> {
     if let Some(translator) = translator {
         let _ = translator.join();
     }
-    session.queue.store(0, Ordering::Relaxed);
+    session.delivery.finish();
+    if let Ok(mut status) = state.live.status.lock() {
+        session.translation_status(&mut status)?;
+    }
     if let Ok(mut m) = session.monitor.lock() {
         m.sample(pid);
     }
@@ -388,7 +402,7 @@ fn open_recognizer(
         let provider = settings
             .speech_provider
             .cloud()
-            .ok_or("Speech provider unavailable.")?;
+            .ok_or(crate::error::ErrorCode::SpeechProviderUnavailable)?;
         Ok(Recognizer::Cloud(OfficialProvider::new(
             provider,
             &settings.chat_model,

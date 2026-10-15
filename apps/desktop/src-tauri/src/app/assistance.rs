@@ -26,7 +26,7 @@ pub fn course_context(state: &AppState, course: &Course) -> AppResult<String> {
 pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResult<()> {
     let detail = state.storage.detail(id)?;
     if detail.lecture.status == LectureStatus::Recording {
-        return Err("Stop and save the recording before transcription.".into());
+        return Err(crate::error::ErrorCode::StopAndSaveTheRecordingBeforeTranscription.into());
     }
     let provider = crate::speech::configured(state, &detail.course.id)?;
     let settings = state.storage.settings()?;
@@ -39,7 +39,7 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
     let context = course_context(state, &detail.course)?;
     let path = state.paths.recording(&detail.course.id, id)?;
     let mut reader = hound::WavReader::open(path)
-        .user_error("Audio cannot be read. The recording may not have completed normally.")?;
+        .user_error(crate::error::ErrorCode::AudioCannotBeReadTheRecordingMayNot)?;
     let spec = reader.spec();
     if spec.sample_rate == 0
         || spec.sample_rate > 384000
@@ -47,7 +47,9 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
         || spec.bits_per_sample != 16
         || spec.sample_format != hound::SampleFormat::Int
     {
-        return Err("This recording format is not supported for transcription.".into());
+        return Err(
+            crate::error::ErrorCode::ThisRecordingFormatIsNotSupportedForTranscription.into(),
+        );
     }
     let rate = spec.sample_rate;
     let total_samples = reader.duration();
@@ -55,10 +57,12 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
         ((detail.lecture.transcribed_until * rate as f64).round() as u32).min(total_samples);
     reader
         .seek(offset)
-        .user_error("Cannot resume transcription.")?;
+        .user_error(crate::error::ErrorCode::CannotResumeTranscription)?;
     let chunk_size = (rate * 30).min(6 * 1024 * 1024);
     let total = (total_samples - offset).div_ceil(chunk_size);
     let mut completed = 0;
+    // Keep one lazily loaded text session for the entire optional combined job.
+    let mut translator = None;
     state.jobs.progress(completed, total);
     while offset < total_samples {
         state.jobs.checkpoint()?;
@@ -66,7 +70,7 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
             .samples::<i16>()
             .take(chunk_size as usize)
             .collect::<hound::Result<_>>()
-            .user_error("Cannot read recording.")?;
+            .user_error(crate::error::ErrorCode::CannotReadRecording)?;
         if samples.is_empty() {
             break;
         }
@@ -116,15 +120,20 @@ pub async fn transcribe(state: &AppState, id: &str, translate: bool) -> AppResul
             .append_cloud_chunk(id, &segments, offset as f64 / rate as f64)?;
         state.storage.snapshot(&state.paths, id)?;
         if translate && !segments.is_empty() {
-            translate_batch(
-                state,
-                configured_text(state, Role::Translation, false)?.as_ref(),
-                &context,
-                &detail.course.assistance_language,
-                id,
-                &segments,
-            )
-            .await?;
+            if translator.is_none() {
+                translator = Some(configured_text(state, Role::Translation, false)?);
+            }
+            if let Some(translator) = &translator {
+                translate_batch(
+                    state,
+                    translator.as_ref(),
+                    &context,
+                    &detail.course.assistance_language,
+                    id,
+                    &segments,
+                )
+                .await?;
+            }
         }
         completed += 1;
         state.jobs.progress(completed, total);
@@ -142,7 +151,7 @@ pub async fn translate_all(state: &AppState, id: &str) -> AppResult<()> {
         .filter(|s| s.translated_text.is_empty())
         .collect();
     if pending.is_empty() {
-        return Err("No English segments need translation.".into());
+        return Err(crate::error::ErrorCode::NoEnglishSegmentsNeedTranslation.into());
     }
     let batches = translation_batches(&pending);
     let total = batches.len() as u32;
@@ -199,9 +208,7 @@ async fn translate_batch(
                 .find(|entry| entry.id == segment.id)
                 .map(|entry| entry.text.as_str())
                 .filter(|text| !text.trim().is_empty() && text.len() <= 20000)
-                .ok_or(
-                    "Some translations are missing. English is preserved; run translation again.",
-                )?;
+                .ok_or(crate::error::ErrorCode::SomeTranslationsAreMissingEnglishIsPreservedRun)?;
             if !state.storage.translate_checked(segment, language, text)? {
                 return Err(
                     "Transcript or target language changed. Old translations were discarded."
@@ -225,18 +232,18 @@ pub async fn review(state: &AppState, id: &str, request: &str) -> AppResult<()> 
 pub async fn answer(state: &AppState, id: &str, question: &str) -> AppResult<Answer> {
     let question = question.trim();
     if question.is_empty() || question.len() > 2000 {
-        return Err("Enter a question of no more than 2,000 characters.".into());
+        return Err(crate::error::ErrorCode::EnterAQuestionOfNoMoreThan2.into());
     }
     let detail = state.storage.detail(id)?;
     if detail.segments.is_empty() {
-        return Err("A transcript is needed to answer from lecture evidence.".into());
+        return Err(crate::error::ErrorCode::ATranscriptIsNeededToAnswerFromLecture.into());
     }
     let provider = configured_text(state, Role::Study, false)?;
     let context = course_context(state, &detail.course)?;
     let sources = select_evidence(&detail.segments, question);
     if sources.is_empty() {
         return Err(
-            "Split long transcript segments into shorter sections before asking a question.".into(),
+            crate::error::ErrorCode::SplitLongTranscriptSegmentsIntoShorterSectionsBefore.into(),
         );
     }
     let evidence = sources

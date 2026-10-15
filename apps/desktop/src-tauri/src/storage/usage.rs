@@ -23,7 +23,7 @@ fn folder_bytes(path: &Path) -> AppResult<u64> {
     let mut pending = vec![path.to_path_buf()];
     while let Some(path) = pending.pop() {
         let metadata = std::fs::symlink_metadata(&path)
-            .user_error("Storage usage is unavailable. Check folder permissions.")?;
+            .user_error(crate::error::ErrorCode::StorageUsageIsUnavailableCheckFolderPermissions)?;
         // Skip junctions and links, including a redirected root, instead of
         // following a cycle or measuring content outside the library.
         if metadata.file_attributes() & 0x400 != 0 {
@@ -32,10 +32,14 @@ fn folder_bytes(path: &Path) -> AppResult<u64> {
         if metadata.is_file() {
             bytes = bytes.saturating_add(metadata.len());
         } else if metadata.is_dir() {
-            for entry in std::fs::read_dir(&path)
-                .user_error("Storage usage is unavailable. Check folder permissions.")?
-            {
-                pending.push(entry.user_error("Storage usage is unavailable.")?.path());
+            for entry in std::fs::read_dir(&path).user_error(
+                crate::error::ErrorCode::StorageUsageIsUnavailableCheckFolderPermissions,
+            )? {
+                pending.push(
+                    entry
+                        .user_error(crate::error::ErrorCode::StorageUsageIsUnavailable)?
+                        .path(),
+                );
             }
         }
     }

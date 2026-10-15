@@ -1,3 +1,4 @@
+pub(crate) mod delivery;
 mod live_translation;
 pub(crate) mod local;
 mod recognition;
@@ -17,7 +18,7 @@ pub fn configured(
     let settings = state.storage.settings()?;
     if settings.speech_provider == crate::domain::SpeechEngine::Local {
         if !crate::models::manager::status(state)?.installed {
-            return Err("Download the local speech model in Settings first.".into());
+            return Err(crate::error::ErrorCode::DownloadTheLocalSpeechModelInSettingsFirst.into());
         }
         let mut engine = crate::speech::local::worker::LocalSpeech::open(
             &state.runtime,
@@ -39,7 +40,7 @@ pub fn configured(
             .speech_provider
             .cloud()
             .or(settings.provider.cloud())
-            .ok_or("Choose an AI provider and add a key in Settings.")?;
+            .ok_or(crate::error::ErrorCode::ChooseAnAiProviderAndAddAKey)?;
         Ok(Box::new(OfficialProvider::new(
             provider,
             &settings.chat_model,

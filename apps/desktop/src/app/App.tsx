@@ -1,8 +1,9 @@
+import { pruneDeletedDrafts } from '../features/study/draft-storage';
 import { ui } from '../i18n';
 import { useCallback, useEffect, useState } from 'react';
 import { isTauri } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import { api, errorText, pruneDeletedDrafts } from '../api/client';
+import { api, errorText } from '../api/client';
 import {
   type Bootstrap,
   type JobStatus,

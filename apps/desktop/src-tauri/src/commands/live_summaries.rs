@@ -16,14 +16,14 @@ pub async fn summary_audio(
             .summary_cards(&id)?
             .into_iter()
             .find(|c| c.id == card_id)
-            .ok_or("Summary card not found.")?;
+            .ok_or(crate::error::ErrorCode::SummaryCardNotFound)?;
         let source = card
             .sources
             .iter()
             .find(|s| s.id == source_id)
-            .ok_or("The source text was not found.")?;
+            .ok_or(crate::error::ErrorCode::TheSourceTextWasNotFound)?;
         let mut reader = hound::WavReader::open(state.paths.recording(&lecture.course_id, &id)?)
-            .user_error("The recording cannot be read right now. Try again later.")?;
+            .user_error(crate::error::ErrorCode::TheRecordingCannotBeReadRightNowTry)?;
         let spec = reader.spec();
         if spec.channels != 1
             || spec.sample_rate > 192000
@@ -31,17 +31,17 @@ pub async fn summary_audio(
             || spec.bits_per_sample != 16
             || spec.sample_format != hound::SampleFormat::Int
         {
-            return Err("This recording format does not support section playback.".into());
+            return Err(
+                crate::error::ErrorCode::ThisRecordingFormatDoesNotSupportSectionPlayback.into(),
+            );
         }
         let start = (source.start_seconds * f64::from(spec.sample_rate)).floor() as u32;
         if start >= reader.duration() {
-            return Err(
-                "This part of the recording is not finished yet. Play it again later.".into(),
-            );
+            return Err(crate::error::ErrorCode::ThisPartOfTheRecordingIsNotFinished.into());
         }
         reader
             .seek(start)
-            .user_error("Cannot locate the recording section.")?;
+            .user_error(crate::error::ErrorCode::CannotLocateTheRecordingSection)?;
         let count = ((source.end_seconds - source.start_seconds).clamp(0.0, 60.0)
             * f64::from(spec.sample_rate))
         .ceil() as usize;
@@ -49,13 +49,13 @@ pub async fn summary_audio(
             .samples::<i16>()
             .take(count)
             .collect::<Result<Vec<_>, _>>()
-            .user_error("Reading the recording section failed. Try again later.")?;
+            .user_error(crate::error::ErrorCode::ReadingTheRecordingSectionFailedTryAgainLater)?;
         Ok(tauri::ipc::Response::new(crate::audio::wav::encode_chunk(
             &samples, spec,
         )?))
     })
     .await
-    .user_error("Cannot read the recording section.")?
+    .user_error(crate::error::ErrorCode::CannotReadTheRecordingSection)?
 }
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -107,7 +107,7 @@ pub fn save_live_summary_settings(
                 .storage
                 .summary_test_matches(provider, &preferences.model)?)
     {
-        return Err("Save the API key, then select Test summary connection; summaries can be enabled after it succeeds.".into());
+        return Err(crate::error::ErrorCode::SaveTheApiKeyThenSelectTestSummary.into());
     }
     if settings.live_summaries.enabled != preferences.enabled
         || settings.live_summaries.provider != preferences.provider
@@ -160,7 +160,7 @@ pub async fn test_summary_provider(
     summaries::parse(&text, &card)?;
     let _gate = state.lock_gate();
     if !state.summaries.matches_generation(generation) {
-        return Err("The key or summary settings changed during the test. Test again.".into());
+        return Err(crate::error::ErrorCode::TheKeyOrSummarySettingsChangedDuringThe.into());
     }
     state.storage.summary_tested(provider, Some(&model))
 }
@@ -174,13 +174,13 @@ pub fn open_summary_provider_page(provider: CloudProvider, kind: String) -> AppR
         (OpenAi, "keys") => "https://platform.openai.com/api-keys",
         (OpenAi, "privacy") => "https://developers.openai.com/api/docs/guides/your-data",
         (OpenAi, "limits") => "https://platform.openai.com/settings/organization/limits",
-        _ => return Err("Cannot open this service page.".into()),
+        _ => return Err(crate::error::ErrorCode::CannotOpenThisServicePage.into()),
     };
     use std::os::windows::process::CommandExt;
     std::process::Command::new("explorer.exe")
         .arg(url)
         .creation_flags(0x08000000)
         .spawn()
-        .user_error("Cannot open the system browser. Check your default browser setting.")?;
+        .user_error(crate::error::ErrorCode::CannotOpenTheSystemBrowserCheckYourDefault)?;
     Ok(())
 }

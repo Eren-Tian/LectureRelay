@@ -3,6 +3,8 @@ import {
   nativeMessages,
   nativeTemplates,
 } from './native-messages';
+import { nativeErrorKeys } from './native-error-codes';
+import type { NativeFailure } from '../types/domain';
 
 const exactMessages: Record<string, string> = {
   ...externalMessages,
@@ -34,8 +36,28 @@ function templateText(rest: string): { text: string; length: number } | null {
 }
 
 /** Display native status/error fields only. Classroom text and identifiers stay untouched. */
-export function messageText(message: string | null | undefined): string {
+export function messageText(
+  message: string | NativeFailure | null | undefined,
+): string {
   if (!message) return '';
+  if (typeof message !== 'string') {
+    const code = typeof message.code === 'string' ? message.code : '';
+    if (code === 'model_required') {
+      const name =
+        Array.isArray(message.params) && typeof message.params[0] === 'string'
+          ? message.params[0].slice(0, 100)
+          : '';
+      return nativeTemplates[
+        'Download {} in Settings → AI & models → Local models first. No text has been uploaded.'
+      ].replace('{}', name);
+    }
+    const english = Object.hasOwn(nativeErrorKeys, code)
+      ? nativeErrorKeys[code]
+      : '';
+    return (
+      exactMessages[english] || exactMessages[nativeErrorKeys.operation_failed]
+    );
+  }
   if (Object.hasOwn(exactMessages, message)) return exactMessages[message];
   let rest = message.trim();
   const parts: string[] = [];

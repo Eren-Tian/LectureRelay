@@ -20,98 +20,99 @@ pub struct Storage {
 
 impl Storage {
     pub fn open(path: &std::path::Path) -> AppResult<Self> {
-        let mut connection =
-            Connection::open(path).user_error("Cannot open the local database.")?;
+        let mut connection = Connection::open(path)
+            .user_error(crate::error::ErrorCode::CannotOpenTheLocalDatabase)?;
         connection
             .busy_timeout(std::time::Duration::from_secs(5))
-            .user_error("Cannot initialize the database.")?;
+            .user_error(crate::error::ErrorCode::CannotInitializeTheDatabase)?;
         connection
             .execute_batch(
                 "PRAGMA foreign_keys=ON; PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;",
             )
-            .user_error("Cannot initialize the database.")?;
+            .user_error(crate::error::ErrorCode::CannotInitializeTheDatabase)?;
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
-            .user_error("Cannot read database version.")?;
+            .user_error(crate::error::ErrorCode::CannotReadDatabaseVersion)?;
         if version > 5 {
             return Err(
-                "This database requires a newer LectureRelay version. Upgrade the app.".into(),
+                crate::error::ErrorCode::ThisDatabaseRequiresANewerLecturerelayVersionUpgrade
+                    .into(),
             );
         }
         if version == 0 {
             let tx = connection
                 .transaction()
-                .user_error("Cannot start database migration.")?;
+                .user_error(crate::error::ErrorCode::CannotStartDatabaseMigration)?;
             tx.execute_batch(include_str!("migrations/001_initial.sql"))
-                .user_error("Database migration failed.")?;
+                .user_error(crate::error::ErrorCode::DatabaseMigrationFailed)?;
             tx.execute_batch("PRAGMA user_version=1;")
-                .user_error("Cannot save database version.")?;
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
             tx.commit()
-                .user_error("Cannot commit database migration.")?;
+                .user_error(crate::error::ErrorCode::CannotCommitDatabaseMigration)?;
         }
         if version < 2 {
             let tx = connection
                 .transaction()
-                .user_error("Cannot start classroom migration.")?;
+                .user_error(crate::error::ErrorCode::CannotStartClassroomMigration)?;
             tx.execute_batch(include_str!("migrations/002_classroom.sql"))
-                .user_error("Classroom migration failed.")?;
+                .user_error(crate::error::ErrorCode::ClassroomMigrationFailed)?;
             tx.execute_batch("PRAGMA user_version=2;")
-                .user_error("Cannot save database version.")?;
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
             tx.commit()
-                .user_error("Cannot commit classroom migration.")?;
+                .user_error(crate::error::ErrorCode::CannotCommitClassroomMigration)?;
         }
         if version < 3 {
             let tx = connection
                 .transaction()
-                .user_error("Cannot start study workspace migration.")?;
+                .user_error(crate::error::ErrorCode::CannotStartStudyWorkspaceMigration)?;
             tx.execute_batch(include_str!("migrations/003_study_workspace.sql"))
-                .user_error("Study workspace migration failed.")?;
+                .user_error(crate::error::ErrorCode::StudyWorkspaceMigrationFailed)?;
             tx.execute_batch("PRAGMA user_version=3;")
-                .user_error("Cannot save database version.")?;
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
             tx.commit()
-                .user_error("Cannot commit study workspace migration.")?;
+                .user_error(crate::error::ErrorCode::CannotCommitStudyWorkspaceMigration)?;
         }
         if version < 4 {
             connection
                 .execute_batch("PRAGMA foreign_keys=OFF;")
-                .user_error("Cannot prepare reliability migration.")?;
+                .user_error(crate::error::ErrorCode::CannotPrepareReliabilityMigration)?;
             let tx = connection
                 .transaction()
-                .user_error("Cannot start reliability migration.")?;
+                .user_error(crate::error::ErrorCode::CannotStartReliabilityMigration)?;
             tx.execute_batch(include_str!("migrations/004_reliability.sql"))
-                .user_error("Reliability migration failed.")?;
+                .user_error(crate::error::ErrorCode::ReliabilityMigrationFailed)?;
             let errors: i64 = tx
                 .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |r| {
                     r.get(0)
                 })
-                .user_error("Cannot verify migration.")?;
+                .user_error(crate::error::ErrorCode::CannotVerifyMigration)?;
             if errors != 0 {
-                return Err("Reliability migration failed its integrity check. Existing database was preserved.".into());
+                return Err(crate::error::ErrorCode::ReliabilityMigrationFailedItsIntegrityCheckExistingDatabase.into());
             }
             tx.execute_batch("PRAGMA user_version=4;")
-                .user_error("Cannot save database version.")?;
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
             tx.commit()
-                .user_error("Cannot commit reliability migration.")?;
+                .user_error(crate::error::ErrorCode::CannotCommitReliabilityMigration)?;
             connection
                 .execute_batch("PRAGMA foreign_keys=ON;")
-                .user_error("Cannot enable database integrity checks.")?;
+                .user_error(crate::error::ErrorCode::CannotEnableDatabaseIntegrityChecks)?;
         }
         // Explicit, idempotent metadata repair: the import task proves the source even
         // when an older decoder failed before saving audio_source. Ambiguous rows stay unchanged.
-        connection.execute("UPDATE lectures SET audio_source='import' WHERE audio_source!='import' AND EXISTS(SELECT 1 FROM processing_tasks t WHERE t.lecture_id=lectures.id AND t.kind='import')", []).user_error("Cannot repair import metadata.")?;
-        connection.execute("UPDATE processing_tasks SET state='interrupted',message='App closed before processing finished. Saved results are preserved.' WHERE state='running'",[]).user_error("Cannot recover processing tasks.")?;
+        connection.execute("UPDATE lectures SET audio_source='import' WHERE audio_source!='import' AND EXISTS(SELECT 1 FROM processing_tasks t WHERE t.lecture_id=lectures.id AND t.kind='import')", []).user_error(crate::error::ErrorCode::CannotRepairImportMetadata)?;
+        connection.execute("UPDATE processing_tasks SET state='interrupted',message='App closed before processing finished. Saved results are preserved.' WHERE state='running'",[]).user_error(crate::error::ErrorCode::CannotRecoverProcessingTasks)?;
         if version < 5 {
             let tx = connection
                 .transaction()
-                .user_error("Cannot start live summary migration.")?;
+                .user_error(crate::error::ErrorCode::CannotStartLiveSummaryMigration)?;
             tx.execute_batch(include_str!("migrations/005_live_summaries.sql"))
-                .user_error("Live summary migration failed.")?;
+                .user_error(crate::error::ErrorCode::LiveSummaryMigrationFailed)?;
             tx.execute_batch("PRAGMA user_version=5;")
-                .user_error("Cannot save database version.")?;
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
             tx.commit()
-                .user_error("Cannot commit live summary migration.")?;
+                .user_error(crate::error::ErrorCode::CannotCommitLiveSummaryMigration)?;
         }
-        connection.execute("UPDATE live_summary_cards SET state='deferred',message='The summary did not finish before the app closed. The source text is saved; you can retry it.' WHERE state='running'", []).user_error("Cannot recover live summaries.")?;
+        connection.execute("UPDATE live_summary_cards SET state='deferred',message='The summary did not finish before the app closed. The source text is saved; you can retry it.' WHERE state='running'", []).user_error(crate::error::ErrorCode::CannotRecoverLiveSummaries)?;
         preferences::disable_local_live_summaries(&connection)?;
         Ok(Self {
             connection: Mutex::new(connection),

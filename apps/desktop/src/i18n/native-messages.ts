@@ -5,6 +5,16 @@
 
 /** Messages the native layer emits verbatim. */
 export const nativeMessages: Record<string, string> = {
+  'Notes are too long. Shorten them before saving.':
+    '笔记过长，请精简后再保存。',
+  'Cannot read notes.': '无法读取笔记。',
+  'Cannot save notes.': '无法保存笔记。',
+  'Cannot read answers.': '无法读取问答记录。',
+  'Cannot encode answer sources.': '无法整理问答引用。',
+  'Cannot save answers.': '无法保存问答记录。',
+  'The answer sources is damaged.': '问答引用已损坏。',
+  'Operation did not complete. Try again.': '操作未完成，请重试。',
+  'Live translation preview superseded.': '翻译预览已更新。',
   'Live translation queue unavailable.':
     '暂时无法处理翻译队列，英文与录音会保留。',
   'Type DELETE to confirm permanent deletion.':

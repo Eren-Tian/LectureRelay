@@ -1,13 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
-import { listen } from '@tauri-apps/api/event';
+import { useEffect, useState } from 'react';
 import { api, errorText } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { Modal } from '../../components/Modal';
 import { ui } from '../../i18n';
 import { messageText } from '../../i18n/messages';
 import { clock } from '../../lib/presentation';
-import type { SummaryState } from '../../types/domain';
 import { LiveSummarySetup } from './LiveSummarySetup';
+import { useSummaryState } from './useSummaryState';
 
 export function LiveSummaryPanel({
   id,
@@ -22,43 +21,18 @@ export function LiveSummaryPanel({
 }) {
   const workspace = useWorkspace();
   const preferences = workspace.data.settings.liveSummaries;
-  const [state, setState] = useState<SummaryState>();
+  const {
+    state,
+    error,
+    setError,
+    busy,
+    generate,
+    reload: load,
+  } = useSummaryState(id);
   const [setup, setSetup] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
   const [clip, setClip] = useState('');
-  const currentId = useRef(id);
-  currentId.current = id;
-  const activeAction = useRef(false);
-  const mounted = useRef(true);
-  const load = async () => {
-    try {
-      const result = await api.summaryState(id);
-      if (mounted.current && currentId.current === id) setState(result);
-    } catch (e) {
-      if (mounted.current && currentId.current === id) setError(errorText(e));
-    }
-  };
   useEffect(() => {
-    mounted.current = true;
-    setState(undefined);
-    setError('');
     setClip('');
-    let active = true;
-    const refresh = () => {
-      if (active) void load();
-    };
-    refresh();
-    const timer = setInterval(refresh, 2000);
-    const subscription = listen<string>('summary-updated', (e) => {
-      if (e.payload === id) refresh();
-    }).catch(() => () => {});
-    return () => {
-      active = false;
-      mounted.current = false;
-      clearInterval(timer);
-      void subscription.then((off) => off());
-    };
   }, [id]);
   useEffect(
     () => () => {
@@ -66,21 +40,6 @@ export function LiveSummaryPanel({
     },
     [clip],
   );
-  const generate = async (cardId: string | null = null) => {
-    if (activeAction.current) return;
-    activeAction.current = true;
-    setBusy(true);
-    setError('');
-    try {
-      await api.summarizeNow(id, cardId);
-    } catch (e) {
-      setError(errorText(e));
-    } finally {
-      activeAction.current = false;
-      setBusy(false);
-      await load();
-    }
-  };
   const replay = async (cardId: string, sourceId: string, seconds: number) => {
     if (onSeek) {
       onSeek(seconds);
@@ -274,7 +233,7 @@ export function LiveSummaryPanel({
       )}
       {setup && (
         <Modal title={ui.liveSummarySetUp} onClose={() => setSetup(false)}>
-          <LiveSummarySetup onSaved={() => void load()} />
+          <LiveSummarySetup onSaved={() => void load(true)} />
         </Modal>
       )}
     </div>

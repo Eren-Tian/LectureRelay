@@ -38,7 +38,7 @@ impl JobGuard<'_> {
                 .0
                 .task_id
                 .lock()
-                .user_error("Task status unavailable.")?;
+                .user_error(crate::error::ErrorCode::TaskStatusUnavailable)?;
             if let Some(id) = task.as_ref() {
                 db.finish_task(id, outcome)?;
             }
@@ -59,19 +59,25 @@ impl Jobs {
         Ok(self
             .status
             .lock()
-            .user_error("Task status unavailable.")?
+            .user_error(crate::error::ErrorCode::TaskStatusUnavailable)?
             .clone())
     }
 
     pub fn begin(&self, id: &str, kind: &str) -> AppResult<JobGuard<'_>> {
-        let mut status = self.status.lock().user_error("Task status unavailable.")?;
+        let mut status = self
+            .status
+            .lock()
+            .user_error(crate::error::ErrorCode::TaskStatusUnavailable)?;
         if status.is_some() {
-            return Err("Another AI task is running. Wait or cancel it.".into());
+            return Err(crate::error::ErrorCode::AnotherAiTaskIsRunningWaitOrCancel.into());
         }
         if kind != "provider-test"
             && let Some(db) = &self.storage
         {
-            *self.task_id.lock().user_error("Task status unavailable.")? =
+            *self
+                .task_id
+                .lock()
+                .user_error(crate::error::ErrorCode::TaskStatusUnavailable)? =
                 Some(db.create_task(id, kind)?);
         }
         self.cancelled.store(false, Ordering::Relaxed);
@@ -88,7 +94,7 @@ impl Jobs {
 
     pub fn checkpoint(&self) -> AppResult<()> {
         if self.cancelled.load(Ordering::Relaxed) {
-            Err("Task cancelled. Saved results are preserved.".into())
+            Err(crate::error::ErrorCode::TaskCancelledSavedResultsArePreserved.into())
         } else {
             Ok(())
         }

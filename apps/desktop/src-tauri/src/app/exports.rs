@@ -12,7 +12,7 @@ fn stamp(ms: u64, vtt: bool) -> String {
 }
 pub fn subtitles(segments: &[TranscriptSegment], vtt: bool, language: &str) -> AppResult<String> {
     if !matches!(language, "source" | "translation" | "bilingual") {
-        return Err("Choose a subtitle language.".into());
+        return Err(crate::error::ErrorCode::ChooseASubtitleLanguage.into());
     }
     let mut rows: Vec<_> = segments
         .iter()
@@ -66,7 +66,7 @@ pub fn subtitles(segments: &[TranscriptSegment], vtt: bool, language: &str) -> A
         ));
     }
     if index == 0 {
-        return Err("No subtitles are available in this language.".into());
+        return Err(crate::error::ErrorCode::NoSubtitlesAreAvailableInThisLanguage.into());
     }
     Ok(output)
 }

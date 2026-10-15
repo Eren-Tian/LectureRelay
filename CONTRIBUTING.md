@@ -26,6 +26,8 @@ Consult the [repository map](docs/architecture/repository-structure.md). Keep fe
 
 Rust commands validate input, take the gate and call `ensure_idle` with their `Operation`; decide which running work blocks an operation only in `app/busy.rs`. Closed choices are enums in `domain.rs` whose wire strings match the TypeScript unions; keep stored values compatible. SQL belongs in database repositories; filesystem snapshots/recovery in storage. Speech contracts, cloud HTTP, native worker management and credentials have distinct homes. Do not duplicate compatible OpenAI/Groq HTTP clients. Keep recording timing, queue bounds and cancellation behavior intact when moving code.
 
+Native command failures use `AppError` with a stable `ErrorCode` and safe parameters. Add codes in `error_codes.rs`, map them through `i18n/native-error-codes.ts` to the Chinese catalog, and keep existing wire codes when editing English wording. Use codes for recovery decisions. Historical stored status messages retain their string translations; never put an untrusted provider error or credential into an error parameter. The repository check verifies the Rust/frontend code catalog and scans production code on both sides of test modules.
+
 Production worker source belongs under `apps/desktop/native/speech-worker`; experiments stay in `experiments/local-stt`. Generated files go under `target` or documented ignored staging. Do not create speculative empty packages or directories.
 
 ## Data and migrations

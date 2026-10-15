@@ -1,5 +1,6 @@
 import { Icon } from '../../components/Icon';
 import { ui } from '../../i18n';
+import { aiReadiness } from '../../lib/ai-readiness';
 import type { AppSettings, ProviderStatus } from '../../types/domain';
 import type { SettingsSectionProps } from './settings-types';
 export function ProviderSettings({
@@ -17,9 +18,11 @@ export function ProviderSettings({
   const hasKey = providers.some(
     (p) => p.provider === settings.provider && p.hasKey,
   );
-  const speechHasKey = providers.some(
-    (p) => p.provider === settings.speechProvider && p.hasKey,
-  );
+  const speechHasKey = aiReadiness(
+    settings,
+    providers,
+    'live-speech',
+  ).configured;
   return (
     <>
       <section className="settings-card">

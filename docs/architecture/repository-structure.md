@@ -23,6 +23,7 @@ apps/desktop/
       database/              connection/version gate, repositories, row mappings,
         migrations/          immutable, sequential SQL migrations
       domain.rs              canonical Rust serialized learning/settings values
+      error.rs, error_codes.rs structured native failures and stable identities
       speech/                live session (streaming.rs), recognition loop,
                              live translation worker and queue
         local/               Nemotron worker IPC/containment and batch adapter
@@ -76,3 +77,5 @@ Generated build/cache output is under `target`: `native/speech-worker` for produ
 Production data stays in Windows Known Folders and Credential Manager; see [storage architecture](overview.md). No unused `packages/`, empty feature folders or speculative framework abstractions are retained.
 
 Settings use stable navigation identifiers rather than translated labels. `SettingsPage` coordinates the selected section and save action; feature panels render individual settings. `useSettingsDraft` merges independently saved runtime/summary preferences while preserving unsaved edits, and `useSettingsResources` handles model/trash reads and subscription cleanup. Keys remain in the existing native credential adapter. General preference saves also preserve authoritative runtime and summary settings in the native command.
+
+AI task configuration lives in `lib/ai-readiness.ts`. The study feature owns summary snapshot sequencing (`useSummaryState.ts`) and note-draft persistence (`useNoteDraft.ts`, `draft-storage.ts`); deletion callers share the same fallback-draft cleanup. See the domain [glossary](../../GLOSSARY.md) for saved and provisional learning material.

@@ -1,5 +1,6 @@
+import { pruneDeletedDrafts } from '../study/draft-storage';
 import { useState } from 'react';
-import { api, pruneDeletedDrafts } from '../../api/client';
+import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { Icon } from '../../components/Icon';
 import { ui } from '../../i18n';

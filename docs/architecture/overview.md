@@ -19,6 +19,8 @@ Stop closes the stream, drains captured audio and finalizes the WAV. On startup,
 
 Live events carry the latest 200 finals and one draft; older finals stay in SQLite. Slow inference creates a disk-backed backlog. More than 12 seconds of backlog shows a warning, and Stop then leaves the remaining audio for postclass transcription. Simple silence detection is not a trained VAD, and caption timestamps are coarse audio spans.
 
+`speech/delivery.rs` owns translation scheduling, pending/deferred outcomes and final-batch accounting. Every consumed final request carries a guard: an early exit, cancellation or panic defers it once. Validated translations are saved through this module using the original source revision and target language. Closing drains existing finals; finishing rejects late saves and defers unsent work. Recognition and the worker publish snapshots of this ledger rather than adjusting separate counters.
+
 ## Live summaries
 
 `app/live_summaries.rs` checks an active recording every two seconds and summarizes newly finalized English every 2, 4 or 5 minutes, or on request. Summaries run only through Groq or OpenAI with the user's key, after explicit upload consent and a successful connection test. Work is single-flight and never holds the recording gate during inference. A rate-limited provider is cooled down for its `retry-after` period. Each card stores a snapshot of its source segments with their revisions, so changed or deleted sources mark a card stale instead of silently changing it. Cards that were running when the app closed become `deferred` on startup.
@@ -37,7 +39,9 @@ Serialized values live in `src-tauri/src/domain.rs` and `apps/desktop/src/types/
 
 ## Messages and localization
 
-Rust reports English. `apps/desktop/src/i18n/native-messages.ts` maps it to Simplified Chinese: exact messages, `format!` templates with `{}` values, and a small external section for browser and PDF.js errors. Interface text lives in `i18n/zh-CN.ts` with a matching `i18n/en.ts`. `pnpm verify:repo` fails when a Rust message has no translation, a translation is no longer emitted, Chinese appears in Rust or component code outside the catalogs, or a UI key is unused. Model prompts and native dialog text are marked `// i18n-exempt`.
+Native commands return `AppError` as `{code, params}`. `error_codes.rs` defines stable wire identities and safe English descriptions; review recovery and preview supersession compare codes. `i18n/native-error-codes.ts` selects the Chinese translation by identity, independently of native English wording. `i18n/native-messages.ts` also retains historical stored status messages, formatted warnings and browser/PDF.js errors. Unknown causes become a generic safe failure, with no raw cause in IPC. Interface text lives in `i18n/zh-CN.ts` and `i18n/en.ts`. `pnpm verify:repo` checks both code catalogs, message coverage (including production code after test modules), forbidden inline Chinese and unused UI keys. Model prompts and native dialog text are marked `// i18n-exempt`.
+
+`lib/ai-readiness.ts` selects the configuration for each task: speech keys are independent of text keys, and only postclass transcription keeps the legacy fallback when speech is None. Native commands remain authoritative for model and credential checks. `study/useSummaryState.ts` owns polling, event subscriptions and generation; only the latest read can publish, and a successful poll does not hide a failed generation. `study/useNoteDraft.ts` owns ordered draft writes, recovery, explicit appends, commit and discard. `study/draft-storage.ts` owns the browser recovery namespace and confirmed-deletion cleanup. Leaving the editor flushes a pending draft without waiting for the debounce timer.
 
 ## Native boundary and model manager
 

@@ -74,7 +74,7 @@ impl Storage {
         let detail = self.lecture(lecture)?;
         let language = self.course(&detail.course_id)?.assistance_language;
         let id = new_id();
-        self.lock()?.execute("INSERT INTO processing_tasks(id,lecture_id,kind,language,state,created_at,updated_at) VALUES(?1,?2,?3,?4,'running',?5,?5)",params![id,lecture,kind,language,now()]).user_error("Cannot save processing task. No request was sent.")?;
+        self.lock()?.execute("INSERT INTO processing_tasks(id,lecture_id,kind,language,state,created_at,updated_at) VALUES(?1,?2,?3,?4,'running',?5,?5)",params![id,lecture,kind,language,now()]).user_error(crate::error::ErrorCode::CannotSaveProcessingTaskNoRequestWasSent)?;
         Ok(id)
     }
 }
@@ -91,7 +91,7 @@ fn source_version_for(segments: &[TranscriptSegment]) -> String {
 
 impl Storage {
     pub fn task_progress(&self, id: &str, completed: u32, total: u32) -> AppResult<()> {
-        self.lock()?.execute("UPDATE processing_tasks SET completed=?2,total=?3,updated_at=?4 WHERE id=?1 AND state='running'",params![id,completed,total,now()]).user_error("Cannot save task progress.")?;
+        self.lock()?.execute("UPDATE processing_tasks SET completed=?2,total=?3,updated_at=?4 WHERE id=?1 AND state='running'",params![id,completed,total,now()]).user_error(crate::error::ErrorCode::CannotSaveTaskProgress)?;
         Ok(())
     }
     pub fn finish_task(&self, id: &str, state: &str) -> AppResult<()> {
@@ -106,12 +106,12 @@ impl Storage {
                 "UPDATE processing_tasks SET state=?2,message=?3,updated_at=?4 WHERE id=?1",
                 params![id, state, message, now()],
             )
-            .user_error("Cannot save task outcome.")?;
+            .user_error(crate::error::ErrorCode::CannotSaveTaskOutcome)?;
         Ok(())
     }
     pub fn tasks(&self, id: &str) -> AppResult<Vec<ProcessingTask>> {
         let db = self.lock()?;
-        let mut q=db.prepare("SELECT id,lecture_id,kind,language,state,completed,total,message,updated_at FROM processing_tasks WHERE lecture_id=?1 ORDER BY created_at DESC,rowid DESC LIMIT 40").user_error("Cannot read processing history.")?;
+        let mut q=db.prepare("SELECT id,lecture_id,kind,language,state,completed,total,message,updated_at FROM processing_tasks WHERE lecture_id=?1 ORDER BY created_at DESC,rowid DESC LIMIT 40").user_error(crate::error::ErrorCode::CannotReadProcessingHistory)?;
         q.query_map([id], |r| {
             Ok(ProcessingTask {
                 id: r.get(0)?,
@@ -125,9 +125,9 @@ impl Storage {
                 updated_at: r.get(8)?,
             })
         })
-        .user_error("Cannot read tasks.")?
+        .user_error(crate::error::ErrorCode::CannotReadTasks)?
         .collect::<rusqlite::Result<_>>()
-        .user_error("Cannot read tasks.")
+        .user_error(crate::error::ErrorCode::CannotReadTasks)
     }
     /// Compare the exact input revision and target language inside the write transaction.
     pub fn translate_checked(
@@ -137,9 +137,9 @@ impl Storage {
         text: &str,
     ) -> AppResult<bool> {
         if text.trim().is_empty() || text.len() > 20000 || !valid_language(language) {
-            return Err("Invalid translation result.".into());
+            return Err(crate::error::ErrorCode::InvalidTranslationResult.into());
         }
-        Ok(self.lock()?.execute("UPDATE transcript_segments SET translated_text=?5 WHERE id=?1 AND lecture_id=?2 AND revision=?3 AND source_text=?4 AND translated_text='' AND EXISTS(SELECT 1 FROM lectures l JOIN courses c ON c.id=l.course_id WHERE l.id=?2 AND c.assistance_language=?6 AND c.deleted_at IS NULL)",params![s.id,s.lecture_id,s.revision,s.source_text,text,language]).user_error("Cannot save translation.")?==1)
+        Ok(self.lock()?.execute("UPDATE transcript_segments SET translated_text=?5 WHERE id=?1 AND lecture_id=?2 AND revision=?3 AND source_text=?4 AND translated_text='' AND EXISTS(SELECT 1 FROM lectures l JOIN courses c ON c.id=l.course_id WHERE l.id=?2 AND c.assistance_language=?6 AND c.deleted_at IS NULL)",params![s.id,s.lecture_id,s.revision,s.source_text,text,language]).user_error(crate::error::ErrorCode::CannotSaveTranslation)?==1)
     }
     pub fn add_note_version(
         &self,
@@ -151,7 +151,7 @@ impl Storage {
     ) -> AppResult<String> {
         self.lecture(id)?;
         if body.len() > 200000 {
-            return Err("Notes exceed the supported size.".into());
+            return Err(crate::error::ErrorCode::NotesExceedTheSupportedSize.into());
         }
         let version = new_id();
         self.lock()?
@@ -159,21 +159,21 @@ impl Storage {
                 "INSERT INTO note_versions VALUES(?1,?2,?3,?4,?5,?6,?7)",
                 params![version, id, body, origin, language, source, now()],
             )
-            .user_error("Cannot save note version.")?;
+            .user_error(crate::error::ErrorCode::CannotSaveNoteVersion)?;
         Ok(version)
     }
     pub fn save_draft(&self, id: &str, body: &str) -> AppResult<()> {
         self.lecture(id)?;
         if body.len() > 200000 {
-            return Err("Draft exceeds the supported size.".into());
+            return Err(crate::error::ErrorCode::DraftExceedsTheSupportedSize.into());
         }
-        self.lock()?.execute("INSERT INTO note_drafts VALUES(?1,?2,?3) ON CONFLICT(lecture_id) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at",params![id,body,now()]).user_error("Draft could not be saved. Keep this window open.")?;
+        self.lock()?.execute("INSERT INTO note_drafts VALUES(?1,?2,?3) ON CONFLICT(lecture_id) DO UPDATE SET body=excluded.body,updated_at=excluded.updated_at",params![id,body,now()]).user_error(crate::error::ErrorCode::DraftCouldNotBeSavedKeepThisWindow)?;
         Ok(())
     }
     pub fn clear_draft(&self, id: &str) -> AppResult<()> {
         self.lock()?
             .execute("DELETE FROM note_drafts WHERE lecture_id=?1", [id])
-            .user_error("Cannot clear draft.")?;
+            .user_error(crate::error::ErrorCode::CannotClearDraft)?;
         Ok(())
     }
     pub fn save_mark(&self, id: &str, seconds: f64, label: &str, kind: &str) -> AppResult<()> {
@@ -186,14 +186,14 @@ impl Storage {
             || label.len() > 300
             || !matches!(kind, "bookmark" | "chapter")
         {
-            return Err("Choose a valid timestamp and a short label.".into());
+            return Err(crate::error::ErrorCode::ChooseAValidTimestampAndAShortLabel.into());
         }
         self.lock()?
             .execute(
                 "INSERT INTO study_marks VALUES(?1,?2,?3,?4,?5)",
                 params![new_id(), id, seconds, label.trim(), kind],
             )
-            .user_error("Cannot save bookmark.")?;
+            .user_error(crate::error::ErrorCode::CannotSaveBookmark)?;
         Ok(())
     }
     pub fn delete_mark(&self, lecture: &str, id: &str) -> AppResult<()> {
@@ -202,12 +202,12 @@ impl Storage {
                 "DELETE FROM study_marks WHERE id=?1 AND lecture_id=?2",
                 params![id, lecture],
             )
-            .user_error("Cannot remove bookmark.")?;
+            .user_error(crate::error::ErrorCode::CannotRemoveBookmark)?;
         Ok(())
     }
     pub fn documents(&self, course: &str) -> AppResult<Vec<CourseDocument>> {
         let db = self.lock()?;
-        let mut q=db.prepare("SELECT id,name,path FROM course_documents WHERE course_id=?1 ORDER BY created_at,id").user_error("Cannot read course documents.")?;
+        let mut q=db.prepare("SELECT id,name,path FROM course_documents WHERE course_id=?1 ORDER BY created_at,id").user_error(crate::error::ErrorCode::CannotReadCourseDocuments)?;
         q.query_map([course], |r| {
             Ok(CourseDocument {
                 id: r.get(0)?,
@@ -215,9 +215,9 @@ impl Storage {
                 path: r.get(2)?,
             })
         })
-        .user_error("Cannot read documents.")?
+        .user_error(crate::error::ErrorCode::CannotReadDocuments)?
         .collect::<rusqlite::Result<_>>()
-        .user_error("Cannot read documents.")
+        .user_error(crate::error::ErrorCode::CannotReadDocuments)
     }
     pub fn add_document(&self, id: &str, course: &str, name: &str, path: &str) -> AppResult<()> {
         self.lock()?
@@ -225,7 +225,7 @@ impl Storage {
                 "INSERT INTO course_documents VALUES(?1,?2,?3,?4,?5)",
                 params![id, course, name, path, now()],
             )
-            .user_error("Cannot save course document.")?;
+            .user_error(crate::error::ErrorCode::CannotSaveCourseDocument)?;
         Ok(())
     }
     pub fn study_state(&self, id: &str) -> AppResult<StudyState> {
@@ -237,7 +237,7 @@ impl Storage {
         let documents = self.documents(&lecture.course_id)?;
         let reviews = self.reviews(id)?;
         let db = self.lock()?;
-        let mut q=db.prepare("SELECT id,seconds,label,kind FROM study_marks WHERE lecture_id=?1 ORDER BY seconds,id").user_error("Cannot read bookmarks.")?;
+        let mut q=db.prepare("SELECT id,seconds,label,kind FROM study_marks WHERE lecture_id=?1 ORDER BY seconds,id").user_error(crate::error::ErrorCode::CannotReadBookmarks)?;
         let marks = q
             .query_map([id], |r| {
                 Ok(StudyMark {
@@ -247,10 +247,10 @@ impl Storage {
                     kind: r.get(3)?,
                 })
             })
-            .user_error("Cannot read bookmarks.")?
+            .user_error(crate::error::ErrorCode::CannotReadBookmarks)?
             .collect::<rusqlite::Result<_>>()
-            .user_error("Cannot read bookmarks.")?;
-        let mut q=db.prepare("SELECT id,body,origin,language,source_version,created_at FROM note_versions WHERE lecture_id=?1 ORDER BY created_at DESC,rowid DESC LIMIT 30").user_error("Cannot read note history.")?;
+            .user_error(crate::error::ErrorCode::CannotReadBookmarks)?;
+        let mut q=db.prepare("SELECT id,body,origin,language,source_version,created_at FROM note_versions WHERE lecture_id=?1 ORDER BY created_at DESC,rowid DESC LIMIT 30").user_error(crate::error::ErrorCode::CannotReadNoteHistory)?;
         let versions = q
             .query_map([id], |r| {
                 Ok(NoteVersion {
@@ -262,9 +262,9 @@ impl Storage {
                     created_at: r.get(5)?,
                 })
             })
-            .user_error("Cannot read note history.")?
+            .user_error(crate::error::ErrorCode::CannotReadNoteHistory)?
             .collect::<rusqlite::Result<_>>()
-            .user_error("Cannot read note history.")?;
+            .user_error(crate::error::ErrorCode::CannotReadNoteHistory)?;
         let draft = db
             .query_row(
                 "SELECT body FROM note_drafts WHERE lecture_id=?1",
@@ -272,7 +272,7 @@ impl Storage {
                 |r| r.get(0),
             )
             .optional()
-            .user_error("Cannot read draft.")?;
+            .user_error(crate::error::ErrorCode::CannotReadDraft)?;
         Ok(StudyState {
             sections,
             reviews,
@@ -293,13 +293,13 @@ impl Storage {
         };
         self.lock()?
             .execute(sql, [id])
-            .user_error("Cannot save pin.")?;
+            .user_error(crate::error::ErrorCode::CannotSavePin)?;
         Ok(())
     }
     pub fn library(&self, query: &str) -> AppResult<Vec<LibraryEntry>> {
         let pattern = format!("%{}%", query.trim().chars().take(200).collect::<String>());
         let db = self.lock()?;
-        let mut q=db.prepare("SELECT l.id,l.course_id,l.title,l.started_at,l.ended_at,l.duration_seconds,l.status,l.recording_path,l.transcribed_until,l.audio_source,c.name,p.lecture_id IS NOT NULL FROM lectures l JOIN courses c ON c.id=l.course_id LEFT JOIN lecture_pins p ON p.lecture_id=l.id WHERE c.deleted_at IS NULL AND (l.title LIKE ?1 OR c.name LIKE ?1 OR EXISTS(SELECT 1 FROM transcript_segments s WHERE s.lecture_id=l.id AND (s.source_text LIKE ?1 OR s.translated_text LIKE ?1))) ORDER BY p.lecture_id IS NOT NULL DESC,l.started_at DESC LIMIT 200").user_error("Cannot search library.")?;
+        let mut q=db.prepare("SELECT l.id,l.course_id,l.title,l.started_at,l.ended_at,l.duration_seconds,l.status,l.recording_path,l.transcribed_until,l.audio_source,c.name,p.lecture_id IS NOT NULL FROM lectures l JOIN courses c ON c.id=l.course_id LEFT JOIN lecture_pins p ON p.lecture_id=l.id WHERE c.deleted_at IS NULL AND (l.title LIKE ?1 OR c.name LIKE ?1 OR EXISTS(SELECT 1 FROM transcript_segments s WHERE s.lecture_id=l.id AND (s.source_text LIKE ?1 OR s.translated_text LIKE ?1))) ORDER BY p.lecture_id IS NOT NULL DESC,l.started_at DESC LIMIT 200").user_error(crate::error::ErrorCode::CannotSearchLibrary)?;
         q.query_map([pattern], |r| {
             Ok(LibraryEntry {
                 lecture: super::rows::lecture_from_row(r)?,
@@ -307,8 +307,8 @@ impl Storage {
                 pinned: r.get(11)?,
             })
         })
-        .user_error("Cannot search library.")?
+        .user_error(crate::error::ErrorCode::CannotSearchLibrary)?
         .collect::<rusqlite::Result<_>>()
-        .user_error("Cannot search library.")
+        .user_error(crate::error::ErrorCode::CannotSearchLibrary)
     }
 }

@@ -6,6 +6,8 @@
 
 `pnpm verify:repo` also runs `scripts/verification/ui-strings.mjs` and `scripts/verification/native-messages.mjs`. They fail on Chinese text outside the i18n catalogs, unused or unmatched UI keys, Rust messages without a Chinese translation and translations Rust no longer emits.
 
+The same check verifies stable Rust/frontend error identities and scans production code after test modules. `pnpm test:components workflow-reliability.mjs` exercises the full React transcription entry with independent speech/text configuration, controlled out-of-order summary replies, generation errors that survive polling, recoverable drafts on quick navigation, and structured error display. Normal Rust tests also exercise delivery scheduling, validated SQLite saves, abandoned requests and late results without loading models.
+
 Rust module-local tests cover PCM conversion, WAV encoding, retrieval, safe provider errors and model cancellation. `src-tauri/src/tests` contains integration-style checks using private APIs: schema 1→2, reopen, multilingual data, Trash, atomic files, checkpoint recovery, cursor/correction preservation, path/timeline validation and exclusive jobs. Their UUID fixtures live under `target/test-fixtures`, not user folders.
 
 The public native-audio integration binary under `src-tauri/tests` is compiled by normal tests but its hardware case is ignored. Preserve its Common Controls v6 manifest and the test-only linker directives in `build.rs`; do not apply them to the production binary.

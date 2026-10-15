@@ -3,9 +3,9 @@
 //! them to translation. Recording never waits on it; audio it does not reach
 //! before Stop remains for postclass transcription.
 
-use super::live_translation::{StablePrefix, TranslationQueue};
+use super::delivery::TranslationDelivery;
+use super::live_translation::StablePrefix;
 use super::streaming::{Draft, LiveSession};
-use super::translation_worker::enqueue_translation;
 use crate::{
     domain::{SegmentOrigin, SpeechEngine, TranscriptSegment},
     error::{AppResult, UserFacing},
@@ -78,7 +78,7 @@ pub(super) struct Recognition {
     pub path: PathBuf,
     pub context: String,
     /// Present while a translation worker consumes finals.
-    pub translations: Option<Arc<TranslationQueue>>,
+    pub translations: Option<Arc<TranslationDelivery>>,
     pub preview_enabled: bool,
     pub progress: Progress,
 }
@@ -137,7 +137,7 @@ impl Recognition {
         };
         let spec = reader.spec();
         if spec.sample_rate == 0 || spec.channels != 1 || spec.bits_per_sample != 16 {
-            return Err("Unsupported live audio format.".into());
+            return Err(crate::error::ErrorCode::UnsupportedLiveAudioFormat.into());
         }
         let rate = spec.sample_rate as f64;
         let duration = reader.duration() as f64 / rate;
@@ -156,12 +156,12 @@ impl Recognition {
         };
         reader
             .seek((self.progress.cursor * rate).round() as u32)
-            .user_error("Cannot read live audio checkpoint.")?;
+            .user_error(crate::error::ErrorCode::CannotReadLiveAudioCheckpoint)?;
         let samples = reader
             .samples::<i16>()
             .take((span * rate).round() as usize)
             .collect::<hound::Result<Vec<_>>>()
-            .user_error("Cannot read live audio. Recording continues.")?;
+            .user_error(crate::error::ErrorCode::CannotReadLiveAudioRecordingContinues)?;
         if samples.is_empty() {
             return Ok(if finishing {
                 Flow::Stop
@@ -188,7 +188,8 @@ impl Recognition {
             }
             Err(error) => {
                 self.progress.failures += 1;
-                self.session.publish(backlog, None, Some(error.clone()))?;
+                self.session
+                    .publish(backlog, None, Some(error.to_string()))?;
                 if matches!(self.recognizer, Recognizer::Local(_))
                     || finishing
                     || self.progress.failures >= 3
@@ -407,12 +408,8 @@ impl Recognition {
         if !segments.is_empty()
             && let Some(translations) = &self.translations
         {
-            enqueue_translation(
-                &self.session.state,
-                translations,
-                &self.session.queue,
-                segments,
-            );
+            self.stage("translation_queued", &segments, 0.0);
+            translations.enqueue(segments, self.session.state.live.translation_paused());
         }
     }
 
@@ -452,7 +449,7 @@ fn final_segments(
             continue;
         }
         if !s.start.is_finite() || !s.end.is_finite() || s.end < s.start || s.text.len() > 10000 {
-            return Err("Invalid live speech response. Audio is preserved.".into());
+            return Err(crate::error::ErrorCode::InvalidLiveSpeechResponseAudioIsPreserved.into());
         }
         let start = s.start.clamp(0.0, span);
         let finish = s.end.clamp(start, span);

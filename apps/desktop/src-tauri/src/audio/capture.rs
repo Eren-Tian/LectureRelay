@@ -167,7 +167,7 @@ pub fn devices(source: InputSource) -> AppResult<Vec<InputDevice>> {
     } else {
         host.input_devices()
     })
-    .user_error("Cannot list audio devices. Check Windows permissions.")?;
+    .user_error(crate::error::ErrorCode::CannotListAudioDevicesCheckWindowsPermissions)?;
     Ok(devices
         .filter_map(|device| {
             let id = device.id().ok()?.to_string();
@@ -194,7 +194,7 @@ where
 {
     let channels = config.channels as usize;
     if channels == 0 || config.sample_rate == 0 {
-        return Err("The audio device returned an invalid format.".into());
+        return Err(crate::error::ErrorCode::TheAudioDeviceReturnedAnInvalidFormat.into());
     }
     let device_health = health.clone();
     let error_paused = paused.clone();
@@ -299,9 +299,7 @@ where
             },
             None,
         )
-        .user_error(
-            "Cannot start audio capture. Check Windows audio permissions or choose another device.",
-        )
+        .user_error(crate::error::ErrorCode::CannotStartAudioCaptureCheckWindowsAudioPermissions)
 }
 
 fn float_to_pcm(value: f32) -> i16 {

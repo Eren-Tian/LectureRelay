@@ -97,6 +97,7 @@ try {
     'localization.mjs',
     'settings-components.mjs',
     'live-summary-components.mjs',
+    'workflow-reliability.mjs',
   ];
   const requested = process.argv.slice(2);
   if (requested.some((script) => !suites.includes(script)))

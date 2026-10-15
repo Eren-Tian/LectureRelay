@@ -31,32 +31,36 @@ impl AppPaths {
         if let Some(root) = std::env::var_os("LECTURERELAY_TEST_ROOT") {
             let root = PathBuf::from(root);
             if !root.is_absolute() {
-                return Err("The test data folder must be an absolute path.".into());
+                return Err(crate::error::ErrorCode::TheTestDataFolderMustBeAnAbsolute.into());
             }
             return Self::initialize(root.join("app-data"), root.join("library"));
         }
-        let data = dirs::data_local_dir().ok_or("Cannot locate the Windows app data folder.")?;
-        let documents =
-            dirs::document_dir().ok_or("Cannot locate the Windows Documents folder.")?;
+        let data = dirs::data_local_dir()
+            .ok_or(crate::error::ErrorCode::CannotLocateTheWindowsAppDataFolder)?;
+        let documents = dirs::document_dir()
+            .ok_or(crate::error::ErrorCode::CannotLocateTheWindowsDocumentsFolder)?;
         Self::initialize(data.join("LectureRelay"), documents.join("LectureRelay"))
     }
 
     pub fn initialize(data: PathBuf, library: PathBuf) -> AppResult<Self> {
         let paths = Self { data, library };
         for dir in ["cache", "models", "logs", "temp", "recovery", "state"] {
-            std::fs::create_dir_all(paths.data.join(dir))
-                .user_error("Cannot create the app data folder. Check permissions.")?;
+            std::fs::create_dir_all(paths.data.join(dir)).user_error(
+                crate::error::ErrorCode::CannotCreateTheAppDataFolderCheckPermissions,
+            )?;
         }
         for dir in ["Courses", "Exports"] {
-            std::fs::create_dir_all(paths.library.join(dir))
-                .user_error("Cannot create the library folder. Check Documents permissions.")?;
+            std::fs::create_dir_all(paths.library.join(dir)).user_error(
+                crate::error::ErrorCode::CannotCreateTheLibraryFolderCheckDocumentsPermissions,
+            )?;
         }
         Ok(paths)
     }
 
     pub fn lecture_dir(&self, course_id: &str, lecture_id: &str) -> AppResult<PathBuf> {
         for id in [course_id, lecture_id] {
-            uuid::Uuid::parse_str(id).user_error("Invalid course or lecture identifier.")?;
+            uuid::Uuid::parse_str(id)
+                .user_error(crate::error::ErrorCode::InvalidCourseOrLectureIdentifier)?;
         }
         Ok(self
             .library
@@ -76,7 +80,7 @@ impl AppPaths {
             .truncate(false)
             .share_mode(0)
             .open(self.data.join("state").join("instance.lock"))
-            .user_error("LectureRelay is already running, or the app data folder is not writable.")
+            .user_error(crate::error::ErrorCode::LecturerelayIsAlreadyRunningOrTheAppData)
     }
 
     pub fn recording(&self, course_id: &str, lecture_id: &str) -> AppResult<PathBuf> {
@@ -102,14 +106,17 @@ impl AppPaths {
         note: Option<&Note>,
     ) -> AppResult<()> {
         let dir = self.lecture_dir(&lecture.course_id, &lecture.id)?;
-        std::fs::create_dir_all(&dir).user_error("Cannot create the lecture folder.")?;
+        std::fs::create_dir_all(&dir)
+            .user_error(crate::error::ErrorCode::CannotCreateTheLectureFolder)?;
         write_atomic(
             &dir.join("metadata.json"),
-            &serde_json::to_vec_pretty(lecture).user_error("Cannot encode lecture metadata.")?,
+            &serde_json::to_vec_pretty(lecture)
+                .user_error(crate::error::ErrorCode::CannotEncodeLectureMetadata)?,
         )?;
         write_atomic(
             &dir.join("transcript.json"),
-            &serde_json::to_vec_pretty(segments).user_error("Cannot encode transcript.")?,
+            &serde_json::to_vec_pretty(segments)
+                .user_error(crate::error::ErrorCode::CannotEncodeTranscript)?,
         )?;
         if let Some(note) = note {
             write_atomic(&dir.join("notes.md"), note.body.as_bytes())?;
@@ -122,7 +129,9 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> AppResult<()> {
     use std::io::Write;
     // A fixed .pending name lets concurrent snapshots/exports overwrite each
     // other's bytes, including different destinations with the same stem.
-    let name = path.file_name().ok_or("Invalid local file path.")?;
+    let name = path
+        .file_name()
+        .ok_or(crate::error::ErrorCode::InvalidLocalFilePath)?;
     let temporary = path.with_file_name(format!(
         ".{}.{}.pending",
         name.to_string_lossy(),
@@ -132,7 +141,7 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> AppResult<()> {
         .write(true)
         .create_new(true)
         .open(&temporary)
-        .user_error("Cannot write a local file. Check disk space.")?;
+        .user_error(crate::error::ErrorCode::CannotWriteALocalFileCheckDiskSpace)?;
     struct Temporary(PathBuf);
     impl Drop for Temporary {
         fn drop(&mut self) {
@@ -142,13 +151,14 @@ pub fn write_atomic(path: &Path, bytes: &[u8]) -> AppResult<()> {
     let cleanup = Temporary(temporary);
     let result: AppResult<()> = (|| {
         file.write_all(bytes)
-            .user_error("Cannot write the file. Check available disk space.")?;
-        file.sync_all().user_error("Cannot save file.")?;
+            .user_error(crate::error::ErrorCode::CannotWriteTheFileCheckAvailableDiskSpace)?;
+        file.sync_all()
+            .user_error(crate::error::ErrorCode::CannotSaveFile)?;
         Ok(())
     })();
     drop(file); // Close before cleanup on Windows, including a failed write/sync.
     result?;
     // Windows rename replaces an existing file through MoveFileEx semantics.
     std::fs::rename(&cleanup.0, path)
-        .user_error("Cannot update the file. Check whether another app is using it.")
+        .user_error(crate::error::ErrorCode::CannotUpdateTheFileCheckWhetherAnotherApp)
 }

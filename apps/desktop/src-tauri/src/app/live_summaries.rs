@@ -94,11 +94,13 @@ impl LiveSummaries {
         if self
             .cooldown
             .lock()
-            .user_error("Cannot read the summary rate-limit status.")?
+            .user_error(crate::error::ErrorCode::CannotReadTheSummaryRateLimitStatus)?
             .get(&provider)
             .is_some_and(|until| *until > now() as u64)
         {
-            return Err("The summary service is still rate limited. Recording and captions continue to be saved; try again later.".into());
+            return Err(
+                crate::error::ErrorCode::TheSummaryServiceIsStillRateLimitedRecording.into(),
+            );
         }
         Ok(())
     }
@@ -199,7 +201,7 @@ pub(crate) fn parse(text: &str, card: &SummaryCard) -> AppResult<(String, Vec<Su
         trimmed.into()
     };
     let mut output: Output = serde_json::from_str(&json)
-        .user_error("The summary format is incomplete. Try again; incomplete results are not shown as key points.")?;
+        .user_error(crate::error::ErrorCode::TheSummaryFormatIsIncompleteTryAgainIncomplete)?;
     if output.title.trim().is_empty()
         || output.title.chars().count() > 80
         || !(3..=5).contains(&output.points.len())
@@ -210,7 +212,7 @@ pub(crate) fn parse(text: &str, card: &SummaryCard) -> AppResult<(String, Vec<Su
                 || p.source_ids.len() > card.sources.len()
         })
     {
-        return Err("The summary length or citations are invalid. Try again.".into());
+        return Err(crate::error::ErrorCode::TheSummaryLengthOrCitationsAreInvalidTry.into());
     }
     for point in &mut output.points {
         for reference in &mut point.source_ids {
@@ -219,7 +221,7 @@ pub(crate) fn parse(text: &str, card: &SummaryCard) -> AppResult<(String, Vec<Su
                 .and_then(|s| s.parse::<usize>().ok())
                 .and_then(|i| i.checked_sub(1))
                 .filter(|i| *i < card.sources.len())
-                .ok_or("The summary cites source text that does not exist. The source is preserved; try again.")?;
+                .ok_or(crate::error::ErrorCode::TheSummaryCitesSourceTextThatDoesNot)?;
             *reference = card.sources[index].id.clone();
         }
         point.source_ids.sort();
@@ -265,7 +267,7 @@ pub async fn run(
     preferences.validate()?;
     let Some(provider) = preferences.provider.cloud().filter(|_| preferences.enabled) else {
         return if force {
-            Err("Set up and enable live summaries first.".into())
+            Err(crate::error::ErrorCode::SetUpAndEnableLiveSummariesFirst.into())
         } else {
             Ok(())
         };
@@ -276,7 +278,7 @@ pub async fn run(
             .storage
             .summary_test_matches(provider, &preferences.model)?
     {
-        return Err("Save and test an API key in live summary settings first. Recording and captions are not affected.".into());
+        return Err(crate::error::ErrorCode::SaveAndTestAnApiKeyInLive.into());
     }
     let cards = state.storage.summary_cards(lecture)?;
     let waiting = cards
@@ -284,7 +286,7 @@ pub async fn run(
         .find(|c| matches!(c.state.as_str(), "failed" | "deferred" | "stale"));
     // At most one unresolved automatic window. A failure cannot create a retry storm.
     if !force && retry.is_none() && waiting.is_some() {
-        return Err("A summary is still unfinished. Retry it on its card; new source text continues to be saved.".into());
+        return Err(crate::error::ErrorCode::ASummaryIsStillUnfinishedRetryItOn.into());
     }
     let card = if let Some(id) = retry {
         state.storage.retry_summary(lecture, id, &preferences)?
@@ -298,7 +300,7 @@ pub async fn run(
         if sources.is_empty() {
             state.summaries.message(lecture, "");
             return if force {
-                Err("There is no newly finalized English yet. Try again later.".into())
+                Err(crate::error::ErrorCode::ThereIsNoNewlyFinalizedEnglishYetTry.into())
             } else {
                 Ok(())
             };

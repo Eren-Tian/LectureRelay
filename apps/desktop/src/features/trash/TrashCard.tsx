@@ -1,6 +1,7 @@
+import { pruneDeletedDrafts } from '../study/draft-storage';
 import { ui } from '../../i18n';
 import type { Course } from '../../types/domain';
-import { api, pruneDeletedDrafts } from '../../api/client';
+import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import type { ActionRunner } from '../../hooks/useAction';
 

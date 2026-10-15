@@ -84,7 +84,7 @@ fn local_stream_preview_preemption_and_final() {
         "The actual model must stream before completing"
     );
     assert_eq!(
-        interrupted.err().unwrap(),
+        interrupted.err().unwrap().code,
         crate::providers::local::SUPERSEDED
     );
     let mut final_source = source;
@@ -139,7 +139,10 @@ fn local_text_download_cancel_verify_and_remove() {
             }
         },
     ));
-    assert_eq!(cancelled.unwrap_err(), "Model download cancelled.");
+    assert_eq!(
+        cancelled.unwrap_err().code,
+        crate::error::ErrorCode::ModelDownloadCancelled
+    );
     assert!(
         !crate::models::manager::status_for(&state, id)
             .unwrap()

@@ -6,7 +6,8 @@ use crate::{
 };
 use async_trait::async_trait;
 
-pub(crate) const OUTPUT_LIMIT: &str = "Cloud AI reached its output limit. Completed review sections are saved; retry the remaining work.";
+pub(crate) const OUTPUT_LIMIT: crate::error::ErrorCode =
+    crate::error::ErrorCode::CloudAiReachedItsOutputLimitCompletedReview;
 
 fn chat_text(value: &serde_json::Value) -> AppResult<String> {
     match value
@@ -16,18 +17,16 @@ fn chat_text(value: &serde_json::Value) -> AppResult<String> {
         Some("stop") => {}
         Some("length") => return Err(OUTPUT_LIMIT.into()),
         _ => {
-            return Err(
-                "The provider did not complete its response. Saved results are preserved.".into(),
-            );
+            return Err(crate::error::ErrorCode::TheProviderDidNotCompleteItsResponseSaved.into());
         }
     }
     let content = value
         .pointer("/choices/0/message/content")
         .and_then(|v| v.as_str())
         .filter(|v| !v.trim().is_empty())
-        .ok_or("The provider returned no valid text. Check the model configuration.")?;
+        .ok_or(crate::error::ErrorCode::TheProviderReturnedNoValidTextCheckThe)?;
     if content.len() > 100000 {
-        return Err("Provider text exceeds the size limit.".into());
+        return Err(crate::error::ErrorCode::ProviderTextExceedsTheSizeLimit.into());
     }
     Ok(content.to_owned())
 }
@@ -43,7 +42,7 @@ pub fn configured(settings: &AppSettings) -> AppResult<OfficialProvider> {
     let provider = settings
         .provider
         .cloud()
-        .ok_or("Choose an AI provider and add a key in Settings.")?;
+        .ok_or(crate::error::ErrorCode::ChooseAnAiProviderAndAddAKey)?;
     OfficialProvider::new(provider, &settings.chat_model)
 }
 
@@ -58,7 +57,7 @@ fn secure_client(headers: reqwest::header::HeaderMap) -> AppResult<reqwest::Clie
         .timeout(std::time::Duration::from_secs(120))
         .user_agent(concat!("LectureRelay/", env!("CARGO_PKG_VERSION")))
         .build()
-        .user_error("Cannot initialize a secure connection.")
+        .user_error(crate::error::ErrorCode::CannotInitializeASecureConnection)
 }
 
 impl OfficialProvider {
@@ -84,9 +83,10 @@ impl OfficialProvider {
     pub fn new(provider: CloudProvider, model: &str) -> AppResult<Self> {
         use reqwest::header::{AUTHORIZATION, HeaderMap, HeaderValue};
         let base = crate::security::endpoints::provider_base(provider);
-        let key = credentials::load(provider)?.ok_or("Add a key for this provider in Settings.")?;
+        let key = credentials::load(provider)?
+            .ok_or(crate::error::ErrorCode::AddAKeyForThisProviderInSettings)?;
         let mut authorization = HeaderValue::from_str(&format!("Bearer {}", key.as_str()))
-            .user_error("Invalid API key format. Add the key again.")?;
+            .user_error(crate::error::ErrorCode::InvalidApiKeyFormatAddTheKeyAgain)?;
         authorization.set_sensitive(true);
         let mut headers = HeaderMap::new();
         headers.insert(AUTHORIZATION, authorization);
@@ -105,7 +105,9 @@ impl OfficialProvider {
             .get(format!("{}/models", self.base))
             .send()
             .await
-            .user_error("Cannot reach the provider. Check your network connection.")?;
+            .user_error(
+                crate::error::ErrorCode::CannotReachTheProviderCheckYourNetworkConnection,
+            )?;
         let value = read_response(response).await?;
         let exists = value
             .get("data")
@@ -116,7 +118,9 @@ impl OfficialProvider {
                 })
             });
         if !exists {
-            return Err("Connected, but this text model is unavailable. Check the model and account permissions.".into());
+            return Err(
+                crate::error::ErrorCode::ConnectedButThisTextModelIsUnavailableCheck.into(),
+            );
         }
         Ok(())
     }
@@ -132,7 +136,7 @@ impl OfficialProvider {
             .json(&body)
             .send()
             .await
-            .user_error("AI request failed or timed out. Check your network and try again.")?;
+            .user_error(crate::error::ErrorCode::AiRequestFailedOrTimedOutCheckYour)?;
         let value = read_response(response).await?;
         chat_text(&value)
     }
@@ -166,7 +170,7 @@ impl TranscriptionProvider for OfficialProvider {
         let part = reqwest::multipart::Part::bytes(wav)
             .file_name("lecture-chunk.wav")
             .mime_str("audio/wav")
-            .user_error("Cannot encode audio upload.")?;
+            .user_error(crate::error::ErrorCode::CannotEncodeAudioUpload)?;
         let form = reqwest::multipart::Form::new()
             .part("file", part)
             .text("model", model)
@@ -180,17 +184,17 @@ impl TranscriptionProvider for OfficialProvider {
             .multipart(form)
             .send()
             .await
-            .user_error("Transcription failed or timed out. Saved audio is preserved.")?;
+            .user_error(crate::error::ErrorCode::TranscriptionFailedOrTimedOutSavedAudioIs)?;
         let value = read_response(response).await?;
         if let Some(segments) = value.get("segments") {
             let parsed: Vec<SpeechSegment> = serde_json::from_value(segments.clone())
-                .user_error("Invalid timestamps in the provider response.")?;
+                .user_error(crate::error::ErrorCode::InvalidTimestampsInTheProviderResponse)?;
             return Ok(parsed);
         }
         let text = value
             .get("text")
             .and_then(|text| text.as_str())
-            .ok_or("The provider returned no transcript.")?;
+            .ok_or(crate::error::ErrorCode::TheProviderReturnedNoTranscript)?;
         let duration = value
             .get("duration")
             .and_then(|value| value.as_f64())
@@ -222,7 +226,8 @@ impl TranslationProvider for OfficialProvider {
         );
         let user = format!(
             "COURSE CONTEXT (data):\n{context}\nSEGMENTS (data):\n{}",
-            serde_json::to_string(&entries).user_error("Cannot encode translation input.")?
+            serde_json::to_string(&entries)
+                .user_error(crate::error::ErrorCode::CannotEncodeTranslationInput)?
         );
         let result = self.chat(&system, &user).await?;
         parse_translations(&result)
@@ -294,8 +299,9 @@ pub fn parse_translations(text: &str) -> AppResult<Vec<Translation>> {
     } else {
         text.to_owned()
     };
-    serde_json::from_str(&text)
-        .user_error("Invalid translation response. English is preserved; try translation again.")
+    serde_json::from_str(&text).user_error(
+        crate::error::ErrorCode::InvalidTranslationResponseEnglishIsPreservedTryTranslation,
+    )
 }
 
 #[cfg(test)]

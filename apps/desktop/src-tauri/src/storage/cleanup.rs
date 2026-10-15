@@ -31,7 +31,7 @@ fn safe(root: &Path, relative: &Path) -> AppResult<PathBuf> {
         .any(|p| !matches!(p, std::path::Component::Normal(_)))
         || relative.as_os_str().is_empty()
     {
-        return Err("Invalid cleanup path. Nothing was deleted.".into());
+        return Err(crate::error::ErrorCode::InvalidCleanupPathNothingWasDeleted.into());
     }
     // Refuse reparse points at every level, including redirected roots.
     let mut path = root.to_path_buf();
@@ -44,17 +44,25 @@ fn safe(root: &Path, relative: &Path) -> AppResult<PathBuf> {
 }
 fn check_tree_root(path: &Path) -> AppResult<()> {
     match fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_attributes() & 0x400 != 0 => Err("Storage contains a link or junction. Cleanup was stopped to protect files outside LectureRelay.".into()),
+        Ok(metadata) if metadata.file_attributes() & 0x400 != 0 => {
+            Err(crate::error::ErrorCode::StorageContainsALinkOrJunctionCleanupWas.into())
+        }
         Ok(_) => Ok(()),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
-        Err(_) => Err("Cannot inspect storage for cleanup. Check permissions.".into()),
+        Err(_) => {
+            Err(crate::error::ErrorCode::CannotInspectStorageForCleanupCheckPermissions.into())
+        }
     }
 }
 fn inspect_tree(path: &Path) -> AppResult<()> {
     check_tree_root(path)?;
     if path.is_dir() {
-        for entry in fs::read_dir(path).user_error("Cannot inspect storage.")? {
-            inspect_tree(&entry.user_error("Cannot inspect storage.")?.path())?;
+        for entry in fs::read_dir(path).user_error(crate::error::ErrorCode::CannotInspectStorage)? {
+            inspect_tree(
+                &entry
+                    .user_error(crate::error::ErrorCode::CannotInspectStorage)?
+                    .path(),
+            )?;
         }
     }
     Ok(())
@@ -77,7 +85,7 @@ fn pair(paths: &AppPaths, entry: &Entry) -> AppResult<(PathBuf, PathBuf)> {
         ) && names.len() <= 2
     };
     if !allowed {
-        return Err("Invalid cleanup scope. Files were preserved.".into());
+        return Err(crate::error::ErrorCode::InvalidCleanupScopeFilesWerePreserved.into());
     }
     let root = if entry.library {
         &paths.library
@@ -98,23 +106,31 @@ fn settle(paths: &AppPaths, db: &Storage, journal: &Journal) -> AppResult<()> {
         }
         if committed {
             inspect_tree(&staged)?;
-            if staged.is_dir() { fs::remove_dir_all(&staged) } else { fs::remove_file(&staged) }
-                .user_error("Content was deleted, but some files could not be freed. Restart LectureRelay to retry cleanup.")?;
+            if staged.is_dir() {
+                fs::remove_dir_all(&staged)
+            } else {
+                fs::remove_file(&staged)
+            }
+            .user_error(crate::error::ErrorCode::ContentWasDeletedButSomeFilesCouldNot)?;
         } else {
             // Startup may have created an empty root before recovery. Never remove nonempty data.
             if original.is_dir()
                 && fs::read_dir(&original)
-                    .user_error("Cannot inspect cleanup recovery.")?
+                    .user_error(crate::error::ErrorCode::CannotInspectCleanupRecovery)?
                     .next()
                     .is_none()
             {
-                fs::remove_dir(&original).user_error("Cannot restore interrupted cleanup.")?;
+                fs::remove_dir(&original)
+                    .user_error(crate::error::ErrorCode::CannotRestoreInterruptedCleanup)?;
             }
             if original.exists() {
-                return Err("Cleanup recovery found conflicting files. Keep both folders and restart after resolving the conflict.".into());
+                return Err(
+                    crate::error::ErrorCode::CleanupRecoveryFoundConflictingFilesKeepBothFolders
+                        .into(),
+                );
             }
             fs::rename(&staged, &original)
-                .user_error("Cannot restore files after interrupted cleanup.")?;
+                .user_error(crate::error::ErrorCode::CannotRestoreFilesAfterInterruptedCleanup)?;
         }
     }
     fs::remove_file(
@@ -123,31 +139,34 @@ fn settle(paths: &AppPaths, db: &Storage, journal: &Journal) -> AppResult<()> {
             .join("state")
             .join(format!("cleanup-{}.json", journal.id)),
     )
-    .user_error("Cannot finish cleanup recovery.")?;
+    .user_error(crate::error::ErrorCode::CannotFinishCleanupRecovery)?;
     db.forget_cleanup(&journal.id)
 }
 
 pub fn recover(paths: &AppPaths, db: &Storage) -> AppResult<()> {
     let dir = safe(&paths.data, Path::new("state"))?;
-    for entry in fs::read_dir(dir).user_error("Cannot inspect cleanup recovery.")? {
-        let entry = entry.user_error("Cannot inspect cleanup recovery.")?;
+    for entry in
+        fs::read_dir(dir).user_error(crate::error::ErrorCode::CannotInspectCleanupRecovery)?
+    {
+        let entry = entry.user_error(crate::error::ErrorCode::CannotInspectCleanupRecovery)?;
         let name = entry.file_name().to_string_lossy().into_owned();
         if !name.starts_with("cleanup-") || !name.ends_with(".json") {
             continue;
         }
         check_tree_root(&entry.path())?;
         let journal: Journal = serde_json::from_slice(
-            &fs::read(entry.path()).user_error("Cannot read cleanup journal.")?,
+            &fs::read(entry.path())
+                .user_error(crate::error::ErrorCode::CannotReadCleanupJournal)?,
         )
-        .user_error("Invalid cleanup journal.")?;
+        .user_error(crate::error::ErrorCode::InvalidCleanupJournal)?;
         uuid::Uuid::parse_str(&journal.id).map_err(|_| "Invalid cleanup journal.")?;
         if name != format!("cleanup-{}.json", journal.id) {
-            return Err("Invalid cleanup journal name.".into());
+            return Err(crate::error::ErrorCode::InvalidCleanupJournalName.into());
         }
         // An interrupted journal may only refer to our staged files.
         for (i, item) in journal.entries.iter().enumerate() {
             if item.staged != format!(".cleanup-{}-{i}", journal.id) {
-                return Err("Invalid cleanup destination.".into());
+                return Err(crate::error::ErrorCode::InvalidCleanupDestination.into());
             }
         }
         settle(paths, db, &journal)?;
@@ -160,7 +179,7 @@ pub fn run(paths: &AppPaths, db: &Storage, course: Option<&str>) -> AppResult<Ve
     let ids: Vec<String> = if let Some(id) = course {
         uuid::Uuid::parse_str(id).map_err(|_| "Invalid course.")?;
         if !db.trash()?.iter().any(|c| c.id == id) {
-            return Err("Move this course to Trash before deleting it permanently.".into());
+            return Err(crate::error::ErrorCode::MoveThisCourseToTrashBeforeDeletingIt.into());
         }
         db.lectures(id)?.into_iter().map(|l| l.id).collect()
     } else {
@@ -203,7 +222,7 @@ pub fn delete_lecture(paths: &AppPaths, db: &Storage, id: &str) -> AppResult<()>
     // Validate both identifiers before deriving any deletion path.
     paths.lecture_dir(&lecture.course_id, id)?;
     if lecture.status == crate::domain::LectureStatus::Recording {
-        return Err("Stop and save this lecture before deleting it.".into());
+        return Err(crate::error::ErrorCode::StopAndSaveThisLectureBeforeDeletingIt.into());
     }
     let mut targets = vec![(true, Path::new("Courses").join(&lecture.course_id).join(id))];
     targets.extend(lecture_extras(paths, &[id.to_owned()])?);
@@ -217,9 +236,9 @@ fn lecture_extras(paths: &AppPaths, ids: &[String]) -> AppResult<Vec<(bool, Path
     for (library, folder) in [(true, "Exports"), (false, "logs"), (false, "recovery")] {
         let root = if library { &paths.library } else { &paths.data };
         for entry in fs::read_dir(safe(root, Path::new(folder))?)
-            .user_error("Cannot inspect course files.")?
+            .user_error(crate::error::ErrorCode::CannotInspectCourseFiles)?
         {
-            let entry = entry.user_error("Cannot inspect course files.")?;
+            let entry = entry.user_error(crate::error::ErrorCode::CannotInspectCourseFiles)?;
             let name = entry.file_name().to_string_lossy().into_owned();
             if ids
                 .iter()
@@ -262,17 +281,17 @@ fn execute(
     )?;
     write_atomic(
         &journal_path,
-        &serde_json::to_vec(&journal).user_error("Cannot prepare cleanup journal.")?,
+        &serde_json::to_vec(&journal)
+            .user_error(crate::error::ErrorCode::CannotPrepareCleanupJournal)?,
     )?;
     let result = (|| {
         for entry in &journal.entries {
             let (original, staged) = pair(paths, entry)?;
             if staged.exists() {
-                return Err("Cleanup destination already exists.".into());
+                return Err(crate::error::ErrorCode::CleanupDestinationAlreadyExists.into());
             }
-            fs::rename(original, staged).user_error(
-                "Cannot free storage while files are in use. Close external players and try again.",
-            )?;
+            fs::rename(original, staged)
+                .user_error(crate::error::ErrorCode::CannotFreeStorageWhileFilesAreInUse)?;
         }
         commit(&journal.id)
     })();

@@ -199,6 +199,8 @@ export const nativeErrorKeys: Record<string, string> = {
   model_download_cancelled: 'Model download cancelled.',
   model_integrity_check_failed_download_again:
     'Model integrity check failed. Download again.',
+  model_download_inside_another_app:
+    'LectureRelay was started from another app, which would store this download separately. Open LectureRelay from the Start menu to download models.',
   authorization_rejected_check_your_api_key_and_account:
     'Authorization rejected. Check your API key and account permissions.',
   model_or_endpoint_unavailable_check_the_model_name:

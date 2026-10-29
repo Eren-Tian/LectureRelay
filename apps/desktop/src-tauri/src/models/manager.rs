@@ -74,16 +74,10 @@ pub fn status_for(state: &AppState, id: &str) -> AppResult<ModelStatus> {
     let installed = path_for(state, id)?
         .metadata()
         .is_ok_and(|m| m.len() == model.size)
-        && state.paths.data.join(format!("models/{id}.json")).is_file()
         && std::fs::read(state.paths.data.join(format!("models/{id}.json")))
             .ok()
             .and_then(|bytes| serde_json::from_slice::<serde_json::Value>(&bytes).ok())
-            .is_some_and(|m| {
-                m["id"] == id
-                    && m["revision"] == model.revision
-                    && m["sha256"] == model.sha256
-                    && m["runtimeVersion"] == model.runtime
-            });
+            .is_some_and(|m| manifest_matches(&m, &model));
     Ok(ModelStatus {
         id: id.into(),
         name: model.name.into(),
@@ -97,6 +91,30 @@ pub fn status_for(state: &AppState, id: &str) -> AppResult<ModelStatus> {
         error: None,
     })
 }
+/// Whether an install manifest names exactly the catalog's weights. The
+/// runtime version is informational only: a runtime that needs different
+/// weights changes the catalog revision, so a runtime upgrade alone never
+/// downloads an identical file again.
+fn manifest_matches(manifest: &serde_json::Value, model: &catalog::Model) -> bool {
+    manifest["id"] == model.id
+        && manifest["revision"] == model.revision
+        && manifest["sha256"] == model.sha256
+}
+
+/// Removes `.part` files left by a download that the app did not finish
+/// (closed or crashed). Call before any download can start.
+pub(crate) fn discard_partial_downloads(models: &std::path::Path) {
+    let Ok(entries) = std::fs::read_dir(models) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().is_some_and(|e| e == "part") {
+            let _ = std::fs::remove_file(path);
+        }
+    }
+}
+
 pub async fn download<R: tauri::Runtime>(
     state: &AppState,
     app: &tauri::AppHandle<R>,
@@ -141,6 +159,12 @@ pub(crate) async fn download_model_from(
         let value = status_for(state, id)?;
         if value.installed {
             return Ok(());
+        }
+        // Inside another app's package, the file would land in that package's
+        // private AppData copy: invisible to a normally started LectureRelay,
+        // which would then download the same model again.
+        if state.paths.host_package.is_some() {
+            return Err(crate::error::ErrorCode::ModelDownloadInsideAnotherApp.into());
         }
         state.models.cancel.store(false, Ordering::Relaxed);
         let mut value = value;
@@ -267,6 +291,37 @@ async fn cancellable<T, E>(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn installed_manifest_ignores_runtime_version_but_not_the_weights() {
+        let model = catalog::get(catalog::STUDY).unwrap();
+        let manifest = |id: &str, revision: &str, sha256: &str, runtime: &str| serde_json::json!({"id": id, "revision": revision, "sha256": sha256, "runtimeVersion": runtime});
+        assert!(manifest_matches(
+            &manifest(model.id, model.revision, model.sha256, model.runtime),
+            &model
+        ));
+        assert!(manifest_matches(
+            &manifest(model.id, model.revision, model.sha256, "llama.cpp b99999"),
+            &model
+        ));
+        assert!(!manifest_matches(
+            &manifest(model.id, "older-revision", model.sha256, model.runtime),
+            &model
+        ));
+        assert!(!manifest_matches(
+            &manifest(model.id, model.revision, "0000", model.runtime),
+            &model
+        ));
+        assert!(!manifest_matches(
+            &manifest(
+                catalog::TRANSLATION,
+                model.revision,
+                model.sha256,
+                model.runtime
+            ),
+            &model
+        ));
+    }
+
     #[test]
     fn cancellation_interrupts_stalled_network_without_waiting_for_request_timeout() {
         let cancel = std::sync::Arc::new(AtomicBool::new(false));

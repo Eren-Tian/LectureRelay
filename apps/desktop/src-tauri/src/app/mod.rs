@@ -34,6 +34,8 @@ pub fn run() {
         .setup(|app| {
             let paths = storage::AppPaths::production()?;
             let instance_lock = paths.acquire_instance_lock()?;
+            // The instance lock guarantees no download is in progress.
+            model_manager::discard_partial_downloads(&paths.data.join("models"));
             let storage = Arc::new(database::Storage::open(&paths.data.join("app.db"))?);
             storage::cleanup::recover(&paths, &storage)?;
             let recovered_count = storage.recover(&paths)?;

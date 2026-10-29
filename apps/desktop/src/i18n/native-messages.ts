@@ -195,6 +195,8 @@ export const nativeMessages: Record<string, string> = {
   'Model download cancelled.': '模型下载已取消。',
   'Model integrity check failed. Download again.':
     '模型未通过完整性校验，请重新下载。',
+  'LectureRelay was started from another app, which would store this download separately. Open LectureRelay from the Start menu to download models.':
+    'LectureRelay 当前由其他应用启动，在此下载的模型会被单独存放、重复占用空间。请从开始菜单打开 LectureRelay 后再下载模型。',
   'Authorization rejected. Check your API key and account permissions.':
     '认证失败，请检查 API Key 和账号权限。',
   'Model or endpoint unavailable. Check the model name.':

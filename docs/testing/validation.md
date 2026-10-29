@@ -25,6 +25,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File scripts/test/native-smoke.ps
 
 Authenticated cloud acceptance is separate and requires an explicitly supplied valid key. Do not infer success from connection metadata, mock results or missing-key checks.
 
+## Packaged-app detection
+
+LectureRelay refuses model downloads when it runs inside another app's MSIX package, because Windows would redirect the file into that package's private AppData. To check detection against a real package, run the library test binary inside one (example: the Codex desktop app) and read the result:
+
+```powershell
+Invoke-CommandInDesktopPackage -PackageFamilyName <family> -AppId <app> -Command <lecturerelay_desktop_lib test exe> -Args '--ignored --exact tests::acceptance::report_host_package_for_manual_package_check'
+Get-Content target/package-probe/host-package.txt
+```
+
+An ordinary run writes `None`; inside a package it writes `Some("<package full name>")`.
+
 ## Live session with real lecture audio
 
 `live_session_transcribes_and_translates_a_real_lecture` runs the complete live session in an isolated library: the recognition loop with the real Nemotron worker and live translation with the real Hy-MT2 runtime. It writes the documented 90-second MIT OCW clip (see [audio sources](audio-sources.md)) into the lecture recording at real-time pace, refreshing the WAV header every second like the recorder, then stops and checks saved finals, translations, timeline order, provenance, emitted states and the performance file. It needs the pinned speech model in `target/asr-evaluation/models`, the text models in `target/local-ai-evaluation/models` and `pnpm build:asr`/`pnpm build:text` staging. It does not capture from an audio device.

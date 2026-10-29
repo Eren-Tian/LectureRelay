@@ -20,7 +20,9 @@ Install the Windows EXE. No LectureRelay login, API key, Python, Ollama or devel
 | Translation candidate                      | Hy-MT2-1.8B Q4_K_M                     | 1,081 MiB |
 | Summary, review, Q&A; optional translation | Qwen3.5-4B Q4_K_M (Unsloth conversion) | 2,614 MiB |
 
-All three need about **4.3 GiB** of disk space plus app files and recordings. Working memory is additional. A GPU is not required. Downloads are optional and independent; Qwen translation and study tools reuse the same file.
+All three need about **4.3 GiB** of disk space plus app files and recordings. Working memory is additional. A GPU is not required. Downloads are optional and independent; Qwen translation and study tools reuse the same file. Each model is stored once in `%LOCALAPPDATA%\LectureRelay\models` and every feature uses that copy.
+
+Download models from LectureRelay opened from the Start menu or desktop shortcut. When another packaged app (for example the Codex desktop app) starts LectureRelay, Windows stores files LectureRelay creates under AppData in that app's private folder, where a normally opened LectureRelay cannot find them. LectureRelay therefore refuses downloads in that situation instead of storing a second copy; models that are already downloaded keep working.
 
 **Quiet Mode** makes all local AI share at most four logical CPUs. Turning it off allows all CPUs available to the app. Running processes receive the affinity change immediately; a text worker's thread pool is refreshed on its next request. Models are released when their task finishes or is cancelled. Post-class study waits until recording and live processing finish.
 

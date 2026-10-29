@@ -128,6 +128,7 @@ pub enum ErrorCode {
     ModelExceedsTheExpectedSize,
     ModelDownloadCancelled,
     ModelIntegrityCheckFailedDownloadAgain,
+    ModelDownloadInsideAnotherApp,
     AuthorizationRejectedCheckYourApiKeyAndAccount,
     ModelOrEndpointUnavailableCheckTheModelName,
     AudioChunkExceedsTheProviderLimit,
@@ -750,6 +751,9 @@ impl ErrorCode {
             Self::ModelDownloadCancelled => "Model download cancelled.",
             Self::ModelIntegrityCheckFailedDownloadAgain => {
                 "Model integrity check failed. Download again."
+            }
+            Self::ModelDownloadInsideAnotherApp => {
+                "LectureRelay was started from another app, which would store this download separately. Open LectureRelay from the Start menu to download models."
             }
             Self::AuthorizationRejectedCheckYourApiKeyAndAccount => {
                 "Authorization rejected. Check your API key and account permissions."
@@ -1641,6 +1645,9 @@ impl ErrorCode {
             "Model download cancelled." => Self::ModelDownloadCancelled,
             "Model integrity check failed. Download again." => {
                 Self::ModelIntegrityCheckFailedDownloadAgain
+            }
+            "LectureRelay was started from another app, which would store this download separately. Open LectureRelay from the Start menu to download models." => {
+                Self::ModelDownloadInsideAnotherApp
             }
             "Authorization rejected. Check your API key and account permissions." => {
                 Self::AuthorizationRejectedCheckYourApiKeyAndAccount

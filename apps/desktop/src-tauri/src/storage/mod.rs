@@ -11,6 +11,11 @@ use std::path::{Path, PathBuf};
 pub struct AppPaths {
     pub data: PathBuf,
     pub library: PathBuf,
+    /// The MSIX package this process runs inside, such as another app that
+    /// started LectureRelay. Windows then stores files LectureRelay creates
+    /// under AppData in that package's private folder, where a normally started
+    /// LectureRelay cannot see them. `None` for ordinary starts and test roots.
+    pub host_package: Option<String>,
 }
 
 #[derive(serde::Serialize)]
@@ -21,6 +26,35 @@ pub struct StorageInfo {
     pub exports: String,
     pub state: String,
     pub version: &'static str,
+}
+
+/// Full name of the MSIX package this process runs inside, if any. An ordinary
+/// start has no package identity; a process launched from a packaged app such
+/// as Codex inherits that app's identity and its AppData redirection.
+pub(crate) fn host_package() -> Option<String> {
+    use windows::{
+        Win32::{
+            Foundation::{ERROR_INSUFFICIENT_BUFFER, ERROR_SUCCESS},
+            Storage::Packaging::Appx::GetCurrentPackageFullName,
+        },
+        core::PWSTR,
+    };
+    let mut length = 0u32;
+    // SAFETY: No buffer and a zero length only query the required length;
+    // `length` is a live out-parameter.
+    if unsafe { GetCurrentPackageFullName(&mut length, None) } != ERROR_INSUFFICIENT_BUFFER {
+        return None; // APPMODEL_ERROR_NO_PACKAGE: not packaged.
+    }
+    let mut name = vec![0u16; length as usize];
+    // SAFETY: `name` holds exactly `length` UTF-16 units, the capacity passed.
+    let result = unsafe { GetCurrentPackageFullName(&mut length, Some(PWSTR(name.as_mut_ptr()))) };
+    let end = name.iter().position(|&c| c == 0).unwrap_or(name.len());
+    // A package identity exists even if the name could not be read.
+    Some(if result == ERROR_SUCCESS {
+        String::from_utf16_lossy(&name[..end])
+    } else {
+        String::new()
+    })
 }
 
 impl AppPaths {
@@ -39,11 +73,18 @@ impl AppPaths {
             .ok_or(crate::error::ErrorCode::CannotLocateTheWindowsAppDataFolder)?;
         let documents = dirs::document_dir()
             .ok_or(crate::error::ErrorCode::CannotLocateTheWindowsDocumentsFolder)?;
-        Self::initialize(data.join("LectureRelay"), documents.join("LectureRelay"))
+        let mut paths =
+            Self::initialize(data.join("LectureRelay"), documents.join("LectureRelay"))?;
+        paths.host_package = host_package();
+        Ok(paths)
     }
 
     pub fn initialize(data: PathBuf, library: PathBuf) -> AppResult<Self> {
-        let paths = Self { data, library };
+        let paths = Self {
+            data,
+            library,
+            host_package: None,
+        };
         for dir in ["cache", "models", "logs", "temp", "recovery", "state"] {
             std::fs::create_dir_all(paths.data.join(dir)).user_error(
                 crate::error::ErrorCode::CannotCreateTheAppDataFolderCheckPermissions,

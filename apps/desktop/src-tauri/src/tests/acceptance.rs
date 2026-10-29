@@ -1,6 +1,76 @@
 use super::*;
 
 #[test]
+fn model_download_inside_another_package_is_refused_before_any_file_is_created() {
+    use std::sync::{Arc, Mutex};
+    let fixture = Fixture::new();
+    let mut paths = fixture.paths.clone();
+    paths.host_package = Some("OpenAI.Codex_1.0.0.0_x64__test".into());
+    let state = crate::AppState {
+        audio_preview: Default::default(),
+        performance: crate::speech::local::performance::Performance::new(true).unwrap(),
+        storage: Arc::new(fixture.db()),
+        paths,
+        recorder: Default::default(),
+        jobs: Default::default(),
+        live: Default::default(),
+        summaries: Default::default(),
+        models: Default::default(),
+        runtime: fixture.root.join("unused-runtime"),
+        gate: Mutex::new(()),
+        recovered_count: 0,
+        _instance_lock: fixture.paths.acquire_instance_lock().unwrap(),
+    };
+    let events = Mutex::new(0);
+    // Port 9 (discard) is never contacted: the guard runs before any request.
+    let result = tauri::async_runtime::block_on(crate::models::manager::download_model_from(
+        &state,
+        crate::models::catalog::STUDY,
+        "http://127.0.0.1:9/model",
+        |_| *events.lock().unwrap() += 1,
+    ));
+    assert_eq!(
+        result.unwrap_err().code,
+        crate::error::ErrorCode::ModelDownloadInsideAnotherApp
+    );
+    assert_eq!(*events.lock().unwrap(), 0);
+    assert!(state.models.active.lock().unwrap().is_none());
+    assert!(
+        std::fs::read_dir(fixture.paths.data.join("models"))
+            .unwrap()
+            .next()
+            .is_none()
+    );
+}
+
+#[test]
+fn startup_discards_unfinished_model_downloads_only() {
+    let fixture = Fixture::new();
+    let models = fixture.paths.data.join("models");
+    std::fs::write(models.join("Qwen3.5-4B-Q4_K_M.part"), b"partial").unwrap();
+    std::fs::write(models.join("Hy-MT2-1.8B-Q4_K_M.gguf"), b"weights").unwrap();
+    std::fs::write(models.join("hy-mt2-1.8b.json"), b"{}").unwrap();
+    crate::models::manager::discard_partial_downloads(&models);
+    assert!(!models.join("Qwen3.5-4B-Q4_K_M.part").exists());
+    assert!(models.join("Hy-MT2-1.8B-Q4_K_M.gguf").exists());
+    assert!(models.join("hy-mt2-1.8b.json").exists());
+}
+
+#[test]
+fn an_ordinary_process_has_no_host_package() {
+    assert_eq!(crate::storage::host_package(), None);
+}
+
+#[test]
+#[ignore = "run the test binary inside a packaged app; see docs/testing/validation.md"]
+fn report_host_package_for_manual_package_check() {
+    let out = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../../target/package-probe/host-package.txt");
+    std::fs::create_dir_all(out.parent().unwrap()).unwrap();
+    std::fs::write(out, format!("{:?}", crate::storage::host_package())).unwrap();
+}
+
+#[test]
 fn model_download_announces_connection_and_allows_cancellation_before_network() {
     use std::sync::{
         Arc, Mutex,

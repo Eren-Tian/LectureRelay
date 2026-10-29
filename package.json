@@ -1,6 +1,6 @@
 {
   "name": "lecturerelay",
-  "version": "0.3.16",
+  "version": "0.3.17",
   "private": true,
   "description": "LectureRelay Windows development workspace",
   "packageManager": "pnpm@11.25.0",

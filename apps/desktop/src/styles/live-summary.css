@@ -2,6 +2,7 @@
 .live-summary-panel {
   display: grid;
   gap: 14px;
+  container: live-summary / inline-size;
 }
 .live-summary-heading {
   display: flex;
@@ -10,39 +11,153 @@
   gap: 12px;
 }
 .live-summary-heading h2 {
-  margin: 0 0 6px;
-  font-size: 17px;
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.35;
+}
+.live-summary-heading p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
 }
 .summary-live-status,
 .summary-empty {
+  display: grid;
+  gap: 10px;
   background: var(--paper);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 14px;
+  border-radius: 12px;
+  padding: 12px 14px;
   font-size: 13px;
   line-height: 1.65;
 }
+.summary-empty p {
+  margin: 0;
+}
+/* Status, then actions, on one row; the progress bar runs underneath. */
+.summary-live-status {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+.summary-live-status > span {
+  grid-area: 1 / 1;
+}
 .summary-live-status .button-row {
-  margin-top: 10px;
+  grid-area: 1 / 2;
+  margin: 0;
+}
+.summary-live-status .summary-progress {
+  grid-area: 2 / 1 / 3 / -1;
+}
+.summary-live-status .button {
+  padding: 7px 14px;
+  font-size: 13px;
+}
+@container live-summary (width < 440px) {
+  .summary-live-status {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .summary-live-status > span,
+  .summary-live-status .button-row,
+  .summary-live-status .summary-progress {
+    grid-area: auto;
+  }
+}
+.summary-empty .button {
+  justify-self: start;
+}
+.summary-progress {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--soft);
+  overflow: hidden;
+}
+.summary-progress span {
+  display: block;
+  height: 100%;
+  background: var(--sage);
+  transform-origin: left;
+  transition: transform 400ms ease;
+}
+.summary-progress span.working {
+  animation: summary-working 1.4s ease-in-out infinite;
+}
+@keyframes summary-working {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .summary-progress span {
+    transition: none;
+  }
+  .summary-progress span.working {
+    animation: none;
+  }
+}
+.live-summary-panel .summary-card {
+  margin: 0;
+  padding: 14px 18px 12px;
+  border-radius: 14px;
+}
+.live-summary-panel .summary-card header {
+  justify-content: flex-start;
+  font-size: 12px;
+  color: var(--muted);
+}
+.live-summary-panel .summary-time {
+  margin: 0;
+}
+.summary-badge {
+  border-radius: 999px;
+  padding: 1px 9px;
+  background: var(--sage);
+  color: var(--on-accent);
+  font-size: 11px;
+  font-weight: 600;
+}
+.summary-latest {
+  border-color: var(--sage);
+  box-shadow: inset 4px 0 var(--sage);
+}
+.summary-title {
+  margin: 6px 0 0;
+  font-size: 17px;
+  line-height: 1.45;
+  text-wrap: balance;
 }
 .summary-points {
   padding-left: 20px;
-  margin: 12px 0;
-  font-size: 14px;
-  line-height: 1.8;
+  margin: 10px 0 6px;
+  font-size: 15px;
+  line-height: 1.75;
 }
 .summary-points li + li {
-  margin-top: 12px;
+  margin-top: 8px;
 }
 .summary-references {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
+  vertical-align: 1px;
 }
 .summary-references .text-button {
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--soft);
   font-size: 12px;
-  text-decoration: underline;
-  text-underline-offset: 3px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.6;
+}
+.summary-references .text-button:hover {
+  text-decoration: none;
+  background: var(--hover);
+}
+.live-summary-panel .summary-card details {
+  margin: 4px 0;
 }
 .summary-archive {
   margin-top: 22px;

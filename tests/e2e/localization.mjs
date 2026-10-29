@@ -195,6 +195,62 @@ try {
   assert.match(model, /下载 Hy-MT2-1.8B · Q4_K_M/);
   assert.match(model, /设置 → AI 与模型 → 本地模型/);
   assert.match(model, /尚未上传任何文本/);
+  // A lecture in progress with live summaries on, at a common laptop size:
+  // the newest summary leads, is readable without scrolling and gets a
+  // full-height column beside the captions.
+  await d.command('POST', '/window/rect', { width: 1366, height: 768 });
+  const laptop = await d.read('return {width:innerWidth,height:innerHeight};');
+  await d.command('POST', '/window/rect', {
+    width: 1366 + 1366 - laptop.width,
+    height: 768 + 768 - laptop.height,
+  });
+  await d.command('POST', '/url', {
+    url:
+      process.env.LECTURERELAY_COMPONENT_URL +
+      '/tests/fixtures/localization.html?classroom',
+  });
+  await until('return !!document.querySelector(".course-card");');
+  await d.click('aside button[aria-label="Introduction to Biology"]');
+  await click('开始录音');
+  await until(
+    'return !!document.querySelector(".modal select option[value=fixture-device]");',
+  );
+  await d.read('document.querySelector(".modal form").requestSubmit();');
+  await until(
+    'return document.querySelectorAll(".live-summary-panel .summary-card").length===2;',
+  );
+  const classroom = await d.read(`
+    const box = (s) => document.querySelector(s).getBoundingClientRect();
+    const first = document.querySelector('.live-summary-panel .summary-card');
+    return {
+      latest: first.classList.contains('summary-latest'),
+      title: first.querySelector('.summary-title').textContent,
+      badge: first.querySelector('.summary-badge')?.textContent,
+      firstPointBottom: first.querySelector('.summary-points li').getBoundingClientRect().bottom,
+      height: innerHeight,
+      tools: box('.study-tools').width,
+      columns: box('.study-columns').width,
+      progress: !!document.querySelector('.summary-progress'),
+      notice: !!document.querySelector('.classroom-notice'),
+      chip: document.querySelector('.classroom-chip')?.textContent,
+    };`);
+  assert.equal(classroom.latest, true);
+  assert.equal(classroom.title, '线粒体中的能量转换');
+  assert.equal(classroom.badge, '最新');
+  assert.ok(
+    classroom.firstPointBottom < classroom.height - 150,
+    `newest summary below the fold: ${JSON.stringify(classroom)}`,
+  );
+  assert.ok(classroom.tools >= classroom.columns * 0.4, 'summary column');
+  assert.ok(classroom.progress && !classroom.notice);
+  assert.match(classroom.chip, /英文识别进度正常/);
+  await d.read(
+    'document.querySelector(".study-tabs [aria-selected=true]").dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true}));',
+  );
+  await until(
+    'return document.querySelector(".study-tabs [aria-selected=true]").textContent==="我的笔记" && document.activeElement.textContent==="我的笔记";',
+  );
+  await screenshot('live-summary-classroom');
   const report = {
     passed: true,
     scope:
@@ -204,6 +260,7 @@ try {
     subjectIdentifierPreserved: true,
     destructiveConfirmationsRetained: true,
     dynamicWarningsTranslated: true,
+    newestLiveSummaryLeadsAndIsVisible: true,
   };
   await fs.writeFile(`${output}/results.json`, JSON.stringify(report, null, 2));
   console.log(JSON.stringify(report));

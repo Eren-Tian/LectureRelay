@@ -439,6 +439,13 @@ export const en = {
     'Remaining excerpts are waiting to be summarized',
   liveSummaryCollecting: (seconds: number) =>
     `Collecting new English · ${seconds}s`,
+  liveSummaryCadence: (minutes: number) =>
+    `Summarizes every ${minutes} minutes; newest first`,
+  liveSummaryProgress: (collected: string, interval: string) =>
+    `Collected ${collected} of ${interval}; summarizes automatically when full`,
+  liveSummaryLatest: 'Latest',
+  liveSummaryOffHint:
+    'When on, new lecture content becomes key-point cards every few minutes, each point linked to its original audio.',
   liveSummarySummarizeNow: 'Summarize Now',
   liveSummarySummarizeRemaining: 'Summarize Remaining Excerpts',
   liveSummaryTurnOffAuto: 'Turn Off Auto-Summary',

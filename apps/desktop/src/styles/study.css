@@ -233,16 +233,28 @@
   flex-shrink: 0;
   font-size: 12px;
 }
+/* Narrow windows switch panels with a segmented control. */
 .workspace-switcher .tabs {
   width: 100%;
   margin: 0;
+  gap: 4px;
+  padding: 4px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 12px;
 }
 .workspace-switcher .tabs button {
   flex: 1;
+  justify-content: center;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 9px;
 }
 .workspace-switcher .tabs [aria-selected='true'] {
-  background: var(--sage-soft);
-  color: var(--sage);
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 600;
+  box-shadow: 0 1px 3px #2a3a2420;
 }
 .study-columns {
   display: grid;

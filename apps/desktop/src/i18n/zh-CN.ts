@@ -406,6 +406,13 @@ export const zhCN = {
   liveSummarySettingsButton: '设置总结',
   liveSummaryRemainingPending: '剩余片段待整理',
   liveSummaryCollecting: (seconds: number) => `正在收集新英文 · ${seconds} 秒`,
+  liveSummaryCadence: (minutes: number) =>
+    `每 ${minutes} 分钟自动整理，最新的在最上方`,
+  liveSummaryProgress: (collected: string, interval: string) =>
+    `已收集 ${collected} / ${interval}，满了自动整理`,
+  liveSummaryLatest: '最新',
+  liveSummaryOffHint:
+    '开启后，每隔几分钟把新讲的内容整理成要点卡片，每条要点都能回听原文。',
   liveSummarySummarizeNow: '立即总结',
   liveSummarySummarizeRemaining: '整理剩余片段',
   liveSummaryTurnOffAuto: '关闭自动总结',

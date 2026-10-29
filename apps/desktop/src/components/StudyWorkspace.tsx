@@ -5,10 +5,21 @@ export function StudyWorkspace({
   primary,
   secondary,
   primaryLabel = ui.transcript,
+  secondaryLabel = ui.studyTools,
+  storageKey = 'study-split',
+  defaultRatio = 58,
+  narrowBelow = 850,
 }: {
   primary: ReactNode;
   secondary: ReactNode;
   primaryLabel?: string;
+  secondaryLabel?: string;
+  /** Remembered split, so each page keeps its own layout. */
+  storageKey?: string;
+  /** Primary column share (percent) before the user resizes. */
+  defaultRatio?: number;
+  /** Below this width (px) the two panels become tabs. */
+  narrowBelow?: number;
 }) {
   const root = useRef<HTMLDivElement>(null);
   const [narrow, setNarrow] = useState(false),
@@ -18,26 +29,26 @@ export function StudyWorkspace({
     try {
       return Math.max(
         40,
-        Math.min(68, Number(localStorage.getItem('study-split')) || 58),
+        Math.min(68, Number(localStorage.getItem(storageKey)) || defaultRatio),
       );
     } catch {
-      return 58;
+      return defaultRatio;
     }
   });
   useEffect(() => {
     const el = root.current;
     if (!el) return;
     const observer = new ResizeObserver(([entry]) =>
-      setNarrow(entry.contentRect.width < 850),
+      setNarrow(entry.contentRect.width < narrowBelow),
     );
     observer.observe(el);
     return () => observer.disconnect();
-  }, []);
+  }, [narrowBelow]);
   const resize = (value: number) => {
     const next = Math.max(40, Math.min(68, value));
     setRatio(next);
     try {
-      localStorage.setItem('study-split', String(next));
+      localStorage.setItem(storageKey, String(next));
     } catch {
       /* Current layout still works. */
     }
@@ -52,7 +63,7 @@ export function StudyWorkspace({
           <div className="tabs" role="tablist" aria-label={ui.workspacePanels}>
             {[
               ['primary', primaryLabel],
-              ['secondary', ui.studyTools],
+              ['secondary', secondaryLabel],
             ].map(([id, label]) => (
               <button
                 key={id}
@@ -103,9 +114,9 @@ export function StudyWorkspace({
                 e.preventDefault();
                 resize(ratio + (e.key === 'ArrowLeft' ? -2 : 2));
               }
-              if (e.key === 'Home') resize(58);
+              if (e.key === 'Home') resize(defaultRatio);
             }}
-            onDoubleClick={() => resize(58)}
+            onDoubleClick={() => resize(defaultRatio)}
             onPointerDown={(e) =>
               e.currentTarget.setPointerCapture(e.pointerId)
             }

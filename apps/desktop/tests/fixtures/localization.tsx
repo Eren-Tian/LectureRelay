@@ -178,6 +178,85 @@ const fixture = {
   failTrash: false,
 };
 const parameters = new URLSearchParams(location.search);
+// ?classroom: a lecture in progress with live summary cards, for layout checks.
+const classroom = parameters.has('classroom');
+const summaryCard = (
+  id: string,
+  start: number,
+  end: number,
+  title: string,
+  points: string[],
+) => ({
+  id,
+  lectureId: lecture.id,
+  provider: 'groq',
+  model: 'openai/gpt-oss-120b',
+  language: 'zh',
+  sources: [
+    {
+      id: `${id}-source`,
+      startSeconds: start,
+      endSeconds: end,
+      text: 'Mitochondria produce ATP through cellular respiration.',
+      revision: 0,
+    },
+  ],
+  state: 'completed' as const,
+  title,
+  points: points.map((text) => ({ text, sourceIds: [`${id}-source`] })),
+  message: '',
+  createdAt: 0,
+});
+const summaryState = {
+  cards: [
+    summaryCard('card-1', 0, 240, '细胞呼吸的总体过程', [
+      '细胞呼吸把葡萄糖中的化学能转化为 ATP。',
+      '过程分为糖酵解、柠檬酸循环和电子传递链三个阶段。',
+    ]),
+    summaryCard('card-2', 240, 480, '线粒体中的能量转换', [
+      '电子传递链在线粒体内膜上建立质子梯度。',
+      'ATP 合酶利用质子回流合成大部分 ATP。',
+      '教授强调速率并未增加 20%，与教材旧版本说法不同。',
+    ]),
+  ],
+  busy: false,
+  message: '',
+  remaining: 2,
+  collectingSeconds: 95,
+};
+if (classroom) {
+  // ?classroom&summaryOff keeps live summaries off to show the empty state.
+  data.settings.liveSummaries.enabled = !parameters.has('summaryOff');
+  data.settings.liveSummaries.uploadConsent = true;
+  data.providers[1].hasKey = true;
+  segments.push(
+    ...[
+      [
+        'Glycolysis splits glucose into two molecules of pyruvate in the cytoplasm.',
+        '糖酵解在细胞质中把葡萄糖分解为两个丙酮酸分子。',
+      ],
+      [
+        'Pyruvate then enters the mitochondria and feeds the citric acid cycle.',
+        '丙酮酸随后进入线粒体，进入柠檬酸循环。',
+      ],
+      [
+        'The electron transport chain pumps protons across the inner membrane.',
+        '电子传递链把质子泵过线粒体内膜。',
+      ],
+      [
+        'ATP synthase lets those protons flow back and makes most of the ATP.',
+        'ATP 合酶让质子回流，并合成大部分 ATP。',
+      ],
+    ].map(([sourceText, translatedText], i) => ({
+      ...segments[0],
+      id: `classroom-segment-${i}`,
+      startSeconds: 10 + i * 12,
+      endSeconds: 22 + i * 12,
+      sourceText,
+      translatedText,
+    })),
+  );
+}
 const speech = parameters.get('speech');
 if (
   speech === 'groq' ||
@@ -260,6 +339,17 @@ mockIPC(
         return new Promise<number>((resolve) => {
           fixture.finishPreview = resolve;
         });
+      case 'live_summary_state':
+        return structuredClone(
+          classroom
+            ? summaryState
+            : {
+                ...summaryState,
+                cards: [],
+                remaining: 0,
+                collectingSeconds: 0,
+              },
+        );
       case 'live_summary_setup':
         return {
           preferences: data.settings.liveSummaries,
@@ -288,10 +378,11 @@ mockIPC(
           deviceName: 'USB Microphone',
           lectureId: lecture.id,
           paused: false,
-          durationSeconds: 60,
+          durationSeconds: classroom ? 575 : 60,
           level: 0.1,
-          warning:
-            'Recording could not keep up: 2 audio buffers (640 samples) were lost. Check the saved recording.',
+          warning: classroom
+            ? null
+            : 'Recording could not keep up: 2 audio buffers (640 samples) were lost. Check the saved recording.',
           failed: false,
           sampleRate: 16000,
           droppedBuffers: 2,

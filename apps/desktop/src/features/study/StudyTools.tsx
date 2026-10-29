@@ -5,6 +5,7 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useId,
   useState,
   type ReactNode,
 } from 'react';
@@ -70,21 +71,47 @@ export function StudyTools({
     await reload();
     await onReload();
   };
+  const tabsId = useId();
+  const names = [
+    'summary',
+    'notes',
+    'index',
+    'slides',
+    ...(questions ? ['questions'] : []),
+    'tasks',
+  ];
+  // Arrow keys move between tabs; only the selected tab is in the Tab order.
+  const moveTab = (key: string) => {
+    const i = names.indexOf(tab);
+    const next = {
+      ArrowRight: names[(i + 1) % names.length],
+      ArrowLeft: names[(i - 1 + names.length) % names.length],
+      Home: names[0],
+      End: names[names.length - 1],
+    }[key];
+    if (!next) return false;
+    setTab(next);
+    document.getElementById(`${tabsId}-${next}`)?.focus();
+    return true;
+  };
   return (
     <section className="study-tools">
-      <div className="study-tabs" role="tablist" aria-label={ui.studyTools}>
-        {[
-          'summary',
-          'notes',
-          'index',
-          'slides',
-          ...(questions ? ['questions'] : []),
-          'tasks',
-        ].map((name) => (
+      <div
+        className="study-tabs"
+        role="tablist"
+        aria-label={ui.studyTools}
+        onKeyDown={(e) => {
+          if (moveTab(e.key)) e.preventDefault();
+        }}
+      >
+        {names.map((name) => (
           <button
             key={name}
+            id={`${tabsId}-${name}`}
             role="tab"
             aria-selected={tab === name}
+            aria-controls={`${tabsId}-panel`}
+            tabIndex={tab === name ? 0 : -1}
             className={tab === name ? 'active' : ''}
             onClick={() => setTab(name)}
           >
@@ -103,7 +130,12 @@ export function StudyTools({
           </button>
         ))}
       </div>
-      <div className="study-tool-content">
+      <div
+        className="study-tool-content"
+        id={`${tabsId}-panel`}
+        role="tabpanel"
+        aria-labelledby={`${tabsId}-${tab}`}
+      >
         {!data ? (
           <ResourceState error={error} reload={reload} />
         ) : (

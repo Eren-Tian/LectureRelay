@@ -11,17 +11,17 @@ Older, version-specific acceptance scripts and their reports were removed from t
 
 `pnpm test:components` downloads a matching official EdgeDriver, starts a private Vite/driver pair on free localhost ports, runs each suite in headless Edge and then closes its processes. Run one suite with `pnpm test:components <script>`. The suites need neither Tauri nor model weights or credentials. Pages under `apps/desktop/tests/fixtures` import production components; Vite's production build does not include them.
 
-| Suite                         | Covers                                                                                                  |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `classroom-summary.mjs`       | Postclass outline, saved versions and appended drafts                                                   |
-| `model-controls.mjs`          | Model downloads, cancellation, failed status reads and recording locks                                  |
-| `audit-components.mjs`        | Note persistence and action states                                                                      |
-| `caption-reader.mjs`          | Live caption ordering, partial-to-final identity, reading anchors, Jump to Live and compact layout      |
-| `theme-contrast.mjs`          | Text, border and control contrast in both themes                                                        |
-| `localization.mjs`            | Full app in Chinese: settings, replay, live, processing, deletion confirmations and translated warnings |
-| `settings-components.mjs`     | Grouped settings, draft preservation, device enumeration and cleanup errors                             |
-| `live-summary-components.mjs` | Live summary opt-in, duplicates, source replay, stale cards and manual notes                            |
-| `workflow-reliability.mjs`    | Independent speech keys, out-of-order summary reads, draft recovery and structured errors               |
+| Suite                         | Covers                                                                                                                                                                                     |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `classroom-summary.mjs`       | Postclass outline, saved versions and appended drafts                                                                                                                                      |
+| `model-controls.mjs`          | Model downloads, cancellation, failed status reads and recording locks                                                                                                                     |
+| `audit-components.mjs`        | Note persistence and action states                                                                                                                                                         |
+| `caption-reader.mjs`          | Live caption ordering, partial-to-final identity, reading anchors, Jump to Live and compact layout                                                                                         |
+| `theme-contrast.mjs`          | Text, border and control contrast in both themes                                                                                                                                           |
+| `localization.mjs`            | Full app in Chinese: settings, replay, live, processing, deletion confirmations and translated warnings; `?classroom` checks that the newest live summary leads and is visible at 1366×768 |
+| `settings-components.mjs`     | Grouped settings, draft preservation, device enumeration and cleanup errors                                                                                                                |
+| `live-summary-components.mjs` | Live summary opt-in, duplicates, source replay, stale cards and manual notes                                                                                                               |
+| `workflow-reliability.mjs`    | Independent speech keys, out-of-order summary reads, draft recovery and structured errors                                                                                                  |
 
 Evidence goes to ignored folders under `target/`. These suites do not establish installed WebView2, real audio or model inference behavior.
 

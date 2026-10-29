@@ -64,6 +64,12 @@ export function LivePage({ id }: { id: string }) {
       }
     }, ui.recordingSavedNotice);
   const target = languageName(data.course.assistanceLanguage);
+  const recognition = live && settings.speechProvider !== 'none' ? live : null;
+  const recognitionOnTrack =
+    recognition &&
+    recognition.state !== 'unavailable' &&
+    recognition.state !== 'loading' &&
+    recognition.backlogSeconds <= 6;
   return (
     <div className="live-page">
       <header className="classroom-heading">
@@ -74,70 +80,78 @@ export function LivePage({ id }: { id: string }) {
           <h1>{data.course.name}</h1>
           <p>{data.lecture.title}</p>
         </div>
-        <span className="pill">
-          <span className="status-dot" />
-          {settings.quietMode ? ui.quietMode : ui.fullSpeedMode}
-        </span>
-      </header>
-      <section
-        className="classroom-status"
-        aria-label={ui.liveRecordingStatusLabel}
-      >
-        <div className="recording-label">
-          <span
-            className={`record-dot ${recording.paused || recording.failed ? 'inactive' : ''}`}
-          />
-          {recording.failed
-            ? ui.liveRecordingFailedStatus
-            : recording.paused
-              ? ui.liveRecordingPausedStatus
-              : ui.recordingInProgress}
-          <strong aria-label={ui.liveRecordingDurationLabel}>
-            {clock(recording.durationSeconds)}
-          </strong>
-        </div>
-        <span className="actual-device" title={recording.deviceName}>
-          {recording.source === 'system' ? ui.systemAudio : ui.microphone} ·{' '}
-          {recording.deviceName}
-        </span>
-        <div className="audio-health">
-          <Icon name="mic" size={16} />
-          <div
-            className="level-track"
-            role="meter"
-            aria-label={ui.liveAudioLevelLabel}
-            aria-valuenow={Math.min(100, Math.round(recording.level * 400))}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
+        <section
+          className="classroom-status"
+          aria-label={ui.liveRecordingStatusLabel}
+        >
+          <div className="recording-label">
             <span
-              style={{ width: Math.min(100, recording.level * 400) + '%' }}
+              className={`record-dot ${recording.paused || recording.failed ? 'inactive' : ''}`}
             />
+            {recording.failed
+              ? ui.liveRecordingFailedStatus
+              : recording.paused
+                ? ui.liveRecordingPausedStatus
+                : ui.recordingInProgress}
+            <strong aria-label={ui.liveRecordingDurationLabel}>
+              {clock(recording.durationSeconds)}
+            </strong>
           </div>
-        </div>
-      </section>
+          <span className="actual-device" title={recording.deviceName}>
+            {recording.source === 'system' ? ui.systemAudio : ui.microphone} ·{' '}
+            {recording.deviceName}
+          </span>
+          {recognitionOnTrack && (
+            <span className="classroom-chip" role="status">
+              <span className="status-dot" />
+              {ui.liveRecognitionOnTrack}
+            </span>
+          )}
+          <div className="audio-health">
+            <Icon name="mic" size={16} />
+            <div
+              className="level-track"
+              role="meter"
+              aria-label={ui.liveAudioLevelLabel}
+              aria-valuenow={Math.min(100, Math.round(recording.level * 400))}
+              aria-valuemin={0}
+              aria-valuemax={100}
+            >
+              <span
+                style={{
+                  transform: `scaleX(${Math.min(1, recording.level * 4)})`,
+                }}
+              />
+            </div>
+          </div>
+          <span className="pill">
+            <span className="status-dot" />
+            {settings.quietMode ? ui.quietMode : ui.fullSpeedMode}
+          </span>
+        </section>
+      </header>
       {recording.warning && (
         <p className="classroom-notice warning" role="alert">
           {messageText(recording.warning)}
         </p>
       )}
-      {live && settings.speechProvider !== 'none' && (
+      {recognition && !recognitionOnTrack && (
         <div
-          className={`classroom-notice ${live.backlogSeconds > 6 ? 'warning' : ''}`}
+          className={`classroom-notice ${recognition.backlogSeconds > 6 ? 'warning' : ''}`}
           role="status"
         >
           <strong>
-            {live.state === 'unavailable'
+            {recognition.state === 'unavailable'
               ? ui.liveEnglishCaptionsUnavailable
-              : live.state === 'loading'
+              : recognition.state === 'loading'
                 ? ui.liveLoadingSpeechModel
-                : live.backlogSeconds > 6
-                  ? ui.liveRecognitionBehind(Math.round(live.backlogSeconds))
-                  : ui.liveRecognitionOnTrack}
+                : ui.liveRecognitionBehind(
+                    Math.round(recognition.backlogSeconds),
+                  )}
           </strong>
-          {live.backlogSeconds > 6 && <p>{ui.liveBacklogHint}</p>}
-          <div className="button-row">
-            {settings.quietMode && live.backlogSeconds > 6 && (
+          {recognition.backlogSeconds > 6 && <p>{ui.liveBacklogHint}</p>}
+          {settings.quietMode && recognition.backlogSeconds > 6 && (
+            <div className="button-row">
               <button
                 className="button secondary"
                 onClick={() =>
@@ -149,32 +163,16 @@ export function LivePage({ id }: { id: string }) {
               >
                 {ui.liveSwitchToFullSpeed}
               </button>
-            )}
-            {translation.enabled && translation.configured && (
-              <button
-                className="text-button"
-                onClick={() =>
-                  void api
-                    .pauseLiveTranslation(!live.translationPaused)
-                    .then(async () => {
-                      await refresh();
-                    })
-                    .catch((e) => workspace.notify(errorText(e), true))
-                }
-              >
-                {live.translationPaused
-                  ? ui.liveResumeTranslation
-                  : ui.livePauseTranslation}
-              </button>
-            )}
-            {live.translationPaused && (
-              <span>{ui.liveTranslationPausedHint}</span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
       <StudyWorkspace
         primaryLabel={ui.captions}
+        secondaryLabel={ui.studyTabSummary}
+        storageKey="live-split"
+        defaultRatio={50}
+        narrowBelow={700}
         primary={
           <section className="live-caption-area">
             <div className="caption-heading">
@@ -184,6 +182,23 @@ export function LivePage({ id }: { id: string }) {
                   {ui.english}
                   <Icon name="arrow" size={13} /> {target}
                 </span>
+                {live && translation.enabled && translation.configured && (
+                  <button
+                    className="text-button"
+                    onClick={() =>
+                      void api
+                        .pauseLiveTranslation(!live.translationPaused)
+                        .then(async () => {
+                          await refresh();
+                        })
+                        .catch((e) => workspace.notify(errorText(e), true))
+                    }
+                  >
+                    {live.translationPaused
+                      ? ui.liveResumeTranslation
+                      : ui.livePauseTranslation}
+                  </button>
+                )}
               </div>
               <span className="caption-state">
                 {settings.speechProvider === 'none'
@@ -199,6 +214,11 @@ export function LivePage({ id }: { id: string }) {
                           : ui.liveWaitingForSpeechStatus}
               </span>
             </div>
+            {live?.translationPaused && (
+              <p className="caption-paused" role="status">
+                {ui.liveTranslationPausedHint}
+              </p>
+            )}
             {settings.showTranslation &&
               (!translation.enabled || !translation.configured) && (
                 <div className="translation-setup">

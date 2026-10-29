@@ -18,7 +18,7 @@ import { CourseForm } from '../features/courses/CourseForm';
 import { LivePage } from '../features/live-lecture/LivePage';
 import { LecturePage } from '../features/lecture-history/LectureWorkspace';
 import { SettingsPage } from '../features/settings/SettingsPage';
-import { WorkspaceProvider, useWorkspace } from './Workspace';
+import { WorkspaceProvider, useWorkspace, type ToastAction } from './Workspace';
 import { nextLiveStatus } from '../lib/live-status';
 
 function CloseGuard() {
@@ -74,9 +74,11 @@ export function App() {
   const [toast, setToast] = useState<{
     message: string;
     error: boolean;
+    action?: ToastAction;
   } | null>(null);
   const notify = useCallback(
-    (message: string, error = false) => setToast({ message, error }),
+    (message: string, error = false, action?: ToastAction) =>
+      setToast({ message, error, action }),
     [],
   );
   const refresh = useCallback(async () => {
@@ -345,6 +347,21 @@ export function App() {
         >
           <Icon name={toast.error ? 'shield' : 'check'} size={19} />
           <span>{toast.message}</span>
+          {toast.action && (
+            <button
+              className="text-button"
+              onClick={() => {
+                const run = toast.action?.run;
+                setToast(null);
+                if (run)
+                  void Promise.resolve(run()).catch((error) =>
+                    notify(errorText(error), true),
+                  );
+              }}
+            >
+              {toast.action.label}
+            </button>
+          )}
           <button
             className="icon-button"
             aria-label={ui.dismissMessage}

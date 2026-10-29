@@ -60,7 +60,7 @@ try {
   await until(
     'return !!window.liveSummaryFixture && !!document.querySelector(".live-summary-panel");',
   );
-  assert.equal(await disabled('启用实时总结'), true);
+  assert.equal(await disabled('开启课堂要点'), true);
   assert.deepEqual(
     await read(
       'return [...document.querySelector(".live-summary-setup select").options].map(o=>o.value);',
@@ -85,15 +85,15 @@ try {
     await read('return document.querySelector("input[type=password]").value;'),
     '',
   );
-  assert.equal(await disabled('启用实时总结'), true);
-  await click('测试总结连接');
-  assert.equal(await disabled('启用实时总结'), true);
+  assert.equal(await disabled('开启课堂要点'), true);
+  await click('测试连接');
+  assert.equal(await disabled('开启课堂要点'), true);
   await read(
     'document.querySelector(".live-summary-setup input[type=checkbox]").click();',
   );
   await pause();
-  assert.equal(await disabled('启用实时总结'), false);
-  await click('启用实时总结');
+  assert.equal(await disabled('开启课堂要点'), false);
+  await click('开启课堂要点');
   assert.equal(
     await read(
       'return document.querySelector(".live-summary-setup select").value;',

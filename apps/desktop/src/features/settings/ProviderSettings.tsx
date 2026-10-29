@@ -27,24 +27,22 @@ export function ProviderSettings({
     <>
       <section className="settings-card">
         <h3>{ui.servicesSpeechTitle}</h3>
-        <label>
-          {ui.speechRecognition}
-          <select
-            disabled={blocked}
-            value={settings.speechProvider}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                speechProvider: e.target.value as AppSettings['speechProvider'],
-              })
-            }
-          >
-            <option value="local">{ui.servicesSpeechLocalOption}</option>
-            <option value="none">{ui.servicesSpeechNoneOption}</option>
-            <option value="openai">{ui.servicesSpeechOpenAIOption}</option>
-            <option value="groq">{ui.servicesSpeechGroqOption}</option>
-          </select>
-        </label>
+        <select
+          aria-label={ui.servicesSpeechTitle}
+          disabled={blocked}
+          value={settings.speechProvider}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              speechProvider: e.target.value as AppSettings['speechProvider'],
+            })
+          }
+        >
+          <option value="local">{ui.servicesSpeechLocalOption}</option>
+          <option value="none">{ui.servicesSpeechNoneOption}</option>
+          <option value="openai">{ui.servicesSpeechOpenAIOption}</option>
+          <option value="groq">{ui.servicesSpeechGroqOption}</option>
+        </select>
         {settings.speechProvider === 'local' ? (
           <button className="button text" onClick={onLocal}>
             {ui.servicesManageLocalModels}
@@ -65,24 +63,21 @@ export function ProviderSettings({
       </section>
       <section className="settings-card">
         <h3>{ui.servicesTranslationTitle}</h3>
-        <label>
-          {ui.servicesTranslationLabel}
-          <select
-            disabled={blocked}
-            value={settings.translationMode}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                translationMode: e.target
-                  .value as AppSettings['translationMode'],
-              })
-            }
-          >
-            <option value="local">{ui.servicesLocalOnDeviceOption}</option>
-            <option value="cloud">{ui.servicesCloudSelectedBelowOption}</option>
-            <option value="none">{ui.off}</option>
-          </select>
-        </label>
+        <select
+          aria-label={ui.servicesTranslationTitle}
+          disabled={blocked}
+          value={settings.translationMode}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              translationMode: e.target.value as AppSettings['translationMode'],
+            })
+          }
+        >
+          <option value="local">{ui.servicesLocalOnDeviceOption}</option>
+          <option value="cloud">{ui.servicesCloudSelectedBelowOption}</option>
+          <option value="none">{ui.off}</option>
+        </select>
         {settings.translationMode === 'local' && (
           <label>
             {ui.servicesLocalTranslationModel}
@@ -128,26 +123,25 @@ export function ProviderSettings({
       </section>
       <section className="settings-card">
         <h3>{ui.servicesStudyTitle}</h3>
-        <label>
-          {ui.servicesStudyLabel}
-          <select
-            disabled={blocked}
-            value={settings.studyMode}
-            onChange={(e) =>
-              setSettings({
-                ...settings,
-                studyMode: e.target.value as AppSettings['studyMode'],
-              })
-            }
-          >
-            <option value="local">{ui.servicesStudyLocalOption}</option>
-            <option value="cloud">{ui.servicesCloudSelectedBelowOption}</option>
-            <option value="none">{ui.off}</option>
-          </select>
-        </label>
+        <p className="field-hint">{ui.servicesStudyLabel}</p>
+        <select
+          aria-label={ui.servicesStudyTitle}
+          disabled={blocked}
+          value={settings.studyMode}
+          onChange={(e) =>
+            setSettings({
+              ...settings,
+              studyMode: e.target.value as AppSettings['studyMode'],
+            })
+          }
+        >
+          <option value="local">{ui.servicesStudyLocalOption}</option>
+          <option value="cloud">{ui.servicesCloudSelectedBelowOption}</option>
+          <option value="none">{ui.off}</option>
+        </select>
         {settings.studyMode === 'local' && (
           <button className="button text" onClick={onLocal}>
-            {ui.servicesDownloadManageModels}
+            {ui.servicesManageLocalModels}
             <Icon name="arrow" size={16} />
           </button>
         )}
@@ -156,28 +150,26 @@ export function ProviderSettings({
         settings.studyMode === 'cloud') && (
         <section className="settings-card">
           <h3>{ui.servicesCloudTextTitle}</h3>
-          <label>
-            {ui.servicesCloudTextLabel}
-            <select
-              disabled={blocked}
-              value={settings.provider}
-              onChange={(e) => {
-                const provider = e.target.value as AppSettings['provider'];
-                setSettings({
-                  ...settings,
-                  provider,
-                  chatModel:
-                    provider === 'groq'
-                      ? 'llama-3.3-70b-versatile'
-                      : 'gpt-4o-mini',
-                });
-              }}
-            >
-              <option value="none">{ui.servicesProviderNotConnected}</option>
-              <option value="openai">OpenAI</option>
-              <option value="groq">Groq</option>
-            </select>
-          </label>
+          <select
+            aria-label={ui.servicesCloudTextTitle}
+            disabled={blocked}
+            value={settings.provider}
+            onChange={(e) => {
+              const provider = e.target.value as AppSettings['provider'];
+              setSettings({
+                ...settings,
+                provider,
+                chatModel:
+                  provider === 'groq'
+                    ? 'llama-3.3-70b-versatile'
+                    : 'gpt-4o-mini',
+              });
+            }}
+          >
+            <option value="none">{ui.servicesProviderNotConnected}</option>
+            <option value="openai">OpenAI</option>
+            <option value="groq">Groq</option>
+          </select>
           {settings.provider !== 'none' && (
             <>
               <button

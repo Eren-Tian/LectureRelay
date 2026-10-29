@@ -141,7 +141,6 @@ export function SetupGuide({
         >
           {ui.setupGoToCourses}
         </button>
-        <p className="field-hint">{ui.setupAfterLectureHint}</p>
       </section>
     </div>
   );

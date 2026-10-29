@@ -61,11 +61,6 @@ export function RuntimePreferences() {
             onChange={(e) => save({ quietMode: e.target.checked })}
           />
         </label>
-        <p className="field-hint" role="status">
-          {quietMode
-            ? ui.runtimeQuietModeOnStatus
-            : ui.runtimeQuietModeOffStatus}
-        </p>
       </section>
     </>
   );

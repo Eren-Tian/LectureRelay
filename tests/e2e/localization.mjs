@@ -111,17 +111,20 @@ try {
     await screenshot(`settings-${category}`);
   }
   await click('数据与存储');
-  await click('清空课堂数据与模型…');
+  await click('清空数据与模型…');
   await until('return !!document.querySelector(".modal input");');
-  assert.match(await text(), /输入 清空全部数据 以确认/);
+  assert.match(await text(), /输入 清空 以确认/);
   assert.equal(
     await d.read('return document.querySelector(".modal .danger").disabled;'),
     true,
   );
   await click('取消');
   await click('永久删除');
-  await until('return !!document.querySelector(".modal input");');
-  assert.match(await text(), /输入 删除 以确认/);
+  await until('return !!document.querySelector(".modal");');
+  assert.equal(
+    await d.read('return !!document.querySelector(".modal input");'),
+    false,
+  );
   assert.match(await text(), /无法恢复/);
   await click('取消');
   await d.click('aside button[aria-label="Introduction to Biology"]');
@@ -149,8 +152,8 @@ try {
   assert.match(await text(), /整堂复习/);
   assert.match(await text(), /Original manual notes/);
   await click('删除课堂记录');
-  await until('return !!document.querySelector(".modal input");');
-  assert.match(await text(), /将永久删除“Cellular respiration”/);
+  await until('return !!document.querySelector(".modal");');
+  assert.match(await text(), /“Cellular respiration”的录音.*无法恢复/);
   await screenshot('delete-confirmation');
   await click('取消');
   assert.ok(
@@ -159,6 +162,18 @@ try {
     ),
   );
   await d.click('aside button[aria-label="Introduction to Biology"]');
+  // Trash is recoverable: the course moves at once and the toast offers Undo.
+  await click('删除课程');
+  await until('return !!document.querySelector(".toast .text-button");');
+  assert.match(await text(), /课程已移入回收站/);
+  assert.equal(
+    await d.read('return !!document.querySelector(".modal");'),
+    false,
+  );
+  await click('撤销');
+  await until(
+    'return window.localizationFixture.calls.includes("restore_course") && !!document.querySelector(".course-delete");',
+  );
   await click('开始录音');
   await until(
     'return !!document.querySelector(".modal select option[value=fixture-device]");',

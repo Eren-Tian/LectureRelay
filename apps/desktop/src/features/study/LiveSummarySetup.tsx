@@ -83,80 +83,74 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
     );
   };
   return (
-    <section className="settings-card live-summary-setup">
-      <h3>{ui.summarySetupTitle}</h3>
-      <details className="settings-advanced">
-        <summary>{ui.summarySetupHowItWorks}</summary>
-        <p>{ui.summarySetupHowItWorksBody}</p>
-        <p>{ui.summarySetupLocalQwenRetired}</p>
-      </details>
-      <label>
-        {ui.summarySetupProviderLabel}
-        <select
-          disabled={busy}
-          value={preferences.provider}
-          onChange={(e) => {
-            const provider = e.target.value as keyof typeof models;
-            setKey('');
-            setMessage('');
-            setPreferences({
-              ...preferences,
-              provider,
-              model: models[provider],
-              enabled: false,
-              uploadConsent: false,
-            });
-          }}
-        >
-          <option value="groq">{ui.summarySetupGroqOption}</option>
-          <option value="openai">OpenAI</option>
-          <option value="none">{ui.off}</option>
-        </select>
-      </label>
-      <label>
-        {ui.summarySetupIntervalLabel}
-        <select
-          disabled={busy}
-          value={preferences.intervalMinutes}
-          onChange={(e) =>
-            setPreferences({
-              ...preferences,
-              intervalMinutes: Number(e.target.value) as 2 | 4 | 5,
-            })
-          }
-        >
-          <option value={2}>{ui.summarySetupIntervalOption(2)}</option>
-          <option value={4}>{ui.summarySetupIntervalDefaultOption(4)}</option>
-          <option value={5}>{ui.summarySetupIntervalOption(5)}</option>
-        </select>
-      </label>
-      {cloud && (
-        <>
-          <ol className="summary-setup-steps">
-            <li>{ui.summarySetupStepGetKey}</li>
-            <li>{ui.summarySetupStepPasteAndSave}</li>
-            <li>{ui.summarySetupStepTest}</li>
-            <li>{ui.summarySetupStepEnable}</li>
-          </ol>
-          <button
-            className="button secondary"
+    <section
+      className="settings-card live-summary-setup"
+      aria-label={ui.summarySetupTitle}
+    >
+      <div className="settings-two-columns">
+        <label>
+          {ui.summarySetupProviderLabel}
+          <select
             disabled={busy}
-            onClick={() =>
-              void action(() =>
-                api.openSummaryPage(preferences.provider, 'keys'),
-              )
+            value={preferences.provider}
+            onChange={(e) => {
+              const provider = e.target.value as keyof typeof models;
+              setKey('');
+              setMessage('');
+              setPreferences({
+                ...preferences,
+                provider,
+                model: models[provider],
+                enabled: false,
+                uploadConsent: false,
+              });
+            }}
+          >
+            <option value="groq">{ui.summarySetupGroqOption}</option>
+            <option value="openai">OpenAI</option>
+            <option value="none">{ui.off}</option>
+          </select>
+        </label>
+        <label>
+          {ui.summarySetupIntervalLabel}
+          <select
+            disabled={busy}
+            value={preferences.intervalMinutes}
+            onChange={(e) =>
+              setPreferences({
+                ...preferences,
+                intervalMinutes: Number(e.target.value) as 2 | 4 | 5,
+              })
             }
           >
-            {preferences.provider === 'groq'
-              ? ui.summarySetupGetGroqKey
-              : ui.summarySetupGetOpenAiKey}
-          </button>
-          <p className="field-hint">{ui.summarySetupKeyHint}</p>
-          <p role="status">
-            {selected?.hasKey
-              ? `${ui.summarySetupKeySavedStatus(selected.maskedKey)} · ${tested === identity ? ui.summarySetupModelTested : ui.summarySetupModelUntested}`
-              : ui.summarySetupNoKeySaved}
-          </p>
+            <option value={2}>{ui.summarySetupIntervalOption(2)}</option>
+            <option value={4}>{ui.summarySetupIntervalDefaultOption(4)}</option>
+            <option value={5}>{ui.summarySetupIntervalOption(5)}</option>
+          </select>
+        </label>
+      </div>
+      {cloud && (
+        <>
+          <div className="summary-key-status">
+            <p role="status">
+              {selected?.hasKey
+                ? `${ui.summarySetupKeySavedStatus(selected.maskedKey)} · ${tested === identity ? ui.summarySetupModelTested : ui.summarySetupModelUntested}`
+                : ui.summarySetupNoKeySaved}
+            </p>
+            <button
+              className="text-button"
+              disabled={busy}
+              onClick={() =>
+                void action(() =>
+                  api.openSummaryPage(preferences.provider, 'keys'),
+                )
+              }
+            >
+              {preferences.provider === 'groq'
+                ? ui.summarySetupGetGroqKey
+                : ui.summarySetupGetOpenAiKey}
+            </button>
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -257,7 +251,6 @@ export function LiveSummarySetup({ onSaved }: { onSaved?: () => void }) {
           >
             {busy ? ui.processing : ui.summarySetupTestConnection}
           </button>
-          <p className="field-hint">{ui.summarySetupTestHint}</p>
           <label className="toggle-row">
             <span>
               {ui.summarySetupUploadConsent(

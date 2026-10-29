@@ -23,6 +23,10 @@ interface Confirmation {
   danger?: boolean;
   confirmationText?: string;
 }
+export interface ToastAction {
+  label: string;
+  run: () => void | Promise<void>;
+}
 interface WorkspaceValue {
   data: Bootstrap;
   route: Route;
@@ -31,7 +35,7 @@ interface WorkspaceValue {
   live: LiveStatus | null;
   navigate: (route: Route) => void;
   refresh: () => Promise<void>;
-  notify: (message: string, error?: boolean) => void;
+  notify: (message: string, error?: boolean, action?: ToastAction) => void;
   confirm: (options: Confirmation) => Promise<boolean>;
 }
 const Workspace = createContext<WorkspaceValue | null>(null);

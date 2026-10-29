@@ -438,6 +438,10 @@
 .toast button {
   pointer-events: auto;
 }
+.toast .text-button {
+  font-weight: 650;
+  white-space: nowrap;
+}
 .toast.error {
   color: var(--danger-text);
   border-color: var(--line);

@@ -37,22 +37,21 @@ export function CoursePage({ id }: { id: string }) {
   }, [reload]);
   if (!data) return <ResourceState error={error} reload={reload} />;
   const course = data.course;
-  const removeCourse = async () => {
-    if (
-      await workspace.confirm({
-        title: ui.trashCourseTitle,
-        body: ui.trashCourseBody,
-        action: ui.moveToTrash,
-        danger: true,
-      })
-    ) {
-      void run(async () => {
-        await api.deleteCourse(id);
-        await workspace.refresh();
-        workspace.navigate({ view: 'courses' });
-      }, ui.courseMovedToTrash);
-    }
-  };
+  // Trash is recoverable, so the course moves at once and the toast offers Undo.
+  const removeCourse = () =>
+    void run(async () => {
+      await api.deleteCourse(id);
+      await workspace.refresh();
+      workspace.navigate({ view: 'courses' });
+      workspace.notify(ui.courseMovedToTrash, false, {
+        label: ui.undo,
+        run: async () => {
+          await api.restoreCourse(id);
+          await workspace.refresh();
+          workspace.navigate({ view: 'course', id });
+        },
+      });
+    });
   return (
     <>
       <button
@@ -180,11 +179,11 @@ export function CoursePage({ id }: { id: string }) {
       </div>
       <button
         className="text-button danger-text course-delete"
-        onClick={() => void removeCourse()}
+        onClick={removeCourse}
         disabled={busy || !!workspace.live?.active}
       >
         <Icon name="trash" size={16} />
-        {ui.moveToTrash}
+        {ui.deleteCourse}
       </button>
       {edit && <CourseForm course={course} onClose={closeEdit} />}
       {start && <StartLecture course={course} onClose={closeStart} />}

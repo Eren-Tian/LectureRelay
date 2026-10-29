@@ -58,7 +58,6 @@ export function TrashCard({
                       ),
                       action: ui.trashDeletePermanently,
                       danger: true,
-                      confirmationText: ui.deleteConfirmationPhrase,
                     }))
                   )
                     return;

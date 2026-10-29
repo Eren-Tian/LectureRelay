@@ -321,6 +321,9 @@ mockIPC(
       case 'trash_courses':
         if (fixture.failTrash) throw Error('Cannot read Trash.');
         return [{ ...course, id: 'trash-course', name: 'Archived course' }];
+      case 'delete_course':
+      case 'restore_course':
+        return null;
       case 'storage_usage':
         return { libraryBytes: 1048576, modelBytes: 3145728 };
       case 'audio_devices':

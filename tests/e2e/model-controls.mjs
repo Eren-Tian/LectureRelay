@@ -90,29 +90,14 @@ try {
       if (mode === 'delete') {
         await click('删除课堂记录');
         await until("return !!document.querySelector('.modal');");
-        assert.equal(
-          await read(
-            "return document.querySelector('.modal .button.danger').disabled;",
-          ),
-          true,
-        );
         await click('取消');
         assert.deepEqual(await read('return window.modelFixture.calls;'), []);
         await until(
           "return !document.querySelector('.modal') && !document.querySelector('main button').disabled;",
         );
         await click('删除课堂记录');
-        const input = await command('POST', '/element', {
-          using: 'css selector',
-          value: '.modal input',
-        });
-        const id = input['element-6066-11e4-a52e-4f735466cecf'];
-        await command('POST', `/element/${id}/value`, {
-          text: '删除',
-          value: [...'删除'],
-        });
         await until(
-          "return !document.querySelector('.modal .button.danger').disabled;",
+          "return !!document.querySelector('.modal .button.danger');",
         );
         await read("document.querySelector('.modal .button.danger').click();");
         await until('return window.modelFixture.calls.length===1;');

@@ -4,23 +4,6 @@
   gap: 14px;
   container: live-summary / inline-size;
 }
-.live-summary-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-.live-summary-heading h2 {
-  margin: 0;
-  font-size: 20px;
-  line-height: 1.35;
-}
-.live-summary-heading p {
-  margin: 4px 0 0;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
 .summary-live-status,
 .summary-empty {
   display: grid;
@@ -193,12 +176,16 @@
   height: 18px;
   margin-top: 3px;
 }
-.summary-setup-steps {
+.summary-key-status {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 28px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+.summary-key-status p {
   margin: 0;
-  padding-left: 20px;
+  color: var(--muted);
   font-size: 13px;
 }
 .summary-audio audio {

@@ -47,7 +47,6 @@ report.evidence.push({
 const course = bootstrap.courses.find((c) => c.id === before.course.id);
 await driver.clickText(course.name);
 await driver.click('.course-delete');
-await driver.click('.modal .danger');
 await driver.clickText('Settings');
 await driver.clickText('Data');
 await driver.clickText('Restore');

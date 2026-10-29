@@ -63,18 +63,10 @@ export function LiveSummaryPanel({
   const interval = preferences.intervalMinutes * 60;
   const collected = Math.min(state?.collectingSeconds ?? 0, interval);
   return (
-    <div className={`live-summary-panel ${live ? 'live' : ''}`}>
-      <header className="live-summary-heading">
-        <div>
-          <h2>{ui.liveSummaryTitle}</h2>
-          {live && preferences.enabled && (
-            <p>{ui.liveSummaryCadence(preferences.intervalMinutes)}</p>
-          )}
-        </div>
-        <button className="text-button" onClick={() => setSetup(true)}>
-          {ui.liveSummarySettingsButton}
-        </button>
-      </header>
+    <section
+      className={`live-summary-panel ${live ? 'live' : ''}`}
+      aria-label={ui.liveSummaryTitle}
+    >
       {preferences.enabled ? (
         <div className="summary-live-status" role="status">
           <span>
@@ -119,11 +111,13 @@ export function LiveSummaryPanel({
             >
               {ui.liveSummaryTurnOffAuto}
             </button>
+            <button className="text-button" onClick={() => setSetup(true)}>
+              {ui.liveSummarySettingsButton}
+            </button>
           </div>
         </div>
       ) : (
         <div className="summary-empty">
-          <p>{ui.liveSummaryOffHint}</p>
           <button className="button primary" onClick={() => setSetup(true)}>
             {ui.liveSummarySetUp}
           </button>
@@ -265,10 +259,10 @@ export function LiveSummaryPanel({
         </div>
       )}
       {setup && (
-        <Modal title={ui.liveSummarySetUp} onClose={() => setSetup(false)}>
+        <Modal title={ui.summarySetupTitle} onClose={() => setSetup(false)}>
           <LiveSummarySetup onSaved={() => void load(true)} />
         </Modal>
       )}
-    </div>
+    </section>
   );
 }

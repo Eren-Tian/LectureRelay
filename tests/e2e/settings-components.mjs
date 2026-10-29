@@ -142,7 +142,7 @@ try {
   );
   await d.read('window.localizationFixture.finishPreview(0.05);');
   await until(
-    'return document.querySelector(".audio-input-test").textContent.includes("已检测到声音");',
+    'return document.querySelector(".audio-input-test").textContent.includes("检测到声音，设备可用");',
   );
   assert.equal(
     await d.read('return window.localizationFixture.previewRequests;'),
@@ -156,7 +156,7 @@ try {
     false,
   );
   await capture('ai-services');
-  await d.clickText('实时总结');
+  await d.clickText('课堂要点');
   await until('return !!document.querySelector(".live-summary-setup");');
   assert.equal(
     await d.read(
@@ -177,8 +177,8 @@ try {
   await d.clickText('数据与存储');
   await until('return document.querySelector(".storage-usage");');
   await d.read('window.localizationFixture.failCleanup=true;');
-  await d.clickText('清空课堂数据与模型…');
-  await d.fill('.modal input', '清空全部数据');
+  await d.clickText('清空数据与模型…');
+  await d.fill('.modal input', '清空');
   await d.click('.modal .danger');
   await until('return document.body.innerText.includes("无法完成存储清理。");');
   assert.match(

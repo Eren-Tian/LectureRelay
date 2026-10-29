@@ -32,7 +32,6 @@ export const en = {
   quietMode: 'Quiet mode',
   fullSpeedMode: 'Full-speed mode',
   processing: 'Processing…',
-  deleteConfirmationPhrase: 'DELETE',
   pending: 'Pending',
   recordingSavedNotice: 'Recording saved.',
   previousPage: 'Previous Page',
@@ -130,13 +129,11 @@ export const en = {
   subject: 'Subject',
   courseContextLabel: 'Course Context ',
   courseContextPlaceholder:
-    'What does this course cover? Context helps recognize technical terms.',
+    'For example: intro cell biology, focusing on metabolism and genetics',
   saveCourse: 'Save Course',
-  trashCourseTitle: 'Move this course to Trash?',
-  trashCourseBody:
-    'The course, lectures, transcripts and notes will be kept in Trash. You can restore them in Settings → Data & Storage.',
-  moveToTrash: 'Move to Trash',
+  deleteCourse: 'Delete Course',
   courseMovedToTrash: 'Course moved to Trash',
+  undo: 'Undo',
   lectureCountSuffix: ' lectures',
   lectureHistory: 'Lecture History',
   lectureStatusRecovered: 'Recovered',
@@ -169,7 +166,7 @@ export const en = {
   sourceHint:
     'System Audio captures sound played through the selected output device.',
   livePrivacy:
-    'Local speech stays on this PC. When cloud speech or translation is enabled, the corresponding audio or text is sent to your configured provider.',
+    'Cloud recognition or translation sends audio or text to that provider.',
   defaultLectureTitle: (date: string, course: string) => `${date} · ${course}`,
   audioDevice: 'Audio Device',
   checkingAudioDevices: 'Checking audio devices…',
@@ -187,7 +184,7 @@ export const en = {
   startNoticeAudioOnly: 'Audio will be saved without captions',
   startNoticeCaptions: 'Captions will be shown during class',
   startNoticeCaptionsOff:
-    'English captions are not enabled yet. Set up local recognition in Settings → First-Time Setup, or start recording right away.',
+    'Captions are off. Record now, or turn them on in Settings → First-Time Setup.',
   localEnglishRecognition: 'Local English recognition',
   cloudEnglishRecognition: 'Cloud English recognition',
   translationOn: 'Translation on',
@@ -215,7 +212,7 @@ export const en = {
     `English recognition is ${seconds}s behind`,
   liveRecognitionOnTrack: 'English recognition is keeping up',
   liveBacklogHint:
-    'Audio is still being saved. Translation is deferred so English recognition can catch up; anything unfinished can be completed after class.',
+    'Recording is unaffected. Translation pauses and can be completed after class.',
   liveSwitchToFullSpeed: 'Switch to Full-Speed Mode',
   liveResumeTranslation: 'Resume Translation',
   livePauseTranslation: 'Pause Translation',
@@ -239,7 +236,7 @@ export const en = {
   captionsWaitingForAudioTitle: 'Waiting for audio',
   captionsSavingRecordingTitle: 'Saving recording',
   captionsPlaceholderLocalTranslationHint:
-    'English captions update as the lecturer speaks. Local translation shows a provisional translation first, then refines it from the complete source text.',
+    'Captions appear here once the lecturer starts speaking.',
   captionsPlaceholderHint: 'English captions update as the lecturer speaks.',
   captionsOffHint:
     'Live captions are off. The recording is still saved and can be replayed after class.',
@@ -276,7 +273,7 @@ export const en = {
   mediaImportTitle: 'Import Lecture Recording',
   mediaImportCourseLabel: 'Course',
   mediaImportHint:
-    'Supports WAV, MP3, M4A, MP4, FLAC and OGG, up to 2 GiB and 5 hours. The app saves a copy of the audio and keeps your original file; you can transcribe it after importing.',
+    'WAV, MP3, M4A, MP4, FLAC or OGG, up to 2 GiB and 5 hours. The original file is not changed.',
   mediaImportCancel: 'Cancel Import',
   mediaImportImporting: 'Importing…',
   mediaImportChooseFile: 'Choose File',
@@ -309,7 +306,7 @@ export const en = {
   localTranscriptionBody:
     'The recording will be transcribed on this PC. Translation is a separate step.',
   cloudTranscriptionBody: (provider: string) =>
-    `The recording will be sent to ${provider}. Your provider may charge for usage. Saved transcripts are preserved.`,
+    `The recording will be sent to ${provider}. Your provider may charge for usage.`,
   cloudTextBody: (provider: string, detail: string) =>
     `The transcript and course context will be sent to ${provider}. Your provider may charge for usage. ${detail}`,
   notesDraftKeepsExisting:
@@ -357,7 +354,7 @@ export const en = {
   deleteLectureHint: 'Permanently delete this lecture',
   deleteLectureTitle: 'Permanently Delete This Lecture?',
   deleteLectureBody: (title: string) =>
-    `“${title}” and its recording, transcript, notes, review guide and in-app exports will be permanently deleted. The course, glossary, PDFs and other lectures are kept. This cannot be undone.`,
+    `“${title}” and its recording, transcript, notes, review guide and in-app exports will be permanently deleted. This cannot be undone.`,
   deleteLecture: 'Delete Lecture',
   lectureDeleted: 'Lecture deleted.',
   deleting: 'Deleting…',
@@ -376,80 +373,61 @@ export const en = {
   cloudQuestionNoticeSuffix:
     '. Answers and sources are saved locally. Check the original explanation.',
   localQuestionNotice:
-    'Q&A runs on this PC and answers from retrieved lecture excerpts. Check the citations to verify answers; for a systematic review of the whole lecture, use “Full Lecture Review”.',
+    'Answered on this computer from lecture excerpts; click a citation to check.',
   // Live and classroom summaries
-  summarySetupEnabledMessage:
-    'Live summaries are on. Recording and caption settings are unchanged.',
-  summarySetupSavedMessage: 'Summary settings saved. Completed cards are kept.',
-  summarySetupTitle: 'Live Lecture Summaries',
-  summarySetupHowItWorks: 'How It Works',
-  summarySetupHowItWorksBody:
-    'Summarizes newly finalized English without changing speech recognition, translation or after-class study settings.',
-  summarySetupLocalQwenRetired:
-    'Local Qwen live summaries are no longer available. Existing cards are kept.',
-  summarySetupProviderLabel: 'Summary Provider',
-  summarySetupGroqOption: 'Groq · Recommended cloud option',
+  summarySetupEnabledMessage: 'Key points are on.',
+  summarySetupSavedMessage: 'Saved.',
+  summarySetupTitle: 'Key Points',
+  summarySetupProviderLabel: 'Service',
+  summarySetupGroqOption: 'Groq (free tier)',
   summarySetupIntervalLabel: 'Auto-Summary Interval',
   summarySetupIntervalOption: (minutes: number) => `${minutes} minutes`,
   summarySetupIntervalDefaultOption: (minutes: number) =>
-    `${minutes} minutes · Default`,
-  summarySetupStepGetKey: 'Get a key',
-  summarySetupStepPasteAndSave: 'Paste and save',
-  summarySetupStepTest: 'Test',
-  summarySetupStepEnable: 'Enable summaries',
+    `${minutes} minutes (default)`,
   summarySetupGetGroqKey: 'Get Groq API Key',
   summarySetupGetOpenAiKey: 'Get OpenAI API Key',
-  summarySetupKeyHint:
-    'Create a key on the provider website, then paste it here. Keys are stored in Windows Credential Manager.',
   summarySetupKeySavedStatus: (maskedKey: string) => `Key saved: ${maskedKey}`,
   summarySetupModelTested: 'Test passed for this model',
   summarySetupModelUntested: 'Not yet tested for this model',
-  summarySetupNoKeySaved: 'No API key saved',
-  summarySetupKeySavedMessage: 'Key saved. Click “Test Summary Connection”.',
+  summarySetupNoKeySaved: 'No key saved',
+  summarySetupKeySavedMessage: 'Key saved. Next: test the connection.',
   summarySetupReplaceKeyLabel: 'Replace API Key',
   summarySetupPasteKeyLabel: 'Paste API Key',
-  summarySetupKeyPlaceholder:
-    'Stored only on this PC, never in notes or exports',
+  summarySetupKeyPlaceholder: 'Stored only on this computer',
   summarySetupSaveKey: 'Save Key',
   summarySetupKeyRemovedMessage: 'Key removed.',
   summarySetupRemoveKey: 'Remove Key',
   summarySetupModelLabel: 'Summary Model',
   summarySetupModelHint:
-    'The default model is configured with the official parameters. Custom models must support JSON Schema; test again after changing it.',
+    'Custom models must support JSON Schema; test again after changing.',
   summarySetupTestPassedMessage:
-    'The selected model generated a real result and passed format and citation checks. Confirm which text will be uploaded, then enable summaries.',
-  summarySetupTestConnection: 'Test Summary Connection',
-  summarySetupTestHint:
-    'The test sends a short fixed sample text and generates a result. A saved key does not guarantee model access, permissions or quota.',
+    'Connection works. Check the upload box below to turn it on.',
+  summarySetupTestConnection: 'Test Connection',
   summarySetupUploadConsent: (provider: string) =>
-    `Allow sending selected English transcript excerpts, course context and glossary terms to ${provider} for summaries. This feature does not upload audio.`,
-  summarySetupViewDataPolicy: 'View Provider Data Policy',
-  summarySetupViewAccountLimits: 'View Account Limits',
+    `Allow sending English caption excerpts, course background and terms to ${provider} (no audio is uploaded)`,
+  summarySetupViewDataPolicy: 'Data Policy',
+  summarySetupViewAccountLimits: 'Account Limits',
   summarySetupGroqQuotaHint:
-    'Groq free limits are as shown in your account. Requests and tokens are limited, and unlimited free use is not guaranteed.',
+    'The free tier has request limits; see your account page.',
   summarySetupOpenAiBillingHint:
-    'OpenAI API usage is billed separately; ChatGPT subscriptions do not include API usage. A full key cannot be viewed again after it is created; if you did not save it, create a new key.',
-  summarySetupSaveAndKeepEnabled: 'Save and Keep Enabled',
-  summarySetupEnable: 'Enable Live Summaries',
-  summarySetupDisable: 'Turn Off Live Summaries',
-  summarySetupSaveWithoutEnabling: 'Save Without Enabling',
-  liveSummaryTitle: 'Live Key Points',
-  liveSummarySettingsButton: 'Summary Settings',
+    'OpenAI API usage is billed separately from ChatGPT subscriptions.',
+  summarySetupSaveAndKeepEnabled: 'Save',
+  summarySetupEnable: 'Turn On Key Points',
+  summarySetupDisable: 'Turn Off Key Points',
+  summarySetupSaveWithoutEnabling: 'Save Only',
+  liveSummaryTitle: 'Key Points',
+  liveSummarySettingsButton: 'Settings',
   liveSummaryRemainingPending:
     'Remaining excerpts are waiting to be summarized',
   liveSummaryCollecting: (seconds: number) =>
     `Collecting new English · ${seconds}s`,
-  liveSummaryCadence: (minutes: number) =>
-    `Summarizes every ${minutes} minutes; newest first`,
   liveSummaryProgress: (collected: string, interval: string) =>
-    `Collected ${collected} of ${interval}; summarizes automatically when full`,
+    `Next summary ${collected} / ${interval}`,
   liveSummaryLatest: 'Latest',
-  liveSummaryOffHint:
-    'When on, new lecture content becomes key-point cards every few minutes, each point linked to its original audio.',
   liveSummarySummarizeNow: 'Summarize Now',
   liveSummarySummarizeRemaining: 'Summarize Remaining Excerpts',
   liveSummaryTurnOffAuto: 'Turn Off Auto-Summary',
-  liveSummarySetUp: 'Set Up Live Summaries',
+  liveSummarySetUp: 'Turn On Key Points',
   liveSummaryNoteHeadingFallback: 'Lecture Key Points',
   liveSummaryCardFallbackTitle: 'This part of the lecture',
   liveSummaryStateRunning: 'Summarizing',
@@ -480,7 +458,7 @@ export const en = {
     'Segment key points use the local Qwen3.5-4B model. ',
   classroomSummaryStudyModelSettings: 'Set Up Study Model',
   classroomSummaryStaleWarning:
-    'The transcript or summary language has changed. The key points below are from the last save; regenerate them before using them for review.',
+    'The transcript or summary language changed; these are the last saved points. Regenerate before reviewing.',
   classroomSummarySavedProgress: (done: number, total: number) =>
     `Key points saved for ${done} / ${total} segments. `,
   classroomSummaryResumeHint: 'Unfinished segments can still be summarized.',
@@ -495,8 +473,7 @@ export const en = {
   classroomSummaryAddNoteForSegment: 'Add Note for This Segment',
   classroomSummaryPagination: 'Lecture segment pages',
   classroomSummaryJumpToLatest: 'View Latest Segments',
-  classroomSummaryAccuracyHint:
-    'AI key points may contain mistakes. Expand the source to check, or click a time range to replay it. If generation fails, completed segments are kept.',
+  classroomSummaryAccuracyHint: 'Generated by AI; expand the source to check.',
   // Study notes, deep review, study tools and PDFs
   studyNotesSavingDraft: 'Saving draft…',
   studyNotesRecoveryCacheUnavailable:
@@ -533,13 +510,13 @@ export const en = {
   studyMyNotes: 'My Notes',
   deepReviewTitle: 'Full Lecture Review',
   deepReviewDescription:
-    'Works through the whole lecture section by section to build a timestamped review guide, saved separately. Check it against the transcript; your existing notes are preserved.',
+    'Works through the whole lecture to build a timestamped review guide. Your notes are not changed.',
   deepReviewRequestLabel: 'What do you want to focus on?',
   deepReviewRequestPlaceholder:
     'Outline the core concepts and how they connect, explain common misconceptions, and give five practice questions.',
-  deepReviewLocalHint: 'Qwen3.5-4B · Runs locally · No API fees',
+  deepReviewLocalHint: 'Runs on this computer at no cost',
   deepReviewCloudHint:
-    'Uses your selected cloud provider. The transcript and course context are sent, and your provider may charge for usage.',
+    'Sends the transcript and course background to the cloud service; charges may apply.',
   deepReviewDisabledHint:
     'Study AI is not enabled. Choose a model in Settings.',
   deepReviewGenerateTitle: 'Generate a review guide for the whole lecture?',
@@ -606,7 +583,6 @@ export const en = {
     'This page has no extractable text. Scanned pages are shown as images and are not used for AI references.',
   // Settings
   apiKeyProvider: 'API Key Provider',
-  speechRecognition: 'Speech Recognition',
   showEnglish: 'Show English',
   showTranslation: 'Show Translation',
   englishSize: 'English font size',
@@ -618,13 +594,13 @@ export const en = {
   trash: 'Trash',
   restore: 'Restore',
   trashHint:
-    'Courses in Trash keep their recordings, transcripts and notes. Restore them or permanently delete them with confirmation.',
+    'Deleted courses wait here until you restore them or delete them for good.',
   trashEmpty: 'Trash is empty.',
   about: 'About',
-  apiKeySaved: 'Key saved to Windows Credential Manager',
+  apiKeySaved: 'Key saved',
   removeApiKeyTitle: (provider: string) => `Remove ${provider} key?`,
   removeApiKeyBody:
-    'The key will be removed from Windows Credential Manager. Courses and recordings are preserved.',
+    'The key is removed from this computer. You can add it again later.',
   removeApiKey: 'Remove Key',
   apiKeyRemoved: 'Key removed',
   apiKeyTitleSuffix: ' key',
@@ -633,13 +609,13 @@ export const en = {
   addApiKey: 'Add Key',
   apiKeyPlaceholder: 'Paste your API key',
   saveSecurely: 'Save Securely',
-  connectionSucceeded: 'Connected. The selected text model is available.',
+  connectionSucceeded: 'Connected.',
   testConnection: 'Test Connection',
   testConnectionHint:
-    'Tests authorization and model availability without uploading lecture content.',
+    'Checks the key and model without uploading lecture content.',
   cloudRequestsNoticePrefix: 'Cloud requests go directly to ',
   cloudRequestsNoticeSuffix:
-    '. Usage and quotas belong to your provider account. LectureRelay does not proxy requests or charge API fees.',
+    '. Usage and quotas belong to your provider account.',
   checking: 'Checking…',
   downloaded: 'Downloaded',
   localModels: 'Local models',
@@ -647,7 +623,7 @@ export const en = {
   apiKeyMissingBadge: 'No key added',
   setupStepCaptionsTitle: '1. Choose Captions',
   setupStepCaptionsBody:
-    'Start with local English captions, then turn on bilingual captions if your PC can keep up. No account or API Key is needed.',
+    'Captions are generated on this computer. No account or API key needed.',
   setupCaptionModeLabel: 'Caption Mode',
   setupCaptionModeBilingual: 'English + translation',
   setupCaptionModeEnglishOnly: 'English only · Uses less computing power',
@@ -655,57 +631,48 @@ export const en = {
   setupDownloadRequired: 'Download required',
   setupTranslationModelItem: 'Translation · about 1.1 GiB ·',
   setupDownloadModels: 'Download Required Models',
-  setupCaptionsSaved: 'Caption settings saved. Next, test your audio.',
+  setupCaptionsSaved: 'Saved. Next: test your sound.',
   setupEnableBilingual: 'Enable Local Bilingual Captions',
   setupEnableEnglish: 'Enable Local English Captions',
   setupQwenHint:
-    'Qwen powers after-class summaries and deep review. You can download it later; it does not affect recording. Existing courses keep their own assistance languages.',
+    'Qwen for after-class study can be downloaded later. Existing courses keep their translation language.',
   setupStepAudioTitle: '2. Test Audio',
   setupMicrophoneLabel: 'Microphone: ',
-  setupMicrophoneUse: 'Records speech in the classroom.',
+  setupMicrophoneUse: 'Classes in the room.',
   setupSystemAudioLabel: 'System Audio: ',
-  setupSystemAudioUse:
-    'Records lectures played on this PC. Before class, choose a device and complete the 5-second audio test.',
+  setupSystemAudioUse: 'Online classes or video playing on this computer.',
   setupChooseDeviceAndTest: 'Choose Device and Test Audio',
   setupQuietModeHint:
-    'Quiet mode limits CPU usage. If captions fall behind, switch to full-speed mode or show English only. Saving recordings does not depend on AI.',
+    'If captions fall behind, turn off Quiet Mode or show English only.',
   setupStepFirstLectureTitle: '3. Start Your First Lecture',
   setupStepFirstLectureBody:
-    'Create a course, choose its assistance language, then click “Start Lecture”. Adding course context and technical terms improves recognition and translation.',
+    'Create a course, then click Start Lecture. Course background and terms improve recognition and translation.',
   setupGoToCourses: 'Go to Courses',
-  setupAfterLectureHint:
-    'After you click “Stop and Save”, open the lecture to replay the recording, correct the transcript, complete translations or generate study notes.',
-  servicesSpeechTitle: 'English Speech Recognition',
-  servicesSpeechLocalOption: 'Local English recognition · Runs on this PC',
-  servicesSpeechNoneOption: 'Audio only · No captions',
-  servicesSpeechOpenAIOption: 'OpenAI · Cloud recognition',
-  servicesSpeechGroqOption: 'Groq · Cloud recognition',
+  servicesSpeechTitle: 'English Captions',
+  servicesSpeechLocalOption: 'Local',
+  servicesSpeechNoneOption: 'Off (record only)',
+  servicesSpeechOpenAIOption: 'OpenAI cloud',
+  servicesSpeechGroqOption: 'Groq cloud',
   servicesManageLocalModels: 'Manage Local Models',
   servicesManageApiKey: 'Manage Key',
-  servicesTranslationTitle: 'Lecture Translation',
-  servicesTranslationLabel: 'Translation',
-  servicesLocalOnDeviceOption: 'Local · Runs on this PC',
-  servicesCloudSelectedBelowOption: 'Cloud · Uses the service selected below',
-  servicesLocalTranslationModel: 'Local Translation Model',
-  servicesTranslationHyMtOption: 'Hy-MT2-1.8B · Smaller, prioritizes speed',
-  servicesTranslationQwenOption:
-    'Qwen3.5-4B · Alternative, shares the model with study tools',
+  servicesTranslationTitle: 'Translation',
+  servicesLocalOnDeviceOption: 'Local',
+  servicesCloudSelectedBelowOption: 'Cloud',
+  servicesLocalTranslationModel: 'Translation Model',
+  servicesTranslationHyMtOption: 'Hy-MT2 (faster)',
+  servicesTranslationQwenOption: 'Qwen3.5 (shared with study tools)',
   servicesLiveTranslationToggle: 'Translate automatically during class',
   servicesStudyTitle: 'After-Class Study',
-  servicesStudyLabel: 'Summaries, Deep Review and Q&A',
-  servicesStudyLocalOption: 'Local · Qwen3.5-4B',
-  servicesDownloadManageModels: 'Download and Manage Local Models',
-  servicesCloudTextTitle: 'Cloud Text Service',
-  servicesCloudTextLabel: 'Optional Cloud Text Service',
+  servicesStudyLabel: 'Summaries, full-lecture review and Q&A',
+  servicesStudyLocalOption: 'Local (Qwen3.5)',
+  servicesCloudTextTitle: 'Cloud Service',
   servicesProviderNotConnected: 'Not connected',
   servicesTextModel: 'Text Model',
-  servicesTextModelHint:
-    'Enter a model name available to your provider account. Saving an API Key does not mean you have access to that model.',
-  servicesOwnApiKeyHint:
-    'Uses your own API Key. Costs and quotas are charged to your provider account.',
+  servicesTextModelHint: 'Enter a model name your account can use.',
+  servicesOwnApiKeyHint: 'Uses your own API key; the provider bills you.',
   aiSettingsNavLabel: 'AI settings',
-  aiSettingsServicesTab: 'Features',
-  aiSettingsSummariesTab: 'Live Summaries',
+  aiSettingsServicesTab: 'Processing',
+  aiSettingsSummariesTab: 'Key Points',
   aiSettingsCloudApiKeys: 'Cloud API Keys',
   generalCoursePreferencesTitle: 'Course Preferences',
   generalNewCourseLanguage: 'Assistance Language for New Courses',
@@ -713,20 +680,15 @@ export const en = {
   runtimeAutoSave: 'Saves automatically',
   runtimeThemeLight: 'Light',
   runtimeThemeDark: 'Dark',
-  runtimeQuietModeHint: 'Local AI shares up to 4 CPU cores',
-  runtimeQuietModeOnStatus: 'CPU usage limited · Saved automatically',
-  runtimeQuietModeOffStatus:
-    'Full speed, higher power use · Saved automatically',
-  audioTestSoundDetected: 'Sound detected. This device is ready to use.',
+  runtimeQuietModeHint: 'Local AI uses at most 4 CPU cores',
+  audioTestSoundDetected: 'Sound detected. This device works.',
   audioTestNoSoundDetected:
-    'No sound detected. Check the selected device and try again.',
+    'No sound detected. Check the device and try again.',
   audioTestTesting: 'Testing audio…',
   audioTestButton: 'Test Audio',
   audioTestLevelLabel: 'Input level',
-  audioTestSystemPrompt:
-    'Play sound through the selected device. The test ends in 5 seconds.',
-  audioTestMicrophonePrompt:
-    'Speak into the microphone. The test ends in 5 seconds.',
+  audioTestSystemPrompt: 'Play some audio (5 seconds)',
+  audioTestMicrophonePrompt: 'Speak into the microphone (5 seconds)',
   audioTestHint: 'The test lasts 5 seconds. Audio is not saved or uploaded.',
   audioSettingsDefaultSource: 'Default Audio Source',
   audioSettingsMicrophoneDevice: 'Microphone Device',
@@ -748,31 +710,28 @@ export const en = {
   storageLocationsSummary: 'Storage Locations',
   storageDatabaseLabel: 'Database',
   storageAppDataLabel: 'App Data',
-  storageBackupHint:
-    'When backing up, save both the library and the database. Transcripts and notes can be exported from the lecture replay page.',
+  storageBackupHint: 'To back up, copy both the library and the database.',
   storageFreeAllTitle: 'Clear Lecture Data and Models',
   storageFreeAllBody:
-    'Permanently deletes all courses (including Trash), recordings, transcripts, notes, review guides, PDFs, in-app exports, downloaded models and processing caches. Models must be downloaded again before using local AI.',
-  storageFreeAllKeepsHint:
-    'The app, preferences and API Keys in Windows Credential Manager are kept, along with a few small database and interface settings files. Copies of files outside the app are not deleted.',
+    'Deletes every course, recording and downloaded model. Preferences and API keys are kept.',
   storageFreeAllConfirmTitle: 'Clear all lecture data and models?',
   storageFreeAllConfirmBody:
-    'All courses (including Trash), recordings, transcripts, notes, review guides, PDFs, in-app exports, local models and processing caches will be permanently deleted and cannot be recovered. Export anything you want to keep first. Preferences and API Keys are kept.',
+    'All courses (including Trash), recordings, transcripts, notes, review guides, PDFs, in-app exports, local models and caches will be permanently deleted. This cannot be undone. Export anything you want to keep first.',
   storageFreeAllConfirmAction: 'Clear Data and Models',
-  storageFreeAllConfirmationPhrase: 'CLEAR ALL DATA',
-  storageFreeAllDone: 'Lecture data and models cleared. Storage space freed.',
-  storageFreeAllButton: 'Clear Lecture Data and Models…',
+  storageFreeAllConfirmationPhrase: 'CLEAR',
+  storageFreeAllDone: 'Lecture data and models cleared.',
+  storageFreeAllButton: 'Clear Data and Models…',
   storageUsageLibraryAndExports: 'Library and exports',
   storageUsageCalculating: 'Calculating storage usage…',
-  privacyDataLocationTitle: 'Where is my data stored, and when is it uploaded?',
+  privacyDataLocationTitle: 'Data and Uploads',
   privacyStoredLocallyTitle: 'Stored on this PC',
   privacyStoredLocallyBody:
-    'Recordings, course materials and transcripts are stored on this PC. Local English recognition also runs on this computer.',
-  privacyCloudUploadTitle: 'Uploaded only when cloud features are enabled',
+    'Recordings, course materials and transcripts stay on this computer.',
+  privacyCloudUploadTitle: 'Uploads happen only for cloud features',
   privacyCloudUploadBody:
-    'Cloud recognition uploads recordings; text features set to cloud send the relevant text and course context to your chosen provider. Local translation and study tools run on this PC. Cloud services may charge fees.',
+    'Cloud recognition uploads audio; other cloud features upload the related text and course background. The provider bills cloud use.',
   privacyApiKeyHint:
-    'API Keys are stored in Windows Credential Manager and are not included in lecture exports. LectureRelay does not require an account.',
+    'API keys stay in Windows Credential Manager and are never exported. No account needed.',
   aboutVersion: (version: string) => `Version ${version}`,
   aboutInterfaceLanguage: 'Interface Language',
   aboutInterfaceLanguageValue: 'English',
@@ -816,28 +775,25 @@ export const en = {
   captionSettingsSampleCaption: 'Sample captions',
   captionSettingsProvidersNote: 'Models and services used for captions',
   captionSettingsGoToSettings: 'Go to Settings',
-  modelSpeechTitle: 'English Transcription',
-  modelTranslationTitle: 'English → Chinese / Japanese / Korean',
-  modelStudyTitle: 'Lecture Summaries and Deep Review',
-  modelSpeechHint:
-    'Nemotron runs during class, so English recognition needs no paid API.',
+  modelSpeechTitle: 'English Captions',
+  modelTranslationTitle: 'Translation',
+  modelStudyTitle: 'After-Class Study',
+  modelSpeechHint: 'Generates English captions during class.',
   modelTranslationHint:
-    "Hy-MT2 translates finalized sentences on this PC. Translation quality and speed depend on the course content and your computer's performance.",
+    'Translates English captions into Chinese, Japanese or Korean.',
   modelStudyHint:
-    'Summaries, full-lecture review and Q&A share Qwen, which loads only after recording and live processing finish.',
+    'Used for summaries, full-lecture review and Q&A after class.',
   modelConnecting: 'Connecting…',
   modelDownloading: 'Downloading',
   modelNotDownloaded: 'Not downloaded',
   modelDetailsSummary: 'Model Details',
-  modelLoadingHint:
-    'Models load on demand and are released when tasks finish. Quiet mode applies to all local AI. No sign-in or API Key required.',
-  modelConnectingHint:
-    'Connecting to the download service. You can cancel while waiting.',
+  modelLoadingHint: 'Models load only while in use.',
+  modelConnectingHint: 'Connecting to the download service…',
   modelRemoveConfirmBody:
-    'Remove the downloaded model? Recordings, transcripts and notes are kept, and you can download the model again later.',
+    'Recordings, transcripts and notes are kept. You can download the model again later.',
   trashDeleteCourseTitle: 'Permanently delete this course?',
   trashDeleteCourseBody: (name: string, lectureCount: number) =>
-    `Permanently deletes “${name}” and its ${lectureCount} lectures, along with recordings, transcripts, notes, review drafts, PDFs and in-app exports. This cannot be undone. Copies exported elsewhere are kept.`,
+    `“${name}”, its ${lectureCount} lectures, PDFs and in-app exports will be permanently deleted. This cannot be undone.`,
   trashDeletePermanently: 'Delete Permanently',
   trashCourseDeleted: 'Course permanently deleted.',
 };

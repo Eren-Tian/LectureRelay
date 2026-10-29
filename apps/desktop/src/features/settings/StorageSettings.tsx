@@ -101,7 +101,6 @@ export function StorageSettings({
       <section className="settings-card">
         <h2>{ui.storageFreeAllTitle}</h2>
         <p>{ui.storageFreeAllBody}</p>
-        <p className="field-hint">{ui.storageFreeAllKeepsHint}</p>
         <button
           className="button danger"
           disabled={blocked}

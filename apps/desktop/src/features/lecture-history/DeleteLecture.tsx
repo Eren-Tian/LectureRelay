@@ -36,7 +36,6 @@ export function DeleteLecture({
               body: ui.deleteLectureBody(lecture.title),
               action: ui.deleteLecture,
               danger: true,
-              confirmationText: ui.deleteConfirmationPhrase,
             }))
           )
             return;

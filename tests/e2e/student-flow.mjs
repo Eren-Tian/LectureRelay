@@ -187,7 +187,6 @@ try {
   passed('Edit and JSON/Markdown export', { exportNames });
   await driver.clickText(course.name);
   await driver.click('.course-delete');
-  await driver.click('.modal .danger');
   await driver.clickText('Settings');
   await driver.clickText('Data');
   await driver.clickText('Restore');

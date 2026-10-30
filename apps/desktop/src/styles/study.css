@@ -300,6 +300,11 @@
   color: var(--muted);
   font-weight: 500;
 }
+.speaker-chip:hover,
+.keyword-chips button:hover {
+  border-color: var(--sage);
+  color: var(--ink);
+}
 .transcript-segment:hover .speaker-chip.empty,
 .speaker-chip.empty:focus-visible {
   opacity: 1;

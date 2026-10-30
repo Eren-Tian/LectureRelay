@@ -349,6 +349,7 @@ export const zhCN = {
   askAiAboutSelection: '问 AI',
   answerCopy: '复制',
   answerCopied: '已复制',
+  answerCopyFailed: '无法复制，请选中文字后按 Ctrl+C。',
   addToGlossary: '加入术语表',
   addToGlossaryTitle: '加入课程术语表',
   addToGlossaryHint: '这门课之后的识别和翻译会参考它。',

@@ -379,6 +379,7 @@ export const en = {
   askAiAboutSelection: 'Ask AI',
   answerCopy: 'Copy',
   answerCopied: 'Copied',
+  answerCopyFailed: 'Could not copy. Select the text and press Ctrl+C.',
   addToGlossary: 'Add to Glossary',
   addToGlossaryTitle: 'Add to Course Glossary',
   addToGlossaryHint:
@@ -392,7 +393,7 @@ export const en = {
   speakerOtherName: 'Other name',
   speakerUse: 'Use for This Segment',
   speakerClear: 'Clear',
-  speakerRenameAll: (name: string) => `Rename every “${name}”`,
+  speakerRenameAll: (name: string) => `Rename Every “${name}”`,
   detectSpeakers: 'Detect Speakers',
   speakerAutoPrefix: 'Speaker',
   speakersDetected: (count: number) =>

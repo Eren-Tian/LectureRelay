@@ -1,4 +1,5 @@
 import { ui } from '../../i18n';
+import { useWorkspace } from '../../app/Workspace';
 import { Icon } from '../../components/Icon';
 import { MarkdownBody } from '../../components/MarkdownBody';
 import { clock } from '../../lib/presentation';
@@ -35,6 +36,7 @@ export function QuestionsPanel({
 }) {
   const input = useRef<HTMLTextAreaElement>(null);
   const [copied, setCopied] = useState('');
+  const { notify } = useWorkspace();
   useEffect(() => {
     if (!focusRequested || !input.current) return;
     input.current.focus();
@@ -76,6 +78,7 @@ export function QuestionsPanel({
                   void navigator.clipboard
                     .writeText(answer.answer)
                     .then(() => setCopied(answer.id))
+                    .catch(() => notify(ui.answerCopyFailed, true))
                 }
               >
                 {copied === answer.id ? ui.answerCopied : ui.answerCopy}

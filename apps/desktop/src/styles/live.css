@@ -509,6 +509,13 @@
   background: var(--paper);
   color: var(--ink);
 }
+.device-choices button:hover:not(:disabled) {
+  border-color: var(--sage);
+}
+.device-choices button strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .device-choices button.active {
   border-color: var(--sage);
   background: var(--soft);

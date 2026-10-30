@@ -360,8 +360,41 @@ pub fn new_id() -> String {
     uuid::Uuid::new_v4().to_string()
 }
 
+/// Translation targets: the stored code and the name models are prompted with.
+/// The courses table CHECK constraint (migration 006) lists the same codes.
+pub const TRANSLATION_LANGUAGES: [(&str, &str); 20] = [
+    ("zh", "Simplified Chinese"),
+    ("zh-Hant", "Traditional Chinese"),
+    ("ja", "Japanese"),
+    ("ko", "Korean"),
+    ("vi", "Vietnamese"),
+    ("th", "Thai"),
+    ("id", "Indonesian"),
+    ("ms", "Malay"),
+    ("hi", "Hindi"),
+    ("bn", "Bengali"),
+    ("ur", "Urdu"),
+    ("ar", "Arabic"),
+    ("fa", "Persian"),
+    ("tr", "Turkish"),
+    ("ru", "Russian"),
+    ("uk", "Ukrainian"),
+    ("es", "Spanish"),
+    ("pt", "Portuguese"),
+    ("fr", "French"),
+    ("de", "German"),
+];
+
+/// The English name of a supported translation language.
+pub fn language_english_name(language: &str) -> Option<&'static str> {
+    TRANSLATION_LANGUAGES
+        .iter()
+        .find(|(code, _)| *code == language)
+        .map(|(_, name)| *name)
+}
+
 pub fn valid_language(language: &str) -> bool {
-    matches!(language, "zh" | "ja" | "ko")
+    language_english_name(language).is_some()
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]

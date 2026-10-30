@@ -33,7 +33,7 @@ impl Storage {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .user_error(crate::error::ErrorCode::CannotReadDatabaseVersion)?;
-        if version > 5 {
+        if version > 6 {
             return Err(
                 crate::error::ErrorCode::ThisDatabaseRequiresANewerLecturerelayVersionUpgrade
                     .into(),
@@ -111,6 +111,31 @@ impl Storage {
                 .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
             tx.commit()
                 .user_error(crate::error::ErrorCode::CannotCommitLiveSummaryMigration)?;
+        }
+        if version < 6 {
+            connection
+                .execute_batch("PRAGMA foreign_keys=OFF;")
+                .user_error(crate::error::ErrorCode::CannotPrepareLanguageMigration)?;
+            let tx = connection
+                .transaction()
+                .user_error(crate::error::ErrorCode::CannotStartLanguageMigration)?;
+            tx.execute_batch(include_str!("migrations/006_translation_languages.sql"))
+                .user_error(crate::error::ErrorCode::LanguageMigrationFailed)?;
+            let errors: i64 = tx
+                .query_row("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |r| {
+                    r.get(0)
+                })
+                .user_error(crate::error::ErrorCode::CannotVerifyMigration)?;
+            if errors != 0 {
+                return Err(crate::error::ErrorCode::LanguageMigrationFailedItsIntegrityCheck.into());
+            }
+            tx.execute_batch("PRAGMA user_version=6;")
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
+            tx.commit()
+                .user_error(crate::error::ErrorCode::CannotCommitLanguageMigration)?;
+            connection
+                .execute_batch("PRAGMA foreign_keys=ON;")
+                .user_error(crate::error::ErrorCode::CannotEnableDatabaseIntegrityChecks)?;
         }
         connection.execute("UPDATE live_summary_cards SET state='deferred',message='The summary did not finish before the app closed. The source text is saved; you can retry it.' WHERE state='running'", []).user_error(crate::error::ErrorCode::CannotRecoverLiveSummaries)?;
         preferences::disable_local_live_summaries(&connection)?;

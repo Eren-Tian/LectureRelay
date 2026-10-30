@@ -498,6 +498,11 @@ pub enum ErrorCode {
     LiveSummaryMigrationFailed,
     CannotCommitLiveSummaryMigration,
     CannotRecoverLiveSummaries,
+    CannotPrepareLanguageMigration,
+    CannotStartLanguageMigration,
+    LanguageMigrationFailed,
+    LanguageMigrationFailedItsIntegrityCheck,
+    CannotCommitLanguageMigration,
     ModelRequired,
 }
 impl ErrorCode {
@@ -1392,6 +1397,11 @@ impl ErrorCode {
             Self::LiveSummaryMigrationFailed => "Live summary migration failed.",
             Self::CannotCommitLiveSummaryMigration => "Cannot commit live summary migration.",
             Self::CannotRecoverLiveSummaries => "Cannot recover live summaries.",
+            Self::CannotPrepareLanguageMigration => "Cannot prepare translation language migration.",
+            Self::CannotStartLanguageMigration => "Cannot start translation language migration.",
+            Self::LanguageMigrationFailed => "Translation language migration failed.",
+            Self::LanguageMigrationFailedItsIntegrityCheck => "Translation language migration failed its integrity check. Existing database was preserved.",
+            Self::CannotCommitLanguageMigration => "Cannot commit translation language migration.",
             Self::ModelRequired => "",
         }
     }
@@ -2286,6 +2296,11 @@ impl ErrorCode {
             "Live summary migration failed." => Self::LiveSummaryMigrationFailed,
             "Cannot commit live summary migration." => Self::CannotCommitLiveSummaryMigration,
             "Cannot recover live summaries." => Self::CannotRecoverLiveSummaries,
+            "Cannot prepare translation language migration." => Self::CannotPrepareLanguageMigration,
+            "Cannot start translation language migration." => Self::CannotStartLanguageMigration,
+            "Translation language migration failed." => Self::LanguageMigrationFailed,
+            "Translation language migration failed its integrity check. Existing database was preserved." => Self::LanguageMigrationFailedItsIntegrityCheck,
+            "Cannot commit translation language migration." => Self::CannotCommitLanguageMigration,
             _ => Self::OperationFailed,
         }
     }

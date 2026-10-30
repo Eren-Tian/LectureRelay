@@ -113,7 +113,7 @@ try {
     url: base + '/tests/fixtures/captions.html',
   });
   await new Promise((r) => setTimeout(r, 1000));
-  for (const lang of ['zh', 'ja', 'ko']) {
+  for (const lang of ['zh', 'ja', 'ko', 'ar']) {
     await click(`select option[value="${lang}"]`);
     await click('#partial');
     await read(
@@ -149,6 +149,13 @@ try {
     assert.equal(
       await read("return document.querySelector('.caption-translation').lang;"),
       lang,
+    );
+    // Right-to-left targets render right-to-left.
+    assert.equal(
+      await read(
+        "return getComputedStyle(document.querySelector('.caption-translation')).direction;",
+      ),
+      lang === 'ar' ? 'rtl' : 'ltr',
     );
     const pair = await read(
       "const e=document.querySelector('.caption-english'),t=document.querySelector('.caption-translation');return {english:e.textContent,translation:t.textContent,below:t.getBoundingClientRect().top>=e.getBoundingClientRect().bottom};",

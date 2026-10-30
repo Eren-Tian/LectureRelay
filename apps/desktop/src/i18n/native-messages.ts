@@ -699,6 +699,13 @@ export const nativeMessages: Record<string, string> = {
   'Live summary migration failed.': '实时总结数据升级失败。',
   'Cannot commit live summary migration.': '无法完成实时总结数据升级。',
   'Cannot recover live summaries.': '无法恢复实时总结。',
+  'Cannot prepare translation language migration.':
+    '无法准备译文语言数据升级。',
+  'Cannot start translation language migration.': '无法开始升级译文语言数据。',
+  'Translation language migration failed.': '译文语言数据升级失败。',
+  'Translation language migration failed its integrity check. Existing database was preserved.':
+    '译文语言数据升级未通过完整性检查，原有数据库已保留。',
+  'Cannot commit translation language migration.': '无法完成译文语言数据升级。',
 };
 
 /** Native messages built with format!; each {} is a value shown as-is. */

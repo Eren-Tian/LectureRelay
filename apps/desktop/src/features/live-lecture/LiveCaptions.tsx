@@ -161,6 +161,7 @@ export function LiveCaptions({
                         <p
                           className="caption-translation"
                           lang={language}
+                          dir="auto"
                           style={{ fontSize: settings.translationFontSize }}
                         >
                           {segment.translatedText}

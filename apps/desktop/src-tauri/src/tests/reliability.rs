@@ -744,3 +744,68 @@ fn finished_translation_delivery_rejects_late_saves_and_clears_pending_once() {
             .is_empty()
     );
 }
+
+#[test]
+fn language_migration_keeps_courses_and_accepts_every_translation_language() {
+    let f = Fixture::new();
+    let path = f.paths.data.join("app.db");
+    let old = rusqlite::Connection::open(&path).unwrap();
+    for sql in [
+        include_str!("../database/migrations/001_initial.sql"),
+        include_str!("../database/migrations/002_classroom.sql"),
+        include_str!("../database/migrations/003_study_workspace.sql"),
+        include_str!("../database/migrations/004_reliability.sql"),
+        include_str!("../database/migrations/005_live_summaries.sql"),
+    ] {
+        old.execute_batch(sql).unwrap();
+    }
+    old.execute_batch("PRAGMA user_version=5; INSERT INTO courses(id,name,subject,assistance_language,created_at,deleted_at) VALUES('c','Biology','subject','ja',1,NULL),('gone','Old','subject','ko',1,5); INSERT INTO lectures(id,course_id,title,started_at,status,recording_path) VALUES('l','c','l',1,'completed','unused'); INSERT INTO transcript_segments(id,lecture_id,start_seconds,end_seconds,source_text,translated_text,origin,provider) VALUES('s','l',0,1,'Mitochondria','ミトコンドリア','local','local');").unwrap();
+    drop(old);
+    let db = f.db();
+    assert_eq!(db.segments("l").unwrap()[0].translated_text, "ミトコンドリア");
+    drop(db);
+    let check = rusqlite::Connection::open(path).unwrap();
+    let one = |sql: &str| check.query_row::<String, _, _>(sql, [], |r| r.get(0)).unwrap();
+    assert_eq!(
+        one("SELECT name||'/'||assistance_language||'/'||IFNULL(deleted_at,'') FROM courses WHERE id='gone'"),
+        "Old/ko/5"
+    );
+    assert_eq!(
+        check
+            .query_row::<i64, _, _>("PRAGMA user_version", [], |r| r.get(0))
+            .unwrap(),
+        6
+    );
+    assert_eq!(
+        check
+            .query_row::<i64, _, _>("SELECT COUNT(*) FROM pragma_foreign_key_check", [], |r| r
+                .get(0))
+            .unwrap(),
+        0
+    );
+    // The rebuilt triggers still switch translations with the course language.
+    check
+        .execute("UPDATE courses SET assistance_language='fr' WHERE id='c'", [])
+        .unwrap();
+    assert_eq!(one("SELECT translated_text FROM transcript_segments"), "");
+    check
+        .execute("UPDATE courses SET assistance_language='ja' WHERE id='c'", [])
+        .unwrap();
+    assert_eq!(
+        one("SELECT translated_text FROM transcript_segments"),
+        "ミトコンドリア"
+    );
+    // The CHECK constraint matches the language table exactly.
+    for (code, _) in crate::domain::TRANSLATION_LANGUAGES {
+        check
+            .execute("UPDATE courses SET assistance_language=?1 WHERE id='gone'", [code])
+            .unwrap();
+        assert!(crate::domain::valid_language(code));
+    }
+    assert!(
+        check
+            .execute("UPDATE courses SET assistance_language='xx' WHERE id='gone'", [])
+            .is_err()
+    );
+    assert!(!crate::domain::valid_language("xx"));
+}

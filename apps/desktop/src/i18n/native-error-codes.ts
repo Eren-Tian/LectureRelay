@@ -722,4 +722,13 @@ export const nativeErrorKeys: Record<string, string> = {
   live_summary_migration_failed: 'Live summary migration failed.',
   cannot_commit_live_summary_migration: 'Cannot commit live summary migration.',
   cannot_recover_live_summaries: 'Cannot recover live summaries.',
+  cannot_prepare_language_migration:
+    'Cannot prepare translation language migration.',
+  cannot_start_language_migration:
+    'Cannot start translation language migration.',
+  language_migration_failed: 'Translation language migration failed.',
+  language_migration_failed_its_integrity_check:
+    'Translation language migration failed its integrity check. Existing database was preserved.',
+  cannot_commit_language_migration:
+    'Cannot commit translation language migration.',
 };

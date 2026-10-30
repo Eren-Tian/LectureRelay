@@ -16,7 +16,7 @@ Upgrade by running the new installer; classroom data and downloaded models are p
 2. Run the installer. It installs for your Windows user and downloads Microsoft WebView2 if needed, which requires internet access.
 3. Open **LectureRelay** from the Start menu or desktop shortcut.
 4. Open **设置 → 首次设置**. In **AI 与模型 → 本地模型**, download **Nemotron** for English captions. Add **Hy-MT2** if you want local translation, then enable the corresponding captions in the setup checklist. Models are downloaded once and shared across courses.
-5. Create a course, choose Chinese, Japanese or Korean for assistance, and add course background and terminology.
+5. Create a course, choose one of 20 translation languages (including Chinese, Japanese, Korean, Vietnamese, Spanish and French), and add course background and terminology.
 6. Select **麦克风** for an in-person class or **系统声音** for a course playing on your PC. Check the input, then start recording.
 
 This installer is for **64-bit Intel/AMD Windows PCs**. A GPU is not required. You do not need Node.js, pnpm, Rust, Python, Ollama or FFmpeg to use the installed app. Model weights are downloaded separately; local inference can then work offline.

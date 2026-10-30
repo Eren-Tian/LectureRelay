@@ -43,6 +43,7 @@ const translations = {
   zh: '把新知识与已知的事物联系起来，会让学习更轻松。',
   ja: '新しい知識を知っていることと結びつけると、学びやすくなります。',
   ko: '새로운 지식을 이미 아는 것과 연결하면 더 쉽게 배울 수 있습니다.',
+  ar: 'يصبح التعلم أسهل عندما نربط المعرفة الجديدة بما نعرفه بالفعل.',
 };
 const segment = (i: number): TranscriptSegment => ({
   id: `fixture:${i}:0`,
@@ -59,7 +60,9 @@ const segment = (i: number): TranscriptSegment => ({
 function Fixture() {
   const [segments, setSegments] = useState<TranscriptSegment[]>([]);
   const [draft, setDraft] = useState<LiveStatus['draft']>(null);
-  const [language, setLanguage] = useState<AssistanceLanguage>('zh');
+  const [language, setLanguage] = useState<
+    keyof typeof translations & AssistanceLanguage
+  >('zh');
   const [failed, setFailed] = useState(false);
   const [following, setFollowing] = useState(true);
   const [previews, setPreviews] = useState<LiveStatus['translationPreviews']>(
@@ -83,7 +86,7 @@ function Fixture() {
           aria-label="Fixture language"
           value={language}
           onChange={(e) => {
-            setLanguage(e.target.value as AssistanceLanguage);
+            setLanguage(e.target.value as typeof language);
             setSegments([]);
             setDraft(null);
           }}
@@ -91,6 +94,7 @@ function Fixture() {
           <option value="zh">Chinese</option>
           <option value="ja">Japanese</option>
           <option value="ko">Korean</option>
+          <option value="ar">Arabic</option>
         </select>
         <button
           id="partial"

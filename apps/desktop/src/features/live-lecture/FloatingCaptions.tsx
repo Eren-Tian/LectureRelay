@@ -91,6 +91,7 @@ export function FloatingCaptions() {
               {settings?.showTranslation && s.translatedText && (
                 <p
                   className="translated-text"
+                  dir="auto"
                   style={{ fontSize: settings.translationFontSize }}
                 >
                   {s.translatedText}

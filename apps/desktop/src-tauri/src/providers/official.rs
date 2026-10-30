@@ -281,11 +281,7 @@ impl QuestionAnsweringProvider for OfficialProvider {
 }
 
 pub fn language_name(language: &str) -> &'static str {
-    match language {
-        "ja" => "Japanese",
-        "ko" => "Korean",
-        _ => "Simplified Chinese",
-    }
+    crate::domain::language_english_name(language).unwrap_or("Simplified Chinese")
 }
 
 pub fn parse_translations(text: &str) -> AppResult<Vec<Translation>> {

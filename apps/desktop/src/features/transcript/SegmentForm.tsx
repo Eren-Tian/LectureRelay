@@ -108,6 +108,8 @@ export function SegmentForm({
           <textarea
             rows={3}
             maxLength={10000}
+            lang={language}
+            dir="auto"
             value={input.translatedText}
             onChange={(event) =>
               setInput((current) => ({

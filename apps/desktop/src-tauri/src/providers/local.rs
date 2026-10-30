@@ -511,12 +511,8 @@ fn background(context: &str) -> String {
     chunks(context, 3000).into_iter().next().unwrap_or_default()
 }
 fn language(code: &str) -> AppResult<&'static str> {
-    match code {
-        "zh" => Ok("Simplified Chinese"),
-        "ja" => Ok("Japanese"),
-        "ko" => Ok("Korean"),
-        _ => Err(crate::error::ErrorCode::UnsupportedTranslationLanguage.into()),
-    }
+    crate::domain::language_english_name(code)
+        .ok_or_else(|| crate::error::ErrorCode::UnsupportedTranslationLanguage.into())
 }
 fn translation_prompt(context: &str, text: &str, target: &str) -> String {
     format!(

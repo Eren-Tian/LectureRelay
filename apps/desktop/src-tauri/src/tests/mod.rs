@@ -127,7 +127,7 @@ fn migrations_reopen_and_preserve_full_learning_data() {
         connection
             .query_row("PRAGMA user_version", [], |row| row.get::<_, i32>(0))
             .unwrap(),
-        5
+        6
     );
     let preferences: String = connection
         .query_row(
@@ -303,7 +303,7 @@ fn rejects_invalid_timeline_language_and_path_traversal() {
     );
     assert!(
         db.save_settings(AppSettings {
-            assistance_language: "fr".into(),
+            assistance_language: "xx".into(),
             ..Default::default()
         })
         .is_err()

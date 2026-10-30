@@ -525,6 +525,8 @@ export function LecturePage({ id }: { id: string }) {
                       <Highlight text={s.sourceText} query={search.trim()} />
                     </p>
                     <p
+                      lang={course.assistanceLanguage}
+                      dir="auto"
                       className={
                         'translated-text ' +
                         (!s.translatedText ? 'untranslated' : '')
@@ -702,7 +704,9 @@ export function LecturePage({ id }: { id: string }) {
             <section key={s.id}>
               <h3>{clock(s.startSeconds)}</h3>
               <p>{s.sourceText}</p>
-              <p>{s.translatedText}</p>
+              <p lang={course.assistanceLanguage} dir="auto">
+                {s.translatedText}
+              </p>
             </section>
           ))}
         </article>

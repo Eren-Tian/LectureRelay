@@ -13,6 +13,7 @@ export function TranslationLine({
       <p
         className="caption-translation"
         lang={preview.language}
+        dir="auto"
         style={{ fontSize: size }}
       >
         {preview.translatedText}

@@ -1,11 +1,28 @@
 import { ui } from '../i18n';
-import type { ExportKind, Lecture } from '../types/domain';
+import type { AssistanceLanguage, ExportKind, Lecture } from '../types/domain';
 
 export const LANGUAGES = [
   { value: 'zh', label: ui.languageChinese },
+  { value: 'zh-Hant', label: ui.languageTraditionalChinese },
   { value: 'ja', label: ui.languageJapanese },
   { value: 'ko', label: ui.languageKorean },
-] as const;
+  { value: 'vi', label: ui.languageVietnamese },
+  { value: 'th', label: ui.languageThai },
+  { value: 'id', label: ui.languageIndonesian },
+  { value: 'ms', label: ui.languageMalay },
+  { value: 'hi', label: ui.languageHindi },
+  { value: 'bn', label: ui.languageBengali },
+  { value: 'ur', label: ui.languageUrdu },
+  { value: 'ar', label: ui.languageArabic },
+  { value: 'fa', label: ui.languagePersian },
+  { value: 'tr', label: ui.languageTurkish },
+  { value: 'ru', label: ui.languageRussian },
+  { value: 'uk', label: ui.languageUkrainian },
+  { value: 'es', label: ui.languageSpanish },
+  { value: 'pt', label: ui.languagePortuguese },
+  { value: 'fr', label: ui.languageFrench },
+  { value: 'de', label: ui.languageGerman },
+] as const satisfies readonly { value: AssistanceLanguage; label: string }[];
 export const SUBJECTS = [
   'Computer Science',
   'Engineering',

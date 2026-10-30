@@ -88,6 +88,7 @@ export function CaptionSettings({
           <p
             className="caption-translation"
             lang={settings.assistanceLanguage}
+            dir="auto"
             style={{ fontSize: settings.translationFontSize }}
           >
             {captionSample.translations[settings.assistanceLanguage]}

@@ -1,4 +1,25 @@
-export type AssistanceLanguage = 'zh' | 'ja' | 'ko';
+/** Translation targets; the native side keeps the same list. */
+export type AssistanceLanguage =
+  | 'zh'
+  | 'zh-Hant'
+  | 'ja'
+  | 'ko'
+  | 'vi'
+  | 'th'
+  | 'id'
+  | 'ms'
+  | 'hi'
+  | 'bn'
+  | 'ur'
+  | 'ar'
+  | 'fa'
+  | 'tr'
+  | 'ru'
+  | 'uk'
+  | 'es'
+  | 'pt'
+  | 'fr'
+  | 'de';
 export type ProviderName = 'none' | 'openai' | 'groq';
 
 export interface NativeFailure {

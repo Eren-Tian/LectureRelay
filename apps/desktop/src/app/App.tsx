@@ -232,24 +232,26 @@ export function App() {
             </button>
           </nav>
           <div className="sidebar-courses" aria-label={ui.courses}>
-            {data.courses.map((course) => (
-              <button
-                key={course.id}
-                className={
-                  route.view === 'course' && route.id === course.id
-                    ? 'active'
-                    : ''
-                }
-                title={course.name}
-                aria-label={course.name}
-                onClick={() => setRoute({ view: 'course', id: course.id })}
-              >
-                <span className="course-initial">
-                  {(course.code || course.name).slice(0, 2)}
-                </span>
-                <span className="sidebar-course-name">{course.name}</span>
-              </button>
-            ))}
+            {data.courses
+              .filter((course) => !course.archived)
+              .map((course) => (
+                <button
+                  key={course.id}
+                  className={
+                    route.view === 'course' && route.id === course.id
+                      ? 'active'
+                      : ''
+                  }
+                  title={course.name}
+                  aria-label={course.name}
+                  onClick={() => setRoute({ view: 'course', id: course.id })}
+                >
+                  <span className="course-initial">
+                    {(course.code || course.name).slice(0, 2)}
+                  </span>
+                  <span className="sidebar-course-name">{course.name}</span>
+                </button>
+              ))}
           </div>
           {recording && (
             <button

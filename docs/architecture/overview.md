@@ -51,7 +51,7 @@ The model manager downloads pinned official revisions, verifies size and SHA-256
 
 ## Storage
 
-SQLite is authoritative. Migrations under `database/migrations/` are explicit, transactional and sequential; the current schema is `user_version=5` (`001_initial` through `005_live_summaries`). Databases newer than the app are rejected.
+SQLite is authoritative. Migrations under `database/migrations/` are explicit, transactional and sequential; the current schema is `user_version=8` (`001_initial` through `008_course_archive`). Databases newer than the app are rejected.
 
 | Entity                    | Behavior                                                              |
 | ------------------------- | --------------------------------------------------------------------- |

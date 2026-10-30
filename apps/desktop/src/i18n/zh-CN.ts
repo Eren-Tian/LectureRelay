@@ -150,6 +150,12 @@ export const zhCN = {
   saveCourse: '保存课程',
   deleteCourse: '删除课程',
   courseMovedToTrash: '课程已移入回收站',
+  archiveCourse: '归档课程',
+  unarchiveCourse: '取消归档',
+  courseArchived: '课程已归档',
+  courseArchivedNotice:
+    '这门课已归档，不显示在侧栏和课程列表里，课堂记录都还在。',
+  archivedCourses: (count: number) => `已归档（${count}）`,
   undo: '撤销',
   lectureCountSuffix: ' 节课',
   lectureHistory: '课堂历史',

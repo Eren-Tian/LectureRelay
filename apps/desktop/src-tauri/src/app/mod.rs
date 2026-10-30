@@ -187,6 +187,7 @@ pub fn run() {
             commands::cancel_model_download,
             commands::trash_courses,
             commands::restore_course,
+            commands::archive_course,
             commands::course_detail,
             commands::save_course,
             commands::delete_course,

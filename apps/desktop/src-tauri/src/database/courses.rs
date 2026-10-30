@@ -8,7 +8,7 @@ use rusqlite::params;
 impl Storage {
     pub fn courses(&self) -> AppResult<Vec<Course>> {
         let db = self.lock()?;
-        let mut query = db.prepare("SELECT c.id,c.name,c.code,c.subject,c.description,c.assistance_language,c.created_at,(SELECT COUNT(*) FROM lectures l WHERE l.course_id=c.id) FROM courses c WHERE c.deleted_at IS NULL ORDER BY c.created_at DESC").user_error(crate::error::ErrorCode::CannotReadCourse)?;
+        let mut query = db.prepare("SELECT c.id,c.name,c.code,c.subject,c.description,c.assistance_language,c.created_at,(SELECT COUNT(*) FROM lectures l WHERE l.course_id=c.id),c.archived_at IS NOT NULL FROM courses c WHERE c.deleted_at IS NULL ORDER BY c.created_at DESC").user_error(crate::error::ErrorCode::CannotReadCourse)?;
         query
             .query_map([], course_from_row)
             .user_error(crate::error::ErrorCode::CannotReadCourse)?
@@ -55,9 +55,24 @@ impl Storage {
         Ok(())
     }
 
+    /// Archiving keeps the course and its lectures; it only leaves the course lists.
+    pub fn archive_course(&self, id: &str, archived: bool) -> AppResult<()> {
+        let changed = self
+            .lock()?
+            .execute(
+                "UPDATE courses SET archived_at=CASE WHEN ?2 THEN unixepoch() END WHERE id=?1 AND deleted_at IS NULL",
+                params![id, archived],
+            )
+            .user_error(crate::error::ErrorCode::CannotArchiveCourse)?;
+        if changed == 0 {
+            return Err(crate::error::ErrorCode::TheCourseDoesNotExist.into());
+        }
+        Ok(())
+    }
+
     pub fn trash(&self) -> AppResult<Vec<Course>> {
         let db = self.lock()?;
-        let mut q = db.prepare("SELECT c.id,c.name,c.code,c.subject,c.description,c.assistance_language,c.created_at,(SELECT COUNT(*) FROM lectures l WHERE l.course_id=c.id) FROM courses c WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC").user_error(crate::error::ErrorCode::CannotReadTrash)?;
+        let mut q = db.prepare("SELECT c.id,c.name,c.code,c.subject,c.description,c.assistance_language,c.created_at,(SELECT COUNT(*) FROM lectures l WHERE l.course_id=c.id),c.archived_at IS NOT NULL FROM courses c WHERE deleted_at IS NOT NULL ORDER BY deleted_at DESC").user_error(crate::error::ErrorCode::CannotReadTrash)?;
         q.query_map([], course_from_row)
             .user_error(crate::error::ErrorCode::CannotReadTrash)?
             .collect::<rusqlite::Result<_>>()
@@ -127,5 +142,6 @@ fn course_from_row(r: &rusqlite::Row<'_>) -> rusqlite::Result<Course> {
         assistance_language: r.get(5)?,
         created_at: r.get(6)?,
         lecture_count: r.get(7)?,
+        archived: r.get(8)?,
     })
 }

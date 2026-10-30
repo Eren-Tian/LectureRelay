@@ -214,8 +214,39 @@
 .glossary-form {
   padding-top: 16px;
 }
-.course-delete {
+.course-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
   margin: 25px 0;
+}
+/* Archived courses: a closed group under the grid, cards without a colour. */
+.archived-courses {
+  margin-top: 25px;
+}
+.archived-courses summary {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.archived-courses .course-grid {
+  margin-top: 12px;
+}
+.course-card.archived {
+  background: var(--soft);
+}
+.course-card.archived .course-symbol {
+  background: var(--paper);
+  color: var(--muted);
+}
+.archived-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
 }
 @media (width <= 1080px) {
   .course-detail-grid {

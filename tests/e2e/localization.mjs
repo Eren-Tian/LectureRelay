@@ -346,6 +346,33 @@ try {
   await until(
     'return window.localizationFixture.calls.includes("restore_course") && !!document.querySelector(".course-delete");',
   );
+  // Archiving keeps the course page but takes the course out of the sidebar
+  // and into the closed Archived group on the course list.
+  await click('归档课程');
+  await until('return !!document.querySelector(".archived-notice");');
+  assert.match(await text(), /课程已归档/);
+  assert.equal(
+    await d.read(
+      'return !!document.querySelector(\'aside button[aria-label="Introduction to Biology"]\');',
+    ),
+    false,
+  );
+  await d.click('.breadcrumb');
+  await until('return !!document.querySelector(".archived-courses");');
+  assert.match(
+    await d.read(
+      'return document.querySelector(".archived-courses summary").textContent;',
+    ),
+    /已归档（1）/,
+  );
+  await d.read('document.querySelector(".archived-courses").open = true;');
+  await screenshot('courses-archived');
+  await d.click('.archived-courses .course-card');
+  await until('return !!document.querySelector(".archived-notice");');
+  await click('取消归档');
+  await until(
+    'return !document.querySelector(".archived-notice") && !!document.querySelector(\'aside button[aria-label="Introduction to Biology"]\');',
+  );
   await click('开始录音');
   await until(
     'return !!document.querySelector(".modal select option[value=fixture-device]");',

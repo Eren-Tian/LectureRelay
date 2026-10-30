@@ -88,6 +88,8 @@ export const api = {
   saveCourse: (id: string | null, input: CourseInput) =>
     call<Course>('save_course', { id, input }),
   deleteCourse: (id: string) => call<void>('delete_course', { id }),
+  archiveCourse: (id: string, archived: boolean) =>
+    call<void>('archive_course', { id, archived }),
   saveTerm: (
     courseId: string,
     id: string | null,

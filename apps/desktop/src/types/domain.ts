@@ -36,6 +36,8 @@ export interface Course {
   assistanceLanguage: AssistanceLanguage;
   createdAt: number;
   lectureCount: number;
+  /** Archived courses keep their lectures but leave the course lists. */
+  archived: boolean;
 }
 export type CourseInput = Pick<
   Course,

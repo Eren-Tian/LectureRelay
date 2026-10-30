@@ -127,7 +127,7 @@ fn migrations_reopen_and_preserve_full_learning_data() {
         connection
             .query_row("PRAGMA user_version", [], |row| row.get::<_, i32>(0))
             .unwrap(),
-        7
+        8
     );
     let preferences: String = connection
         .query_row(
@@ -263,6 +263,27 @@ fn trash_preserves_courses_lectures_and_files_and_can_restore() {
     );
     assert!(path.exists());
     assert!(path.parent().unwrap().join("notes.md").exists());
+}
+
+#[test]
+fn archive_keeps_course_and_lectures_and_can_be_undone() {
+    let fixture = Fixture::new();
+    let db = fixture.db();
+    let course = fixture.course(&db);
+    let lecture = db
+        .create_lecture(&fixture.paths, &course.id, "Last semester")
+        .unwrap();
+    assert!(!db.course(&course.id).unwrap().archived);
+    db.archive_course(&course.id, true).unwrap();
+    assert!(db.course(&course.id).unwrap().archived);
+    assert_eq!(db.course(&course.id).unwrap().lecture_count, 1);
+    assert!(db.lecture(&lecture.id).is_ok());
+    db.archive_course(&course.id, false).unwrap();
+    assert!(!db.course(&course.id).unwrap().archived);
+    // A course in the trash cannot be archived, nor can an unknown one.
+    db.delete_course(&course.id).unwrap();
+    assert!(db.archive_course(&course.id, true).is_err());
+    assert!(db.archive_course("missing", true).is_err());
 }
 
 #[test]

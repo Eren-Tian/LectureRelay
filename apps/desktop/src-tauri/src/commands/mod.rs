@@ -690,6 +690,11 @@ pub fn trash_courses(state: App<'_>) -> AppResult<Vec<Course>> {
     state.storage.trash()
 }
 #[tauri::command]
+pub fn archive_course(state: App<'_>, id: String, archived: bool) -> AppResult<()> {
+    let _gate = state.lock_gate();
+    state.storage.archive_course(&id, archived)
+}
+#[tauri::command]
 pub fn restore_course(state: App<'_>, id: String) -> AppResult<()> {
     let _gate = state.lock_gate();
     state.storage.restore_course(&id)

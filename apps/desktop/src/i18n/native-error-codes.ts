@@ -734,6 +734,10 @@ export const nativeErrorKeys: Record<string, string> = {
   cannot_start_speaker_migration: 'Cannot start speaker label migration.',
   speaker_migration_failed: 'Speaker label migration failed.',
   cannot_commit_speaker_migration: 'Cannot commit speaker label migration.',
+  cannot_start_archive_migration: 'Cannot start course archive migration.',
+  archive_migration_failed: 'Course archive migration failed.',
+  cannot_commit_archive_migration: 'Cannot commit course archive migration.',
+  cannot_archive_course: 'Cannot archive the course.',
   speaker_name_is_empty_or_too_long:
     'Enter a speaker name of up to 40 characters.',
   cannot_save_speaker: 'Cannot save the speaker.',

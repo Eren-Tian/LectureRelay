@@ -24,6 +24,7 @@ const course = {
   assistanceLanguage: 'zh' as const,
   createdAt: 0,
   lectureCount: 1,
+  archived: false,
 };
 const lecture: Lecture = {
   id: 'localization-lecture',
@@ -375,6 +376,9 @@ mockIPC(
         return [{ ...course, id: 'trash-course', name: 'Archived course' }];
       case 'delete_course':
       case 'restore_course':
+        return null;
+      case 'archive_course':
+        course.archived = Boolean(input.archived);
         return null;
       case 'stop_lecture':
         data.recording = null;

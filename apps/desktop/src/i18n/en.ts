@@ -153,6 +153,12 @@ export const en = {
   saveCourse: 'Save Course',
   deleteCourse: 'Delete Course',
   courseMovedToTrash: 'Course moved to Trash',
+  archiveCourse: 'Archive Course',
+  unarchiveCourse: 'Unarchive',
+  courseArchived: 'Course archived',
+  courseArchivedNotice:
+    'This course is archived. It is hidden from the sidebar and course list; its lectures are kept.',
+  archivedCourses: (count: number) => `Archived (${count})`,
   undo: 'Undo',
   lectureCountSuffix: ' lectures',
   lectureHistory: 'Lecture History',

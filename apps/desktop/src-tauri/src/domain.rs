@@ -184,6 +184,7 @@ pub struct Course {
     pub assistance_language: String,
     pub created_at: i64,
     pub lecture_count: i64,
+    pub archived: bool,
 }
 
 #[derive(Clone, Deserialize)]

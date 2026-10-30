@@ -53,6 +53,19 @@ export function CoursePage({ id }: { id: string }) {
         },
       });
     });
+  const archive = (archived: boolean) =>
+    void run(async () => {
+      await api.archiveCourse(id, archived);
+      await Promise.all([reload(), workspace.refresh()]);
+      if (archived)
+        workspace.notify(ui.courseArchived, false, {
+          label: ui.undo,
+          run: async () => {
+            await api.archiveCourse(id, false);
+            await Promise.all([reload(), workspace.refresh()]);
+          },
+        });
+    });
   return (
     <>
       <button
@@ -101,6 +114,18 @@ export function CoursePage({ id }: { id: string }) {
           </button>
         </div>
       </header>
+      {course.archived && (
+        <div className="notice archived-notice">
+          <span>{ui.courseArchivedNotice}</span>
+          <button
+            className="button secondary"
+            disabled={busy}
+            onClick={() => archive(false)}
+          >
+            {ui.unarchiveCourse}
+          </button>
+        </div>
+      )}
       {course.description && (
         <p className="course-description">{course.description}</p>
       )}
@@ -180,14 +205,25 @@ export function CoursePage({ id }: { id: string }) {
           run={run}
         />
       </div>
-      <button
-        className="text-button danger-text course-delete"
-        onClick={removeCourse}
-        disabled={busy || !!workspace.live?.active}
-      >
-        <Icon name="trash" size={16} />
-        {ui.deleteCourse}
-      </button>
+      <div className="course-actions">
+        {!course.archived && (
+          <button
+            className="text-button"
+            onClick={() => archive(true)}
+            disabled={busy}
+          >
+            {ui.archiveCourse}
+          </button>
+        )}
+        <button
+          className="text-button danger-text course-delete"
+          onClick={removeCourse}
+          disabled={busy || !!workspace.live?.active}
+        >
+          <Icon name="trash" size={16} />
+          {ui.deleteCourse}
+        </button>
+      </div>
       {edit && <CourseForm course={course} onClose={closeEdit} />}
       {start && <StartLecture course={course} onClose={closeStart} />}
     </>

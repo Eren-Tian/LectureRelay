@@ -290,6 +290,30 @@ pub fn lecture_detail(state: App<'_>, id: String) -> AppResult<LectureDetail> {
 }
 
 #[tauri::command]
+pub fn set_segment_speaker(
+    state: App<'_>,
+    lecture_id: String,
+    segment_id: String,
+    speaker: String,
+) -> AppResult<()> {
+    let _gate = state.lock_gate();
+    state
+        .storage
+        .set_speaker(&lecture_id, &segment_id, &speaker)
+}
+
+#[tauri::command]
+pub fn rename_speaker(
+    state: App<'_>,
+    lecture_id: String,
+    from: String,
+    to: String,
+) -> AppResult<()> {
+    let _gate = state.lock_gate();
+    state.storage.rename_speaker(&lecture_id, &from, &to)
+}
+
+#[tauri::command]
 pub fn save_segment(
     state: App<'_>,
     lecture_id: String,
@@ -514,7 +538,12 @@ pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<Str
                 .ok_or(crate::error::ErrorCode::InvalidSubtitleFormat)?;
             (
                 format,
-                crate::app::exports::subtitles(&detail.segments, format == "vtt", language)?,
+                crate::app::exports::subtitles(
+                    &detail.segments,
+                    &detail.speakers,
+                    format == "vtt",
+                    language,
+                )?,
             )
         }
         "notes" => (
@@ -526,16 +555,22 @@ pub fn export_lecture(state: App<'_>, id: String, kind: String) -> AppResult<Str
         ),
         "transcript-json" => (
             "json",
-            serde_json::to_string_pretty(&detail.segments)
-                .user_error(crate::error::ErrorCode::CannotEncodeTranscriptExport)?,
+            serde_json::to_string_pretty(&crate::app::exports::labelled(
+                &detail.segments,
+                &detail.speakers,
+            )?)
+            .user_error(crate::error::ErrorCode::CannotEncodeTranscriptExport)?,
         ),
         "transcript-markdown" => {
             let body = detail
                 .segments
                 .iter()
                 .map(|s| {
+                    let speaker = crate::app::exports::speaker_of(&detail.speakers, &s.id)
+                        .map(|name| format!(" · {name}"))
+                        .unwrap_or_default();
                     format!(
-                        "### {}\n\n{}\n\n{}\n",
+                        "### {}{speaker}\n\n{}\n\n{}\n",
                         ai::timestamp(s.start_seconds),
                         s.source_text,
                         s.translated_text

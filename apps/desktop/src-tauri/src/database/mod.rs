@@ -33,7 +33,7 @@ impl Storage {
         let version: i64 = connection
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .user_error(crate::error::ErrorCode::CannotReadDatabaseVersion)?;
-        if version > 6 {
+        if version > 7 {
             return Err(
                 crate::error::ErrorCode::ThisDatabaseRequiresANewerLecturerelayVersionUpgrade
                     .into(),
@@ -138,6 +138,17 @@ impl Storage {
             connection
                 .execute_batch("PRAGMA foreign_keys=ON;")
                 .user_error(crate::error::ErrorCode::CannotEnableDatabaseIntegrityChecks)?;
+        }
+        if version < 7 {
+            let tx = connection
+                .transaction()
+                .user_error(crate::error::ErrorCode::CannotStartSpeakerMigration)?;
+            tx.execute_batch(include_str!("migrations/007_segment_speakers.sql"))
+                .user_error(crate::error::ErrorCode::SpeakerMigrationFailed)?;
+            tx.execute_batch("PRAGMA user_version=7;")
+                .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;
+            tx.commit()
+                .user_error(crate::error::ErrorCode::CannotCommitSpeakerMigration)?;
         }
         connection.execute("UPDATE live_summary_cards SET state='deferred',message='The summary did not finish before the app closed. The source text is saved; you can retry it.' WHERE state='running'", []).user_error(crate::error::ErrorCode::CannotRecoverLiveSummaries)?;
         preferences::disable_local_live_summaries(&connection)?;

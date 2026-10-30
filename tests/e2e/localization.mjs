@@ -191,6 +191,19 @@ try {
     await d.read('return window.localizationFixture.savedTerm;'),
     'Mitochondria=线粒体',
   );
+  // Speakers: label a segment, then rename that speaker everywhere.
+  await d.read('document.querySelector(".speaker-chip").click();');
+  await click('老师');
+  await until(
+    'return document.querySelector(".speaker-chip").textContent === "老师";',
+  );
+  await d.read('document.querySelector(".speaker-chip").click();');
+  await d.fill('.modal input', '李老师');
+  await click('把所有“老师”改成这个名字');
+  await until(
+    'return document.querySelector(".speaker-chip").textContent === "李老师";',
+  );
+  await screenshot('replay-speaker');
   if (
     await d.read('return !!document.querySelector(".study-workspace.narrow");')
   )

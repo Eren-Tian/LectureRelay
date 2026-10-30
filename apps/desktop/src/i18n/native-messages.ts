@@ -706,6 +706,12 @@ export const nativeMessages: Record<string, string> = {
   'Translation language migration failed its integrity check. Existing database was preserved.':
     '译文语言数据升级未通过完整性检查，原有数据库已保留。',
   'Cannot commit translation language migration.': '无法完成译文语言数据升级。',
+  'Cannot start speaker label migration.': '无法开始升级讲话人数据。',
+  'Speaker label migration failed.': '讲话人数据升级失败。',
+  'Cannot commit speaker label migration.': '无法完成讲话人数据升级。',
+  'Enter a speaker name of up to 40 characters.': '讲话人名称最多 40 个字。',
+  'Cannot save the speaker.': '无法保存讲话人。',
+  'Cannot read speakers.': '无法读取讲话人。',
 };
 
 /** Native messages built with format!; each {} is a value shown as-is. */

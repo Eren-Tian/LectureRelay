@@ -101,6 +101,7 @@ const detail: LectureDetail = {
   course,
   lecture,
   segments,
+  speakers: [],
   answers: [],
   recordingWarning:
     'The audio device reported a discontinuity. Check the recording; the device did not report how much audio was affected.',
@@ -352,6 +353,26 @@ mockIPC(
         live.active = false;
         lecture.status = 'completed';
         return lecture;
+      case 'set_segment_speaker': {
+        const others = detail.speakers.filter(
+          (s) => s.segmentId !== input.segmentId,
+        );
+        detail.speakers = input.speaker
+          ? [
+              ...others,
+              {
+                segmentId: String(input.segmentId),
+                speaker: String(input.speaker),
+              },
+            ]
+          : others;
+        return null;
+      }
+      case 'rename_speaker':
+        detail.speakers = detail.speakers.map((s) =>
+          s.speaker === input.from ? { ...s, speaker: String(input.to) } : s,
+        );
+        return null;
       case 'save_term':
         fixture.savedTerm = `${input.source}=${input.translation}`;
         return null;

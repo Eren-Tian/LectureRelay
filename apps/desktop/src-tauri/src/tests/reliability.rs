@@ -783,7 +783,7 @@ fn language_migration_keeps_courses_and_accepts_every_translation_language() {
         check
             .query_row::<i64, _, _>("PRAGMA user_version", [], |r| r.get(0))
             .unwrap(),
-        6
+        7
     );
     assert_eq!(
         check

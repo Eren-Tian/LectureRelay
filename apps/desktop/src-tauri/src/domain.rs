@@ -277,6 +277,14 @@ pub struct Answer {
     pub created_at: i64,
 }
 
+/// A speaker label the student gave one transcript segment.
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct SegmentSpeaker {
+    pub segment_id: String,
+    pub speaker: String,
+}
+
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LectureDetail {
@@ -284,6 +292,7 @@ pub struct LectureDetail {
     pub lecture: Lecture,
     pub course: Course,
     pub segments: Vec<TranscriptSegment>,
+    pub speakers: Vec<SegmentSpeaker>,
     pub note: Option<Note>,
     pub answers: Vec<Answer>,
 }

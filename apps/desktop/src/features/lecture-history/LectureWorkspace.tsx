@@ -21,6 +21,7 @@ import { StudyTools } from '../study/StudyTools';
 import { QuestionsPanel } from '../qa/QuestionsPanel';
 import { DeleteLecture } from './DeleteLecture';
 import { SegmentForm } from '../transcript/SegmentForm';
+import { SpeakerDialog } from '../transcript/SpeakerDialog';
 import { ReplayControls } from './ReplayControls';
 import { AddTermDialog } from '../glossary/AddTermDialog';
 import { savedPosition, savePosition } from './resume';
@@ -58,7 +59,8 @@ export function LecturePage({ id }: { id: string }) {
     } | null>(null),
     [toolRequest, setToolRequest] = useState<{ tab: string; key: number }>(),
     [focusQuestion, setFocusQuestion] = useState(false),
-    [newTerm, setNewTerm] = useState<string | null>(null);
+    [newTerm, setNewTerm] = useState<string | null>(null),
+    [speakerFor, setSpeakerFor] = useState<TranscriptSegment | null>(null);
   const transcriptList = useRef<HTMLDivElement>(null),
     lastSaved = useRef(0);
   const resumeAt = useMemo(() => savedPosition(id), [id]);
@@ -78,14 +80,20 @@ export function LecturePage({ id }: { id: string }) {
     const timer = setInterval(() => void reload(), 4000);
     return () => clearInterval(timer);
   }, [ownJob?.kind, live?.active, reload]);
+  const speakers = useMemo(
+    () => new Map((data?.speakers ?? []).map((s) => [s.segmentId, s.speaker])),
+    [data?.speakers],
+  );
   const filtered = useMemo(() => {
     const q = search.trim().toLocaleLowerCase();
     return (data?.segments ?? []).filter(
       (s) =>
         !q ||
-        `${s.sourceText}\n${s.translatedText}`.toLocaleLowerCase().includes(q),
+        `${speakers.get(s.id) ?? ''}\n${s.sourceText}\n${s.translatedText}`
+          .toLocaleLowerCase()
+          .includes(q),
     );
-  }, [data?.segments, search]);
+  }, [data?.segments, search, speakers]);
   const closeSegment = useCallback(() => setSegment(null), []);
   const questionFocused = useCallback(() => setFocusQuestion(false), []);
   const closeTerm = useCallback(() => setNewTerm(null), []);
@@ -550,6 +558,17 @@ export function LecturePage({ id }: { id: string }) {
                     {clock(s.startSeconds)}
                   </button>
                   <div>
+                    <button
+                      className={`speaker-chip ${speakers.get(s.id) ? '' : 'empty'}`}
+                      aria-label={
+                        speakers.get(s.id)
+                          ? ui.speakerChangeLabel(speakers.get(s.id) ?? '')
+                          : ui.speakerAddLabel
+                      }
+                      onClick={() => setSpeakerFor(s)}
+                    >
+                      {speakers.get(s.id) ?? ui.speakerAdd}
+                    </button>
                     <p
                       className="source-text"
                       style={{
@@ -724,6 +743,16 @@ export function LecturePage({ id }: { id: string }) {
           )}
         </div>
       )}
+      {speakerFor && (
+        <SpeakerDialog
+          lectureId={id}
+          segment={speakerFor}
+          current={speakers.get(speakerFor.id) ?? ''}
+          known={[...new Set(speakers.values())]}
+          onClose={() => setSpeakerFor(null)}
+          onSaved={reload}
+        />
+      )}
       {newTerm !== null && (
         <AddTermDialog course={course} term={newTerm} onClose={closeTerm} />
       )}
@@ -753,7 +782,10 @@ export function LecturePage({ id }: { id: string }) {
           <h2>{ui.transcript}</h2>
           {segments.map((s) => (
             <section key={s.id}>
-              <h3>{clock(s.startSeconds)}</h3>
+              <h3>
+                {clock(s.startSeconds)}
+                {speakers.get(s.id) && ` · ${speakers.get(s.id)}`}
+              </h3>
               <p>{s.sourceText}</p>
               <p lang={course.assistanceLanguage} dir="auto">
                 {s.translatedText}

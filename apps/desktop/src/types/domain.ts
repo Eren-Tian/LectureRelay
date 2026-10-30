@@ -93,11 +93,17 @@ export interface CourseDetail {
   lectures: Lecture[];
   glossary: GlossaryTerm[];
 }
+/** A speaker label the student gave one transcript segment. */
+export interface SegmentSpeaker {
+  segmentId: string;
+  speaker: string;
+}
 export interface LectureDetail {
   recordingWarning: string | null;
   lecture: Lecture;
   course: Course;
   segments: TranscriptSegment[];
+  speakers: SegmentSpeaker[];
   note: Note | null;
   answers: Answer[];
 }

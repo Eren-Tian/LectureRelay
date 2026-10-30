@@ -136,11 +136,11 @@ fn subtitle_exports_are_ordered_nonoverlapping_and_language_specific() {
     b.start_seconds = 4.;
     b.end_seconds = 6.;
     b.source_text = "<script> -->".into();
-    let srt = crate::app::exports::subtitles(&[b, a.clone()], false, "bilingual").unwrap();
+    let srt = crate::app::exports::subtitles(&[b, a.clone()], &[], false, "bilingual").unwrap();
     assert!(srt.contains("00:00:01,250 --> 00:00:04,000"));
     assert!(!srt.contains("<script>"));
     assert!(srt.contains("字幕"));
-    let vtt = crate::app::exports::subtitles(&[a], true, "source").unwrap();
+    let vtt = crate::app::exports::subtitles(&[a], &[], true, "source").unwrap();
     assert!(vtt.starts_with("WEBVTT"));
     assert!(vtt.contains("00:00:01.250"));
     assert!(!vtt.contains("字幕"));
@@ -198,4 +198,39 @@ fn dropped_files_import_only_supported_media() {
     for name in ["slides.pdf", "notes.txt", "noextension", "archive.mp3.zip"] {
         assert!(!is_media(Path::new(name)), "{name}");
     }
+}
+#[test]
+fn speaker_labels_follow_segments_and_appear_in_exports() {
+    let f = Fixture::new();
+    let db = f.db();
+    let (_, l) = lecture(&f, &db);
+    let s = segment(&db, &l.id);
+    db.set_speaker(&l.id, &s.id, "  Teacher ").unwrap();
+    assert_eq!(
+        db.speakers(&l.id).unwrap(),
+        vec![SegmentSpeaker {
+            segment_id: s.id.clone(),
+            speaker: "Teacher".into()
+        }]
+    );
+    // Another lecture's segment cannot be labelled through this lecture.
+    let (_, other) = lecture(&f, &db);
+    assert!(db.set_speaker(&other.id, &s.id, "Student").is_err());
+    assert!(db.set_speaker(&l.id, &s.id, &"x".repeat(41)).is_err());
+    db.rename_speaker(&l.id, "Teacher", "Prof. Lee").unwrap();
+    assert!(db.rename_speaker(&l.id, "Prof. Lee", " ").is_err());
+    let speakers = db.speakers(&l.id).unwrap();
+    assert_eq!(speakers[0].speaker, "Prof. Lee");
+    let srt = crate::app::exports::subtitles(std::slice::from_ref(&s), &speakers, false, "source")
+        .unwrap();
+    assert!(srt.contains("Prof. Lee: Do not increase"));
+    let json = crate::app::exports::labelled(std::slice::from_ref(&s), &speakers).unwrap();
+    assert_eq!(json[0]["speaker"], "Prof. Lee");
+    assert_eq!(json[0]["sourceText"], s.source_text);
+    // An empty name clears the label; deleting the lecture removes them all.
+    db.set_speaker(&l.id, &s.id, "").unwrap();
+    assert!(db.speakers(&l.id).unwrap().is_empty());
+    db.set_speaker(&l.id, &s.id, "Student").unwrap();
+    db.purge_lecture_content("speaker-test", &l.id).unwrap();
+    assert!(db.speakers(&l.id).unwrap().is_empty());
 }

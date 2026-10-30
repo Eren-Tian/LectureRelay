@@ -731,4 +731,11 @@ export const nativeErrorKeys: Record<string, string> = {
     'Translation language migration failed its integrity check. Existing database was preserved.',
   cannot_commit_language_migration:
     'Cannot commit translation language migration.',
+  cannot_start_speaker_migration: 'Cannot start speaker label migration.',
+  speaker_migration_failed: 'Speaker label migration failed.',
+  cannot_commit_speaker_migration: 'Cannot commit speaker label migration.',
+  speaker_name_is_empty_or_too_long:
+    'Enter a speaker name of up to 40 characters.',
+  cannot_save_speaker: 'Cannot save the speaker.',
+  cannot_read_speakers: 'Cannot read speakers.',
 };

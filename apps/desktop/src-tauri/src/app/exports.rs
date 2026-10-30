@@ -1,4 +1,7 @@
-use crate::{domain::TranscriptSegment, error::AppResult};
+use crate::{
+    domain::{SegmentSpeaker, TranscriptSegment},
+    error::{AppResult, UserFacing},
+};
 use std::fmt::Write as _;
 
 fn stamp(ms: u64, vtt: bool) -> String {
@@ -11,7 +14,39 @@ fn stamp(ms: u64, vtt: bool) -> String {
         ms % 1000
     )
 }
-pub fn subtitles(segments: &[TranscriptSegment], vtt: bool, language: &str) -> AppResult<String> {
+pub fn speaker_of<'a>(speakers: &'a [SegmentSpeaker], segment: &str) -> Option<&'a str> {
+    speakers
+        .iter()
+        .find(|s| s.segment_id == segment)
+        .map(|s| s.speaker.as_str())
+}
+
+/// Segments as JSON values, each with its speaker when one was assigned.
+pub fn labelled(
+    segments: &[TranscriptSegment],
+    speakers: &[SegmentSpeaker],
+) -> AppResult<Vec<serde_json::Value>> {
+    segments
+        .iter()
+        .map(|segment| {
+            let mut value = serde_json::to_value(segment)
+                .user_error(crate::error::ErrorCode::CannotEncodeTranscriptExport)?;
+            if let (Some(name), Some(object)) =
+                (speaker_of(speakers, &segment.id), value.as_object_mut())
+            {
+                object.insert("speaker".into(), name.into());
+            }
+            Ok(value)
+        })
+        .collect()
+}
+
+pub fn subtitles(
+    segments: &[TranscriptSegment],
+    speakers: &[SegmentSpeaker],
+    vtt: bool,
+    language: &str,
+) -> AppResult<String> {
     if !matches!(language, "source" | "translation" | "bilingual") {
         return Err(crate::error::ErrorCode::ChooseASubtitleLanguage.into());
     }
@@ -43,6 +78,10 @@ pub fn subtitles(segments: &[TranscriptSegment], vtt: bool, language: &str) -> A
             "source" => s.source_text.clone(),
             "translation" => s.translated_text.clone(),
             _ => format!("{}\n{}", s.source_text, s.translated_text),
+        };
+        let text = match speaker_of(speakers, &s.id) {
+            Some(name) => format!("{name}: {text}"),
+            None => text,
         };
         let text = text
             .replace('\r', "")

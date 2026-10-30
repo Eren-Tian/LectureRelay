@@ -372,6 +372,16 @@ export const en = {
   addToGlossaryTitle: 'Add to Course Glossary',
   addToGlossaryHint:
     'This course will use it for future recognition and translation.',
+  speakerDialogTitle: 'Speaker',
+  speakerAdd: '+ Speaker',
+  speakerAddLabel: 'Label who is speaking',
+  speakerChangeLabel: (name: string) => `Speaker: ${name}. Click to change`,
+  speakerTeacher: 'Teacher',
+  speakerStudent: 'Student',
+  speakerOtherName: 'Other name',
+  speakerUse: 'Use for This Segment',
+  speakerClear: 'Clear',
+  speakerRenameAll: (name: string) => `Rename every “${name}”`,
   askAboutSelectionQuestion: (text: string) =>
     `What does this part of the lecture mean? “${text}”`,
   lectureWordCount: (count: number) => `${count.toLocaleString('en-US')} words`,

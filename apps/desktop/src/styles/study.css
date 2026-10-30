@@ -282,6 +282,53 @@
     display: none;
   }
 }
+/* Who is speaking: a quiet chip, shown on hover or focus until set. */
+.speaker-chip {
+  display: inline-flex;
+  margin-bottom: 4px;
+  padding: 2px 9px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--secondary);
+  font-size: 11px;
+  font-weight: 650;
+}
+.speaker-chip.empty {
+  opacity: 0;
+  border-style: dashed;
+  color: var(--muted);
+  font-weight: 500;
+}
+.transcript-segment:hover .speaker-chip.empty,
+.speaker-chip.empty:focus-visible {
+  opacity: 1;
+}
+.speaker-excerpt {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.speaker-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 16px;
+}
+.speaker-choices button {
+  padding: 6px 14px;
+  border: 1px solid var(--control-line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 13px;
+}
+.speaker-choices button.active,
+.speaker-choices button:hover:not(:disabled) {
+  border-color: var(--sage);
+  background: var(--soft);
+}
 .follow-toggle[aria-pressed='true'] {
   font-weight: 650;
 }

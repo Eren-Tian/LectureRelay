@@ -120,6 +120,10 @@ export const api = {
   stopLecture: (id: string) => call<Lecture>('stop_lecture', { id }),
   recording: () => call<RecordingStatus | null>('recording_status'),
   lecture: (id: string) => call<LectureDetail>('lecture_detail', { id }),
+  setSpeaker: (lectureId: string, segmentId: string, speaker: string) =>
+    call<void>('set_segment_speaker', { lectureId, segmentId, speaker }),
+  renameSpeaker: (lectureId: string, from: string, to: string) =>
+    call<void>('rename_speaker', { lectureId, from, to }),
   saveSegment: (lectureId: string, id: string | null, input: SegmentInput) =>
     call<void>('save_segment', { lectureId, id, input }),
   saveNote: (lectureId: string, body: string) =>

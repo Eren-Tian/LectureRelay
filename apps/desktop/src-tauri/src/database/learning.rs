@@ -28,6 +28,67 @@ impl Storage {
         .collect::<rusqlite::Result<_>>()
         .user_error(crate::error::ErrorCode::CannotReadLiveCaptions)
     }
+    pub fn speakers(&self, lecture_id: &str) -> AppResult<Vec<SegmentSpeaker>> {
+        let db = self.lock()?;
+        let mut query = db
+            .prepare("SELECT segment_id,speaker FROM segment_speakers WHERE lecture_id=?1")
+            .user_error(crate::error::ErrorCode::CannotReadSpeakers)?;
+        query
+            .query_map([lecture_id], |r| {
+                Ok(SegmentSpeaker {
+                    segment_id: r.get(0)?,
+                    speaker: r.get(1)?,
+                })
+            })
+            .user_error(crate::error::ErrorCode::CannotReadSpeakers)?
+            .collect::<Result<_, _>>()
+            .user_error(crate::error::ErrorCode::CannotReadSpeakers)
+    }
+
+    /// Labels one segment; an empty name removes the label.
+    pub fn set_speaker(&self, lecture_id: &str, segment_id: &str, speaker: &str) -> AppResult<()> {
+        let speaker = speaker.trim();
+        if speaker.chars().count() > 40 {
+            return Err(crate::error::ErrorCode::SpeakerNameIsEmptyOrTooLong.into());
+        }
+        let db = self.lock()?;
+        let exists: bool = db
+            .query_row(
+                "SELECT EXISTS(SELECT 1 FROM transcript_segments WHERE id=?1 AND lecture_id=?2)",
+                params![segment_id, lecture_id],
+                |r| r.get(0),
+            )
+            .user_error(crate::error::ErrorCode::CannotSaveSpeaker)?;
+        if !exists {
+            return Err(crate::error::ErrorCode::TranscriptSegmentDoesNotExist.into());
+        }
+        if speaker.is_empty() {
+            db.execute("DELETE FROM segment_speakers WHERE segment_id=?1", [segment_id])
+        } else {
+            db.execute(
+                "INSERT INTO segment_speakers(segment_id,lecture_id,speaker) VALUES(?1,?2,?3) ON CONFLICT(segment_id) DO UPDATE SET speaker=excluded.speaker",
+                params![segment_id, lecture_id, speaker],
+            )
+        }
+        .user_error(crate::error::ErrorCode::CannotSaveSpeaker)?;
+        Ok(())
+    }
+
+    /// Renames a speaker on every segment of one lecture.
+    pub fn rename_speaker(&self, lecture_id: &str, from: &str, to: &str) -> AppResult<()> {
+        let to = to.trim();
+        if to.is_empty() || to.chars().count() > 40 {
+            return Err(crate::error::ErrorCode::SpeakerNameIsEmptyOrTooLong.into());
+        }
+        self.lock()?
+            .execute(
+                "UPDATE segment_speakers SET speaker=?3 WHERE lecture_id=?1 AND speaker=?2",
+                params![lecture_id, from, to],
+            )
+            .user_error(crate::error::ErrorCode::CannotSaveSpeaker)?;
+        Ok(())
+    }
+
     pub fn segments(&self, lecture_id: &str) -> AppResult<Vec<TranscriptSegment>> {
         let db = self.lock()?;
         let mut query = db.prepare("SELECT id,lecture_id,start_seconds,end_seconds,source_text,translated_text,origin,provider,status,transcript_version,revision FROM transcript_segments WHERE lecture_id=?1 ORDER BY start_seconds,id").user_error(crate::error::ErrorCode::CannotReadTranscript)?;
@@ -171,6 +232,7 @@ impl Storage {
             recording_warning: None,
             course: self.course(&lecture.course_id)?,
             segments: self.segments(id)?,
+            speakers: self.speakers(id)?,
             note: self.note(id)?,
             answers: self.answers(id)?,
             lecture,

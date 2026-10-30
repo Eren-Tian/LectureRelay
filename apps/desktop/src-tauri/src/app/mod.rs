@@ -168,6 +168,8 @@ pub fn run() {
             commands::study::pin_lecture,
             commands::study::import_media,
             commands::study::import_dropped_media,
+            commands::set_segment_speaker,
+            commands::rename_speaker,
             commands::study::attach_document,
             commands::study::read_document,
             commands::bootstrap,

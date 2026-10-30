@@ -503,6 +503,12 @@ pub enum ErrorCode {
     LanguageMigrationFailed,
     LanguageMigrationFailedItsIntegrityCheck,
     CannotCommitLanguageMigration,
+    CannotStartSpeakerMigration,
+    SpeakerMigrationFailed,
+    CannotCommitSpeakerMigration,
+    SpeakerNameIsEmptyOrTooLong,
+    CannotSaveSpeaker,
+    CannotReadSpeakers,
     ModelRequired,
 }
 impl ErrorCode {
@@ -1406,6 +1412,12 @@ impl ErrorCode {
                 "Translation language migration failed its integrity check. Existing database was preserved."
             }
             Self::CannotCommitLanguageMigration => "Cannot commit translation language migration.",
+            Self::CannotStartSpeakerMigration => "Cannot start speaker label migration.",
+            Self::SpeakerMigrationFailed => "Speaker label migration failed.",
+            Self::CannotCommitSpeakerMigration => "Cannot commit speaker label migration.",
+            Self::SpeakerNameIsEmptyOrTooLong => "Enter a speaker name of up to 40 characters.",
+            Self::CannotSaveSpeaker => "Cannot save the speaker.",
+            Self::CannotReadSpeakers => "Cannot read speakers.",
             Self::ModelRequired => "",
         }
     }
@@ -2309,6 +2321,12 @@ impl ErrorCode {
                 Self::LanguageMigrationFailedItsIntegrityCheck
             }
             "Cannot commit translation language migration." => Self::CannotCommitLanguageMigration,
+            "Cannot start speaker label migration." => Self::CannotStartSpeakerMigration,
+            "Speaker label migration failed." => Self::SpeakerMigrationFailed,
+            "Cannot commit speaker label migration." => Self::CannotCommitSpeakerMigration,
+            "Enter a speaker name of up to 40 characters." => Self::SpeakerNameIsEmptyOrTooLong,
+            "Cannot save the speaker." => Self::CannotSaveSpeaker,
+            "Cannot read speakers." => Self::CannotReadSpeakers,
             _ => Self::OperationFailed,
         }
     }

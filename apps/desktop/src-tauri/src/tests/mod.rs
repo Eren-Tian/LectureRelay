@@ -127,7 +127,7 @@ fn migrations_reopen_and_preserve_full_learning_data() {
         connection
             .query_row("PRAGMA user_version", [], |row| row.get::<_, i32>(0))
             .unwrap(),
-        6
+        7
     );
     let preferences: String = connection
         .query_row(

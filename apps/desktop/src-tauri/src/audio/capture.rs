@@ -119,6 +119,55 @@ fn send_samples(
     }
 }
 
+impl CaptureHealth {
+    /// Recording moved to a replacement device; the saved recording reports the gap.
+    pub(super) fn device_switched(&self, paused: bool) {
+        self.discontinuities.fetch_add(1, Ordering::Relaxed);
+        self.pending_discontinuities.fetch_add(1, Ordering::Relaxed);
+        self.trace.event("device_switched", paused, None, None);
+    }
+}
+
+/// Converts mono PCM between sample rates by linear interpolation, keeping
+/// state across packets. Used when a replacement device runs at a different
+/// rate than the recording file.
+pub(super) struct Resampler {
+    step: f64,
+    /// Fractional index into the next packet; -1 refers to `previous`.
+    position: f64,
+    previous: Option<i16>,
+}
+
+impl Resampler {
+    pub(super) fn new(from: u32, to: u32) -> Self {
+        Self {
+            step: f64::from(from) / f64::from(to),
+            position: 0.0,
+            previous: None,
+        }
+    }
+
+    pub(super) fn process(&mut self, input: &[i16]) -> Vec<i16> {
+        let Some(&last) = input.last() else {
+            return Vec::new();
+        };
+        let previous = f64::from(self.previous.unwrap_or(input[0]));
+        let sample =
+            |index: isize| usize::try_from(index).map_or(previous, |i| f64::from(input[i]));
+        let end = (input.len() - 1) as f64;
+        let mut output = Vec::with_capacity((input.len() as f64 / self.step) as usize + 1);
+        while self.position < end {
+            let base = self.position.floor();
+            let (a, b) = (sample(base as isize), sample(base as isize + 1));
+            output.push((a + (b - a) * (self.position - base)).round() as i16);
+            self.position += self.step;
+        }
+        self.position -= input.len() as f64;
+        self.previous = Some(last);
+        output
+    }
+}
+
 fn stream_error(kind: cpal::ErrorKind, health: &CaptureHealth, failed: &AtomicBool, paused: bool) {
     match kind {
         cpal::ErrorKind::Xrun => {
@@ -180,9 +229,10 @@ pub fn devices(source: InputSource) -> AppResult<Vec<InputDevice>> {
         .collect())
 }
 
-pub(super) fn build_stream<T>(
+fn build_stream<T>(
     device: &cpal::Device,
     config: cpal::StreamConfig,
+    output_rate: u32,
     sender: mpsc::SyncSender<Vec<i16>>,
     paused: Arc<AtomicBool>,
     health: Arc<CaptureHealth>,
@@ -202,6 +252,8 @@ where
     let mut previous_capture = None;
     let mut previous_frames = 0_u64;
     let mut last_anchor_us = 0;
+    let mut resampler = (config.sample_rate != output_rate)
+        .then(|| Resampler::new(config.sample_rate, output_rate));
     device
         .build_input_stream(
             config,
@@ -267,7 +319,7 @@ where
                     return;
                 }
                 let mut invalid = 0_u64;
-                let mono = data
+                let mono: Vec<i16> = data
                     .chunks_exact(channels)
                     .map(|frame| {
                         let average = frame
@@ -285,7 +337,11 @@ where
                     .trace
                     .invalid_replaced
                     .fetch_add(invalid, Ordering::Relaxed);
-                send_samples(&sender, mono, &health, config.sample_rate);
+                let mono = match resampler.as_mut() {
+                    Some(resampler) => resampler.process(&mono),
+                    None => mono,
+                };
+                send_samples(&sender, mono, &health, output_rate);
             },
             move |error| {
                 // WASAPI reports recoverable discontinuities at stream start/resume.
@@ -302,6 +358,70 @@ where
         .user_error(crate::error::ErrorCode::CannotStartAudioCaptureCheckWindowsAudioPermissions)
 }
 
+/// A capture stream for any supported sample format, delivering mono PCM at
+/// `output_rate` (resampled when the device runs at another rate). None when
+/// the format is unsupported; callers report that in their own words.
+pub(super) fn open_stream(
+    device: &cpal::Device,
+    config: &cpal::SupportedStreamConfig,
+    output_rate: u32,
+    samples: mpsc::SyncSender<Vec<i16>>,
+    paused: &Arc<AtomicBool>,
+    health: &Arc<CaptureHealth>,
+    failed: &Arc<AtomicBool>,
+) -> Option<AppResult<cpal::Stream>> {
+    let stream_config = config.config();
+    let (paused, health, failed) = (paused.clone(), health.clone(), failed.clone());
+    Some(match config.sample_format() {
+        cpal::SampleFormat::F32 => build_stream::<f32>(
+            device,
+            stream_config,
+            output_rate,
+            samples,
+            paused,
+            health,
+            failed,
+        ),
+        cpal::SampleFormat::I16 => build_stream::<i16>(
+            device,
+            stream_config,
+            output_rate,
+            samples,
+            paused,
+            health,
+            failed,
+        ),
+        cpal::SampleFormat::U16 => build_stream::<u16>(
+            device,
+            stream_config,
+            output_rate,
+            samples,
+            paused,
+            health,
+            failed,
+        ),
+        cpal::SampleFormat::I32 => build_stream::<i32>(
+            device,
+            stream_config,
+            output_rate,
+            samples,
+            paused,
+            health,
+            failed,
+        ),
+        cpal::SampleFormat::F64 => build_stream::<f64>(
+            device,
+            stream_config,
+            output_rate,
+            samples,
+            paused,
+            health,
+            failed,
+        ),
+        _ => return None,
+    })
+}
+
 fn float_to_pcm(value: f32) -> i16 {
     if !value.is_finite() {
         return 0;
@@ -312,6 +432,29 @@ fn float_to_pcm(value: f32) -> i16 {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn resampler_keeps_equal_rates_and_scales_others_across_packets() {
+        let ramp: Vec<i16> = (0..480).map(|i| i as i16 * 10).collect();
+        // Interpolation needs the next sample, so each packet's last sample
+        // comes out with the following packet.
+        let mut same = Resampler::new(48_000, 48_000);
+        assert_eq!(same.process(&ramp), ramp[..479]);
+        assert_eq!(same.process(&[4800, 4810]), [4790, 4800]);
+        // 48 kHz to 16 kHz keeps every third sample of a straight line.
+        let third = Resampler::new(48_000, 16_000).process(&ramp);
+        assert_eq!(third.len(), 160);
+        assert!(third.iter().enumerate().all(|(i, s)| *s == (i * 30) as i16));
+        // Packet boundaries do not change the result.
+        let mut whole = Resampler::new(44_100, 48_000);
+        let expected = whole.process(&ramp);
+        let mut split = Resampler::new(44_100, 48_000);
+        let mut got = split.process(&ramp[..173]);
+        got.extend(split.process(&ramp[173..]));
+        assert_eq!(got.len(), expected.len());
+        assert!(got.iter().zip(&expected).all(|(a, b)| (a - b).abs() <= 1));
+        assert!((expected.len() as i64 - 522).abs() <= 1);
+        assert!(Resampler::new(44_100, 48_000).process(&[]).is_empty());
+    }
     #[test]
     fn capture_preserves_two_seconds_while_writer_is_temporarily_busy() {
         let health = CaptureHealth::default();

@@ -1,13 +1,10 @@
-use super::capture::{CaptureHealth, CaptureQuality, build_stream, sample_queue};
+use super::capture::{CaptureHealth, CaptureQuality, open_stream, sample_queue};
 use crate::{
     domain::InputSource,
     error::{AppResult, UserFacing},
     storage::write_atomic,
 };
-use cpal::{
-    SampleFormat,
-    traits::{DeviceTrait, HostTrait, StreamTrait},
-};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::{
     io::BufWriter,
     path::PathBuf,
@@ -266,9 +263,7 @@ fn record<R: tauri::Runtime>(
     .ok_or(crate::error::ErrorCode::NoAudioDeviceFoundConnectItAndCheck)?;
     if let Ok(mut current) = status.lock() {
         current.source = source;
-        current.device_name = device
-            .description()
-            .map_or_else(|_| "Selected audio device".into(), |d| d.name().to_owned());
+        current.device_name = device_name(&device);
     }
     let config = (if source == InputSource::System {
         device.default_output_config()
@@ -300,53 +295,16 @@ fn record<R: tauri::Runtime>(
         .user_error(crate::error::ErrorCode::CannotSaveTheWavHeader)?;
     let (samples_tx, samples_rx) = sample_queue();
     let failed = Arc::new(AtomicBool::new(false));
-    let stream = match config.sample_format() {
-        SampleFormat::F32 => build_stream::<f32>(
-            &device,
-            stream_config,
-            samples_tx,
-            paused.clone(),
-            health.clone(),
-            failed.clone(),
-        ),
-        SampleFormat::I16 => build_stream::<i16>(
-            &device,
-            stream_config,
-            samples_tx,
-            paused.clone(),
-            health.clone(),
-            failed.clone(),
-        ),
-        SampleFormat::U16 => build_stream::<u16>(
-            &device,
-            stream_config,
-            samples_tx,
-            paused.clone(),
-            health.clone(),
-            failed.clone(),
-        ),
-        SampleFormat::I32 => build_stream::<i32>(
-            &device,
-            stream_config,
-            samples_tx,
-            paused.clone(),
-            health.clone(),
-            failed.clone(),
-        ),
-        SampleFormat::F64 => build_stream::<f64>(
-            &device,
-            stream_config,
-            samples_tx,
-            paused.clone(),
-            health.clone(),
-            failed.clone(),
-        ),
-        _ => {
-            return Err(
-                crate::error::ErrorCode::ThisAudioSampleFormatIsUnsupportedChooseAnother.into(),
-            );
-        }
-    }?;
+    let mut stream = open_stream(
+        &device,
+        &config,
+        rate,
+        samples_tx.clone(),
+        &paused,
+        &health,
+        &failed,
+    )
+    .ok_or(crate::error::ErrorCode::ThisAudioSampleFormatIsUnsupportedChooseAnother)??;
     health.trace.event("start_requested", false, None, None);
     stream
         .play()
@@ -361,6 +319,8 @@ fn record<R: tauri::Runtime>(
     let mut trace_at = Instant::now();
     let mut voice_at = Instant::now();
     let mut error = None;
+    let mut lost_at: Option<Instant> = None;
+    let mut retry_at = Instant::now();
     loop {
         match controls.try_recv() {
             Ok(Control::Stop) | Err(mpsc::TryRecvError::Disconnected) => break,
@@ -385,11 +345,43 @@ fn record<R: tauri::Runtime>(
             }
             Err(mpsc::TryRecvError::Empty) => {}
         }
+        // A lost device is replaced by the system default for up to five seconds.
+        // Its audio continues in the same file at this recording's sample rate.
         if failed.load(Ordering::Relaxed) {
-            error = Some(
-                "Audio device disconnected or unavailable. Earlier audio is preserved.".into(),
-            );
-            break;
+            let deadline = *lost_at.get_or_insert_with(|| Instant::now() + Duration::from_secs(5));
+            if retry_at.elapsed() >= Duration::from_millis(500) {
+                retry_at = Instant::now();
+                if let Some((replacement, replacement_config)) = default_device(&host, source)
+                    && let Some(Ok(next)) = open_stream(
+                        &replacement,
+                        &replacement_config,
+                        rate,
+                        samples_tx.clone(),
+                        &paused,
+                        &health,
+                        &failed,
+                    )
+                {
+                    // The failed stream goes first, so its late errors cannot mark the new one.
+                    drop(std::mem::replace(&mut stream, next));
+                    failed.store(false, Ordering::Relaxed);
+                    if stream.play().is_ok() {
+                        lost_at = None;
+                        health.device_switched(paused.load(Ordering::Relaxed));
+                        if let Ok(mut current) = status.lock() {
+                            current.device_name = device_name(&replacement);
+                        }
+                        continue;
+                    }
+                    failed.store(true, Ordering::Relaxed);
+                }
+            }
+            if Instant::now() >= deadline {
+                error = Some(
+                    "Audio device disconnected or unavailable. Earlier audio is preserved.".into(),
+                );
+                break;
+            }
         }
         if let Ok(samples) = samples_rx.recv_timeout(Duration::from_millis(100)) {
             let buffered = samples.len();
@@ -520,4 +512,29 @@ fn record<R: tauri::Runtime>(
         duration_seconds: count as f64 / rate as f64,
         error,
     })
+}
+
+fn device_name(device: &cpal::Device) -> String {
+    device
+        .description()
+        .map_or_else(|_| "Selected audio device".into(), |d| d.name().to_owned())
+}
+
+/// The system default device of the recording's kind, with its default format.
+fn default_device(
+    host: &cpal::Host,
+    source: InputSource,
+) -> Option<(cpal::Device, cpal::SupportedStreamConfig)> {
+    let device = if source == InputSource::System {
+        host.default_output_device()
+    } else {
+        host.default_input_device()
+    }?;
+    let config = if source == InputSource::System {
+        device.default_output_config()
+    } else {
+        device.default_input_config()
+    }
+    .ok()?;
+    Some((device, config))
 }

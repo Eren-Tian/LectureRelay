@@ -1,12 +1,9 @@
-use super::capture::{CaptureHealth, build_stream};
+use super::capture::{CaptureHealth, open_stream};
 use crate::{
     domain::InputSource,
     error::{AppResult, UserFacing},
 };
-use cpal::{
-    SampleFormat,
-    traits::{DeviceTrait, HostTrait, StreamTrait},
-};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use std::{
     sync::{
         Arc,
@@ -56,53 +53,9 @@ pub fn test(
     let paused = Arc::new(AtomicBool::new(false));
     let health = Arc::new(CaptureHealth::default());
     let failed = Arc::new(AtomicBool::new(false));
-    let stream = match config.sample_format() {
-        SampleFormat::F32 => build_stream::<f32>(
-            &device,
-            config.into(),
-            sender,
-            paused,
-            health,
-            failed.clone(),
-        ),
-        SampleFormat::I16 => build_stream::<i16>(
-            &device,
-            config.into(),
-            sender,
-            paused,
-            health,
-            failed.clone(),
-        ),
-        SampleFormat::U16 => build_stream::<u16>(
-            &device,
-            config.into(),
-            sender,
-            paused,
-            health,
-            failed.clone(),
-        ),
-        SampleFormat::I32 => build_stream::<i32>(
-            &device,
-            config.into(),
-            sender,
-            paused,
-            health,
-            failed.clone(),
-        ),
-        SampleFormat::F64 => build_stream::<f64>(
-            &device,
-            config.into(),
-            sender,
-            paused,
-            health,
-            failed.clone(),
-        ),
-        _ => {
-            return Err(
-                crate::error::ErrorCode::ThisAudioFormatIsUnsupportedChooseAnotherDevice.into(),
-            );
-        }
-    }?;
+    let rate = config.config().sample_rate;
+    let stream = open_stream(&device, &config, rate, sender, &paused, &health, &failed)
+        .ok_or(crate::error::ErrorCode::ThisAudioFormatIsUnsupportedChooseAnotherDevice)??;
     stream
         .play()
         .user_error(crate::error::ErrorCode::CannotStartTheAudioTestCloseAppsHolding)?;

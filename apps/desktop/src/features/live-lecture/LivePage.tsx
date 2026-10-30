@@ -2,7 +2,7 @@ import { ui } from '../../i18n';
 import { messageText } from '../../i18n/messages';
 import { StudyWorkspace } from '../../components/StudyWorkspace';
 import { StudyTools } from '../study/StudyTools';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api, errorText } from '../../api/client';
 import { clock, languageName } from '../../lib/presentation';
 import { Icon } from '../../components/Icon';
@@ -25,6 +25,16 @@ export function LivePage({ id }: { id: string }) {
   const [openingCaptions, setOpeningCaptions] = useState(false);
   const [continuation, setContinuation] = useState(false);
   const closeContinuation = useCallback(() => setContinuation(false), []);
+  // The native recorder moves to the default device when the chosen one is
+  // lost; say so, since the sound source may have changed.
+  const deviceName = recording?.lectureId === id ? recording.deviceName : '';
+  const lastDevice = useRef(deviceName);
+  const { notify } = workspace;
+  useEffect(() => {
+    if (deviceName && lastDevice.current && deviceName !== lastDevice.current)
+      notify(ui.liveDeviceSwitched(deviceName));
+    lastDevice.current = deviceName;
+  }, [deviceName, notify]);
   const settings = workspace.data.settings;
   const live = workspace.live?.lectureId === id ? workspace.live : null;
   if (!data) return <ResourceState error={error} reload={reload} />;

@@ -292,6 +292,11 @@ try {
   assert.match(model, /下载 Hy-MT2-1.8B · Q4_K_M/);
   assert.match(model, /设置 → AI 与模型 → 本地模型/);
   assert.match(model, /尚未上传任何文本/);
+  // A replacement device chosen by the recorder is announced.
+  await d.read('window.localizationFixture.switchDevice("Laptop Microphone");');
+  await until(
+    'return document.body.innerText.includes("已自动切换到 Laptop Microphone");',
+  );
   // If the device fails mid-lecture, one click saves and starts a follow-on.
   await d.read('window.localizationFixture.failRecording();');
   await click('保存并继续录音');

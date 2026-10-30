@@ -179,6 +179,12 @@ const fixture = {
   failTrash: false,
   droppedImport: '',
   savedTerm: '',
+  /** Simulates the recorder moving to another device by itself. */
+  switchDevice: (deviceName: string) => {
+    if (!data.recording) return;
+    data.recording = { ...data.recording, deviceName };
+    return emit('recording-status', data.recording);
+  },
   /** Simulates the audio device disappearing mid-lecture. */
   failRecording: () => {
     if (!data.recording) return;

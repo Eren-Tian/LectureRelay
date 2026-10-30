@@ -223,6 +223,8 @@ export const en = {
     'Recording stopped. Everything recorded so far is saved. Save this part, then pick a device to keep recording.',
   liveSaveAndContinue: 'Save and Keep Recording',
   liveContinuationTitle: (title: string) => `${title} (continued)`,
+  liveDeviceSwitched: (device: string) =>
+    `The audio device was lost. Recording continues on ${device}.`,
   liveRecordingPausedStatus: 'Paused',
   liveRecordingDurationLabel: 'Recording duration',
   liveAudioLevelLabel: 'Audio level',

@@ -203,8 +203,16 @@ try {
   await until(
     'return document.querySelector(".speaker-chip").textContent === "老师";',
   );
+  await until('return !document.querySelector(".modal");');
   await d.read('document.querySelector(".speaker-chip").click();');
+  // The dialog renders and focuses its field on the next frame.
+  await until(
+    'return document.activeElement === document.querySelector(".modal input");',
+  );
   await d.fill('.modal input', '李老师');
+  await until(
+    'return document.querySelector(".modal input").value === "李老师";',
+  );
   await click('把所有“老师”改成这个名字');
   await until(
     'return document.querySelector(".speaker-chip").textContent === "李老师";',

@@ -104,7 +104,7 @@ try {
       driver.native('live_status'),
       driver.native('recording_status'),
       driver.read(
-        'const e=document.querySelector(".caption-scroll");return {captionText:e?.innerText||"",captionCount:document.querySelectorAll(".live-caption").length,clock:document.querySelector(".recording-clock")?.innerText,scrollHeight:e?.scrollHeight,viewHeight:e?.clientHeight};',
+        'const e=document.querySelector(".caption-scroll");return {captionText:e?.innerText||"",captionCount:document.querySelectorAll(".live-caption").length,clock:document.querySelector(".recording-label strong")?.innerText,scrollHeight:e?.scrollHeight,viewHeight:e?.clientHeight};',
       ),
     ]);
     assert(

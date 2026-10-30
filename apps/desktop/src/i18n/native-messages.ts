@@ -581,7 +581,7 @@ export const nativeMessages: Record<string, string> = {
   'Invalid local speech chunk.': '本地识别片段无效。',
   'Cannot contain local speech worker.': '无法限制本地识别进程。',
   'A live summary is being processed. Wait for it to finish or turn summaries off.':
-    '实时总结正在处理，请等待完成，或先关闭实时总结。',
+    '课堂要点正在处理，请等待完成，或先关闭课堂要点。',
   'Wait for the model download to finish.': '请等待模型下载完成。',
   'Wait for the five-second audio test to finish.':
     '请等待 5 秒的声音测试结束。',
@@ -589,10 +589,10 @@ export const nativeMessages: Record<string, string> = {
     '请选择有效的总结服务、模型和 2、4 或 5 分钟间隔。',
   'Before enabling cloud summaries, allow the selected provider to receive the matching English transcript and course background.':
     '启用云端总结前，请确认允许向所选服务商发送对应英文转录与课程背景。',
-  'Cannot read live summary settings.': '无法读取实时总结设置。',
-  'Cannot save live summary settings.': '无法保存实时总结设置。',
+  'Cannot read live summary settings.': '无法读取课堂要点设置。',
+  'Cannot save live summary settings.': '无法保存课堂要点设置。',
   'Cannot turn off the old local live summary setting.':
-    '无法停用旧的本地实时总结设置。',
+    '无法停用旧的本地课堂要点设置。',
   'Summary processing was interrupted. The source text is saved; retry on this card.':
     '总结处理已中断，原文已保存。请在这张卡片上重试。',
   'Another summary is being processed. Please wait.':
@@ -606,9 +606,9 @@ export const nativeMessages: Record<string, string> = {
     '总结长度或引用不符合要求，请重试。',
   'The summary cites source text that does not exist. The source is preserved; try again.':
     '总结包含不存在的原文引用，已保留原文，请重试。',
-  'Set up and enable live summaries first.': '请先设置并启用实时总结。',
+  'Set up and enable live summaries first.': '请先设置并启用课堂要点。',
   'Save and test an API key in live summary settings first. Recording and captions are not affected.':
-    '请先在实时总结设置中保存 API Key 并测试。录音和字幕不受影响。',
+    '请先在课堂要点设置中保存 API Key 并测试。录音和字幕不受影响。',
   'A summary is still unfinished. Retry it on its card; new source text continues to be saved.':
     '有一段总结尚未完成，请在卡片上重试；新原文继续保存。',
   'There is no newly finalized English yet. Try again later.':
@@ -676,7 +676,7 @@ export const nativeMessages: Record<string, string> = {
     '需要先有转录文本，才能根据课堂内容回答。',
   'Cannot read summary language.': '无法读取总结语言。',
   'Cannot check summary references.': '无法核对总结引用。',
-  'Cannot read live summaries.': '无法读取实时总结。',
+  'Cannot read live summaries.': '无法读取课堂要点。',
   'Cannot read saved summary cards.': '无法读取已保存的总结卡片。',
   'Cannot mark an outdated summary.': '无法标记过期的总结。',
   'Cannot reserve a summary.': '无法创建总结任务。',
@@ -687,7 +687,7 @@ export const nativeMessages: Record<string, string> = {
     '无法保存总结输入，尚未发送任何请求。',
   'Cannot save summary input.': '无法保存总结输入。',
   'Cannot retry summary.': '无法重试这段总结。',
-  'Cannot save live summary.': '无法保存实时总结。',
+  'Cannot save live summary.': '无法保存课堂要点。',
   'Cannot encode summary.': '无法整理总结内容。',
   'Cannot save summary outcome.': '无法保存总结结果。',
   'Cannot save connection test.': '无法保存连接测试结果。',
@@ -695,10 +695,10 @@ export const nativeMessages: Record<string, string> = {
   'Cannot read connection test.': '无法读取连接测试结果。',
   'App closed before processing finished. Saved results are preserved.':
     '应用在处理完成前已关闭，已保存的结果会保留。',
-  'Cannot start live summary migration.': '无法开始升级实时总结数据。',
-  'Live summary migration failed.': '实时总结数据升级失败。',
-  'Cannot commit live summary migration.': '无法完成实时总结数据升级。',
-  'Cannot recover live summaries.': '无法恢复实时总结。',
+  'Cannot start live summary migration.': '无法开始升级课堂要点数据。',
+  'Live summary migration failed.': '课堂要点数据升级失败。',
+  'Cannot commit live summary migration.': '无法完成课堂要点数据升级。',
+  'Cannot recover live summaries.': '无法恢复课堂要点。',
   'Cannot prepare translation language migration.':
     '无法准备译文语言数据升级。',
   'Cannot start translation language migration.': '无法开始升级译文语言数据。',

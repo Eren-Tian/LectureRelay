@@ -12,7 +12,12 @@ export function ReplayControls({
   onToggle,
   onScrub,
   onSpeed,
+  resumeAt,
+  onResume,
 }: {
+  /** Where the last session stopped, offered until playback moves. */
+  resumeAt?: number;
+  onResume?: () => void;
   playing: boolean;
   position: number;
   duration: number;
@@ -54,6 +59,11 @@ export function ReplayControls({
       <span className="player-time">
         {clock(position)} / {clock(duration)}
       </span>
+      {resumeAt !== undefined && (
+        <button className="text-button player-resume" onClick={onResume}>
+          {ui.playerResumeFrom(clock(resumeAt))}
+        </button>
+      )}
       <input
         className="player-progress"
         type="range"

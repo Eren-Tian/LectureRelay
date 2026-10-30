@@ -330,6 +330,7 @@ export const zhCN = {
   playerPause: '暂停',
   playerProgress: '播放进度',
   playerShortcutHint: '空格 播放/暂停 · ←/→ 5 秒',
+  playerResumeFrom: (time: string) => `从 ${time} 继续`,
   transcriptFollowPlayback: '跟随播放',
   askAiAboutSelection: '问 AI',
   askAboutSelectionQuestion: (text: string) =>
@@ -472,7 +473,7 @@ export const zhCN = {
   studyNotesLengthLimit: '笔记长度已达上限，请先导出或精简内容。',
   studyNotesPreviewDraft: '预览草稿',
   studyNotesGenerateAiDraft: '生成 AI 草稿',
-  studyNotesInsertTimestamp: (time: string) => `+ 插入时间戳${time}`,
+  studyNotesInsertTimestamp: (time: string) => `+ 插入时间戳 ${time}`,
   notesFormatToolbar: '笔记格式',
   notesFormatHeading: '标题',
   notesFormatBold: '加粗（Ctrl+B）',

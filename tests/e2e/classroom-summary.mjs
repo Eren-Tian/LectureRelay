@@ -115,9 +115,9 @@ try {
     `document.querySelector('[aria-label="加粗（Ctrl+B）"]').click();`,
   );
   await until(`return ${editor}.value.startsWith("**Original** manual");`);
-  assert.deepEqual(
-    await d.read(`return [${editor}.selectionStart, ${editor}.selectionEnd];`),
-    [2, 10],
+  // The selection is restored on the next frame.
+  await until(
+    `return ${editor}.selectionStart === 2 && ${editor}.selectionEnd === 10;`,
   );
   await d.read(`${editor}.setSelectionRange(0, 0);`);
   await d.read(`document.querySelector('[aria-label="标题"]').click();`);

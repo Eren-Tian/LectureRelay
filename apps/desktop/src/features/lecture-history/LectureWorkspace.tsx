@@ -22,6 +22,7 @@ import { QuestionsPanel } from '../qa/QuestionsPanel';
 import { DeleteLecture } from './DeleteLecture';
 import { SegmentForm } from '../transcript/SegmentForm';
 import { ReplayControls } from './ReplayControls';
+import { savedPosition, savePosition } from './resume';
 import {
   clock,
   exportName,
@@ -56,7 +57,10 @@ export function LecturePage({ id }: { id: string }) {
     } | null>(null),
     [toolRequest, setToolRequest] = useState<{ tab: string; key: number }>(),
     [focusQuestion, setFocusQuestion] = useState(false);
-  const transcriptList = useRef<HTMLDivElement>(null);
+  const transcriptList = useRef<HTMLDivElement>(null),
+    lastSaved = useRef(0);
+  const resumeAt = useMemo(() => savedPosition(id), [id]);
+  const [resumeOffered, setResumeOffered] = useState(true);
   const ownJob = workspace.job?.lectureId === id ? workspace.job : null,
     live = workspace.live?.lectureId === id ? workspace.live : null;
   const blocked =
@@ -183,7 +187,7 @@ export function LecturePage({ id }: { id: string }) {
     if (
       !picked?.rangeCount ||
       text.length < 2 ||
-      !transcriptList.current?.contains(picked.anchorNode)
+      !(picked.anchorNode?.parentElement ?? null)?.closest('.study-workspace')
     ) {
       setSelection(null);
       return;
@@ -289,7 +293,12 @@ export function LecturePage({ id }: { id: string }) {
     });
   const settings = workspace.data.settings;
   return (
-    <div className="replay-page">
+    <div
+      className="replay-page"
+      onMouseUp={pickSelection}
+      onKeyUp={pickSelection}
+      onScrollCapture={() => selection && setSelection(null)}
+    >
       <button
         className="breadcrumb"
         onClick={() => workspace.navigate({ view: 'course', id: course.id })}
@@ -401,9 +410,22 @@ export function LecturePage({ id }: { id: string }) {
           src={recordingUrl(lecture.recordingPath)}
           preload="metadata"
           onPlay={() => setPlaying(true)}
-          onPause={() => setPlaying(false)}
-          onEnded={() => setPlaying(false)}
-          onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
+          onPause={(e) => {
+            setPlaying(false);
+            savePosition(id, e.currentTarget.currentTime);
+          }}
+          onEnded={() => {
+            setPlaying(false);
+            savePosition(id, 0);
+          }}
+          onTimeUpdate={(e) => {
+            const seconds = e.currentTarget.currentTime;
+            setPosition(seconds);
+            if (Math.abs(seconds - lastSaved.current) >= 5) {
+              lastSaved.current = seconds;
+              savePosition(id, seconds);
+            }
+          }}
           onLoadedMetadata={(e) => {
             e.currentTarget.playbackRate = speed;
             if (pendingSeek.current !== null) {
@@ -421,6 +443,18 @@ export function LecturePage({ id }: { id: string }) {
           speed={speed}
           onToggle={toggle}
           onScrub={scrub}
+          resumeAt={
+            resumeOffered &&
+            position < 1 &&
+            resumeAt > 5 &&
+            resumeAt < lecture.durationSeconds - 5
+              ? resumeAt
+              : undefined
+          }
+          onResume={() => {
+            setResumeOffered(false);
+            scrub(resumeAt);
+          }}
           onSpeed={(n) => {
             setSpeed(n);
             if (audio.current) audio.current.playbackRate = n;
@@ -495,9 +529,6 @@ export function LecturePage({ id }: { id: string }) {
               className="transcript-list"
               ref={transcriptList}
               onWheel={() => playing && setFollow(false)}
-              onMouseUp={pickSelection}
-              onKeyUp={pickSelection}
-              onScroll={() => selection && setSelection(null)}
             >
               {visible.map((s) => (
                 <article

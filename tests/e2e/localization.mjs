@@ -129,6 +129,10 @@ try {
   await click('取消');
   await d.click('aside button[aria-label="Introduction to Biology"]');
   await until('return !!document.querySelector(".lecture-row");');
+  // A position saved by an earlier session is offered, not applied.
+  await d.read(
+    'localStorage.setItem("lecturerelay-position:localization-lecture", "30");',
+  );
   await d.click('.lecture-row');
   await until('return !!document.querySelector(".replay-player");');
   assert.match(await text(), /录音设备报告声音中断/);
@@ -139,11 +143,19 @@ try {
     await d.read('return document.querySelector(".player-time").textContent;'),
     /^00:00 \//,
   );
+  await click('从 00:30 继续');
+  await until(
+    'return document.querySelector(".player-time").textContent.startsWith("00:30");',
+  );
+  assert.equal(
+    await d.read('return !!document.querySelector(".player-resume");'),
+    false,
+  );
   await d.read(
     'document.activeElement?.blur(); document.body.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true}));',
   );
   await until(
-    'return document.querySelector(".player-time").textContent.startsWith("00:05");',
+    'return document.querySelector(".player-time").textContent.startsWith("00:35");',
   );
   assert.equal(
     await d.read(

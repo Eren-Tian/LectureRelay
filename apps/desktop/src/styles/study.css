@@ -259,6 +259,10 @@
   padding: 7px 10px;
   margin: 0;
 }
+.player-resume {
+  font-weight: 650;
+  white-space: nowrap;
+}
 .player-hint {
   font-size: 11px;
   color: var(--muted);

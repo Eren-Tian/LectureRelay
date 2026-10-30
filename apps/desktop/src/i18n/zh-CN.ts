@@ -340,6 +340,7 @@ export const zhCN = {
   playerShortcutHint: '空格 播放/暂停 · ←/→ 5 秒',
   playerResumeFrom: (time: string) => `从 ${time} 继续`,
   transcriptFollowPlayback: '跟随播放',
+  transcriptKeywords: '关键词',
   askAiAboutSelection: '问 AI',
   addToGlossary: '加入术语表',
   addToGlossaryTitle: '加入课程术语表',

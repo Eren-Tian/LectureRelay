@@ -329,6 +329,39 @@
   border-color: var(--sage);
   background: var(--soft);
 }
+/* Frequent terms; one click filters the transcript to them. */
+.keyword-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: -6px 0 12px;
+}
+.keyword-chips > span {
+  font-size: 11px;
+  color: var(--muted);
+  margin-right: 2px;
+}
+.keyword-chips button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--secondary);
+  font-size: 12px;
+}
+.keyword-chips button small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.keyword-chips button[aria-pressed='true'] {
+  border-color: var(--sage);
+  background: var(--soft);
+  font-weight: 650;
+}
 .follow-toggle[aria-pressed='true'] {
   font-weight: 650;
 }

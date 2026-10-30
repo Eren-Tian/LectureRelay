@@ -23,6 +23,7 @@ import { DeleteLecture } from './DeleteLecture';
 import { SegmentForm } from '../transcript/SegmentForm';
 import { SpeakerDialog } from '../transcript/SpeakerDialog';
 import { ReplayControls } from './ReplayControls';
+import { keywords } from '../../lib/keywords';
 import { AddTermDialog } from '../glossary/AddTermDialog';
 import { savedPosition, savePosition } from './resume';
 import {
@@ -103,6 +104,10 @@ export function LecturePage({ id }: { id: string }) {
         (n, s) => n + s.sourceText.split(/\s+/).filter(Boolean).length,
         0,
       ),
+    [data?.segments],
+  );
+  const terms = useMemo(
+    () => keywords((data?.segments ?? []).map((s) => s.sourceText)),
     [data?.segments],
   );
   const duration = data?.lecture.durationSeconds ?? 0;
@@ -559,6 +564,28 @@ export function LecturePage({ id }: { id: string }) {
                 </button>
               )}
             </div>
+            {terms.length > 2 && (
+              <div
+                className="keyword-chips"
+                role="group"
+                aria-label={ui.transcriptKeywords}
+              >
+                <span>{ui.transcriptKeywords}</span>
+                {terms.map(({ term, count }) => (
+                  <button
+                    key={term}
+                    aria-pressed={search === term}
+                    onClick={() => {
+                      setSearch(search === term ? '' : term);
+                      setPage(0);
+                    }}
+                  >
+                    {term}
+                    <small>{count}</small>
+                  </button>
+                ))}
+              </div>
+            )}
             <div
               className="transcript-list"
               ref={transcriptList}

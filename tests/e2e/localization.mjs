@@ -221,6 +221,22 @@ try {
   await until('return !!document.querySelector(".lecture-row");');
   await d.click('.lecture-row');
   await until('return !!document.querySelector(".replay-player");');
+  // Keyword chips filter the transcript, and a second click clears the filter.
+  const keyword =
+    'return [...document.querySelectorAll(".keyword-chips button")].find(b=>b.textContent.startsWith("Mitochondria"))';
+  await until(`return !!(${keyword.slice(7)});`);
+  await d.read(`${keyword.slice(7)}.click();`);
+  await until(
+    'return document.querySelector("input[type=search]").value === "Mitochondria";',
+  );
+  assert.equal(
+    await d.read(`${keyword}.getAttribute("aria-pressed");`),
+    'true',
+  );
+  await d.read(`${keyword.slice(7)}.click();`);
+  await until(
+    'return document.querySelector("input[type=search]").value === "";',
+  );
   if (
     await d.read('return !!document.querySelector(".study-workspace.narrow");')
   )

@@ -368,6 +368,7 @@ export const en = {
   playerShortcutHint: 'Space play/pause · ←/→ 5 s',
   playerResumeFrom: (time: string) => `Resume from ${time}`,
   transcriptFollowPlayback: 'Follow Playback',
+  transcriptKeywords: 'Keywords',
   askAiAboutSelection: 'Ask AI',
   addToGlossary: 'Add to Glossary',
   addToGlossaryTitle: 'Add to Course Glossary',

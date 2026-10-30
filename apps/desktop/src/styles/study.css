@@ -1032,3 +1032,54 @@
   background: var(--soft);
   font-weight: 600;
 }
+/* Self-test: one note heading at a time, its text hidden until asked for. */
+.self-test {
+  display: grid;
+  gap: 12px;
+  max-width: 720px;
+}
+.self-test-progress {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+.self-test-progress progress {
+  flex: 1;
+}
+.self-test-card {
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.self-test-card h3 {
+  margin: 0;
+  font-size: 17px;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.self-test-path {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.self-test-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+.self-test-answer {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.self-test-done h3 {
+  margin: 0;
+}
+.self-test-done p {
+  margin: 0;
+  color: var(--muted);
+}

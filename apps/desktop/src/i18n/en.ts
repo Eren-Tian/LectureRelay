@@ -579,8 +579,23 @@ export const en = {
   notesViewLabel: 'Notes view',
   notesViewDocument: 'Document',
   notesViewMindMap: 'Mind Map',
+  notesViewSelfTest: 'Self-Test',
   mindMapLabel: 'Notes mind map',
   mindMapEmpty: 'Add headings or lists to the notes to see them as a mind map.',
+  selfTestEmpty:
+    'Add headings with text under them to test yourself on the notes.',
+  selfTestProgress: (current: number, total: number) =>
+    `Card ${current} of ${total}`,
+  selfTestRecallHint:
+    'Recall what this section covers, then show the text to check.',
+  selfTestReveal: 'Show Text',
+  selfTestKnew: 'Knew It',
+  selfTestMissed: 'Review Again',
+  selfTestDone: 'Round complete',
+  selfTestScore: (knew: number, missed: number) =>
+    `Knew ${knew}, review again ${missed}.`,
+  selfTestRetryMissed: (count: number) => `Retry ${count} Missed`,
+  selfTestRestart: 'Start Over',
   studyNotesRestoredDraft: 'Draft restored',
   studyNotesEditorLabel: 'Lecture notes',
   studyNotesDiscardDraftTitle: 'Discard this draft?',

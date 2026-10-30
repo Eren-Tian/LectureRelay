@@ -4,6 +4,7 @@ import { useNoteDraft } from './useNoteDraft';
 import { useWorkspace } from '../../app/Workspace';
 import { MarkdownBody } from '../../components/MarkdownBody';
 import { MindMap } from '../../components/MindMap';
+import { SelfTest } from '../../components/SelfTest';
 import { clock, dateText, languageName } from '../../lib/presentation';
 import type { Note, StudyState } from '../../types/domain';
 
@@ -33,7 +34,7 @@ export function StudyNotes({
 }) {
   const { confirm } = useWorkspace();
   const [version, setVersion] = useState(''),
-    [view, setView] = useState<'document' | 'map'>('document');
+    [view, setView] = useState<'document' | 'map' | 'test'>('document');
   const {
     draft,
     editing,
@@ -241,7 +242,7 @@ export function StudyNotes({
                 role="group"
                 aria-label={ui.notesViewLabel}
               >
-                {(['document', 'map'] as const).map((option) => (
+                {(['document', 'map', 'test'] as const).map((option) => (
                   <button
                     key={option}
                     aria-pressed={view === option}
@@ -249,7 +250,9 @@ export function StudyNotes({
                   >
                     {option === 'document'
                       ? ui.notesViewDocument
-                      : ui.notesViewMindMap}
+                      : option === 'map'
+                        ? ui.notesViewMindMap
+                        : ui.notesViewSelfTest}
                   </button>
                 ))}
               </div>
@@ -257,6 +260,13 @@ export function StudyNotes({
                 <MindMap
                   body={selected?.body ?? (draft || note?.body || '')}
                   title={title || ui.studyMyNotes}
+                />
+              ) : view === 'test' ? (
+                // A changed body starts a fresh round.
+                <SelfTest
+                  key={selected?.body ?? (draft || note?.body || '')}
+                  body={selected?.body ?? (draft || note?.body || '')}
+                  onSeek={onSeek}
                 />
               ) : (
                 <MarkdownBody

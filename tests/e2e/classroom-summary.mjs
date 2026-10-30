@@ -160,6 +160,45 @@ try {
     new URL('component-mindmap.png', output),
     Buffer.from(await d.screenshot(), 'base64'),
   );
+  // Self-test: each heading with text is a card; its text stays hidden
+  // until asked for, and a missed card can be practised again.
+  await click('自测');
+  await until('return !!document.querySelector(".self-test-card h3");');
+  assert.match(
+    await d.read(
+      'return document.querySelector(".self-test-card h3").textContent;',
+    ),
+    /段/,
+  );
+  assert.equal(
+    await d.read('return !!document.querySelector(".self-test-answer");'),
+    false,
+  );
+  await click('显示内容');
+  await until(
+    'return /Saved key point/.test(document.querySelector(".self-test-answer")?.textContent || "");',
+  );
+  await fs.writeFile(
+    new URL('component-self-test.png', output),
+    Buffer.from(await d.screenshot(), 'base64'),
+  );
+  await click('再看看');
+  for (let n = 0; n < 20; n++) {
+    if (await d.read('return !!document.querySelector(".self-test-done");'))
+      break;
+    await click('显示内容');
+    await click('记住了');
+  }
+  assert.match(
+    await d.read(
+      'return document.querySelector(".self-test-done").textContent;',
+    ),
+    /再看看 1 张/,
+  );
+  await click('重练没记住的 1 张');
+  await until(
+    'return /第 1 \\/ 1 张/.test(document.querySelector(".self-test-progress")?.textContent || "");',
+  );
   await click('文档');
   await click('课堂要点');
   await d.read('window.summaryFixture.stale();');

@@ -1,5 +1,5 @@
 import { ui } from '../i18n';
-import type { ExportKind } from '../types/domain';
+import type { ExportKind, Lecture } from '../types/domain';
 
 export const LANGUAGES = [
   { value: 'zh', label: ui.languageChinese },
@@ -20,6 +20,15 @@ export const SUBJECTS = [
   'Law',
   'Other',
 ];
+/** "Not transcribed" or "Partly transcribed" for a saved recording, else ''. */
+export const transcriptionLabel = (lecture: Lecture) =>
+  lecture.status === 'recording' || lecture.durationSeconds <= 0
+    ? ''
+    : lecture.transcribedUntil <= 0
+      ? ui.lectureNotTranscribed
+      : lecture.transcribedUntil < lecture.durationSeconds - 0.1
+        ? ui.lecturePartlyTranscribed
+        : '';
 export const languageName = (language: string) =>
   language === 'en'
     ? ui.english

@@ -73,6 +73,7 @@ pub fn run() {
                 _instance_lock: instance_lock,
             });
             app.manage(state.clone());
+            app.manage(commands::study::DroppedMedia::default());
             live_summaries::start(state, app.handle().clone());
             let window = tauri::WebviewWindowBuilder::new(
                 app,
@@ -118,6 +119,15 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
+            if let tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) = event {
+                if window.label() == "main"
+                    && let Ok(mut dropped) =
+                        window.state::<commands::study::DroppedMedia>().0.lock()
+                {
+                    *dropped = paths.iter().find(|p| media::is_media(p)).cloned();
+                }
+                return;
+            }
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 if window.label() != "main" {
                     return;
@@ -157,6 +167,7 @@ pub fn run() {
             commands::study::library_search,
             commands::study::pin_lecture,
             commands::study::import_media,
+            commands::study::import_dropped_media,
             commands::study::attach_document,
             commands::study::read_document,
             commands::bootstrap,

@@ -1,5 +1,5 @@
 import { ui } from '../../i18n';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNoteDraft } from './useNoteDraft';
 import { useWorkspace } from '../../app/Workspace';
 import { MarkdownBody } from '../../components/MarkdownBody';
@@ -48,6 +48,24 @@ export function StudyNotes({
   const save = async (body?: string) => {
     if (await commit(body)) setVersion('');
   };
+  const editor = useRef<HTMLTextAreaElement>(null);
+  /** Applies Markdown to the selection and keeps it selected. */
+  const format = (kind: NoteFormat) => {
+    const el = editor.current;
+    if (!el) return;
+    const { text, start, end } = applyFormat(
+      draft,
+      el.selectionStart,
+      el.selectionEnd,
+      kind,
+      `[${clock(position)}](#t=${Math.floor(position)}) `,
+    );
+    change(text);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start, end);
+    });
+  };
   useEffect(() => {
     if (append) setVersion('');
   }, [append]);
@@ -78,14 +96,28 @@ export function StudyNotes({
       {editing ? (
         <>
           <div className="study-toolbar">
+            <div
+              className="format-toolbar"
+              role="toolbar"
+              aria-label={ui.notesFormatToolbar}
+            >
+              {FORMATS.map(([kind, glyph]) => (
+                <button
+                  key={kind}
+                  type="button"
+                  aria-label={formatLabel(kind)}
+                  title={formatLabel(kind)}
+                  disabled={saving}
+                  onClick={() => format(kind)}
+                >
+                  {glyph}
+                </button>
+              ))}
+            </div>
             <button
               className="text-button"
               disabled={saving}
-              onClick={() =>
-                change(
-                  draft + `\n[${clock(position)}](#t=${Math.floor(position)}) `,
-                )
-              }
+              onClick={() => format('timestamp')}
             >
               {ui.studyNotesInsertTimestamp(clock(position))}
             </button>
@@ -97,9 +129,19 @@ export function StudyNotes({
             className="study-note-editor"
             aria-label={ui.studyNotesEditorLabel}
             value={draft}
+            ref={editor}
             disabled={saving}
             maxLength={100000}
             onChange={(e) => change(e.target.value)}
+            onKeyDown={(e) => {
+              if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+              const key = e.key.toLowerCase();
+              if (key === 's') void save();
+              else if (key === 'b') format('bold');
+              else if (key === 'i') format('italic');
+              else return;
+              e.preventDefault();
+            }}
           />
           <div className="form-actions">
             <button
@@ -197,4 +239,63 @@ export function StudyNotes({
       )}
     </div>
   );
+}
+
+type NoteFormat =
+  'heading' | 'bold' | 'italic' | 'bullet' | 'numbered' | 'quote' | 'timestamp';
+const FORMATS: [NoteFormat, string][] = [
+  ['heading', 'H'],
+  ['bold', 'B'],
+  ['italic', 'I'],
+  ['bullet', '•'],
+  ['numbered', '1.'],
+  ['quote', '❝'],
+];
+const formatLabel = (kind: NoteFormat) =>
+  ({
+    heading: ui.notesFormatHeading,
+    bold: ui.notesFormatBold,
+    italic: ui.notesFormatItalic,
+    bullet: ui.notesFormatBullet,
+    numbered: ui.notesFormatNumbered,
+    quote: ui.notesFormatQuote,
+    timestamp: '',
+  })[kind];
+/** Markdown for one toolbar action; returns the new text and selection. */
+function applyFormat(
+  text: string,
+  from: number,
+  to: number,
+  kind: NoteFormat,
+  stamp: string,
+) {
+  if (kind === 'timestamp')
+    return {
+      text: text.slice(0, from) + stamp + text.slice(to),
+      start: from + stamp.length,
+      end: from + stamp.length,
+    };
+  if (kind === 'bold' || kind === 'italic') {
+    const mark = kind === 'bold' ? '**' : '*';
+    const chosen = text.slice(from, to);
+    return {
+      text: text.slice(0, from) + mark + chosen + mark + text.slice(to),
+      start: from + mark.length,
+      end: to + mark.length,
+    };
+  }
+  const prefix = { heading: '## ', bullet: '- ', numbered: '1. ', quote: '> ' }[
+    kind
+  ];
+  const lineStart = text.lastIndexOf('\n', from - 1) + 1;
+  const block = text
+    .slice(lineStart, to)
+    .split('\n')
+    .map((line) => prefix + line)
+    .join('\n');
+  return {
+    text: text.slice(0, lineStart) + block + text.slice(to),
+    start: from + prefix.length,
+    end: lineStart + block.length,
+  };
 }

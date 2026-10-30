@@ -502,6 +502,32 @@
   font-size: 12px;
   padding: 8px 10px;
 }
+.format-toolbar {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+}
+.format-toolbar button {
+  min-width: 30px;
+  height: 28px;
+  padding: 0 7px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 650;
+}
+.format-toolbar button:nth-child(3) {
+  font-style: italic;
+  font-family: Georgia, serif;
+}
+.format-toolbar button:hover:not(:disabled) {
+  background: var(--soft);
+}
 .study-toolbar select {
   min-width: 0;
   max-width: 100%;

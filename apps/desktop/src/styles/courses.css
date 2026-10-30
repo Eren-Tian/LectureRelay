@@ -280,6 +280,34 @@
   flex-wrap: wrap;
   gap: 6px 12px;
 }
+/* Shown over the whole window while a media file is dragged in. */
+.drop-overlay {
+  position: fixed;
+  inset: 14px;
+  z-index: 60;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--sage);
+  font-size: 16px;
+  border: 2px dashed var(--sage);
+  border-radius: 20px;
+  background: color-mix(in srgb, var(--canvas) 88%, transparent);
+}
+.dropped-file {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--soft);
+  font-size: 13px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
 .pin-button {
   position: absolute;
   right: 8px;

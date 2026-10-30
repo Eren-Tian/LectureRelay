@@ -47,11 +47,33 @@ pub async fn import_media(
             // i18n-exempt: native file dialog title
             .set_title("导入课堂音视频")
             // i18n-exempt: native file dialog filter name
-            .add_filter("音频与视频", &["wav", "mp3", "m4a", "mp4", "flac", "ogg"])
+            .add_filter("音频与视频", &crate::app::media::MEDIA_EXTENSIONS)
             .pick_file()
         else {
             return Ok(None);
         };
+        crate::app::media::import(&state, &course_id, &title, &source).map(Some)
+    })
+    .await
+    .user_error(crate::error::ErrorCode::MediaImportCouldNotFinish)?
+}
+/// The media file last dropped on the main window. Only the window's drop
+/// event sets it, so the page can import a dropped file but cannot name paths.
+#[derive(Default)]
+pub struct DroppedMedia(pub std::sync::Mutex<Option<std::path::PathBuf>>);
+
+#[tauri::command]
+pub async fn import_dropped_media(
+    state: App<'_>,
+    dropped: tauri::State<'_, DroppedMedia>,
+    course_id: String,
+    title: String,
+) -> AppResult<Option<Lecture>> {
+    let Some(source) = dropped.0.lock().ok().and_then(|mut file| file.take()) else {
+        return Ok(None);
+    };
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
         crate::app::media::import(&state, &course_id, &title, &source).map(Some)
     })
     .await

@@ -4,10 +4,11 @@ import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { useResource } from '../../hooks/useResource';
 import { useAction } from '../../hooks/useAction';
-import { clock, dateText } from '../../lib/presentation';
+import { clock, dateText, transcriptionLabel } from '../../lib/presentation';
 import { ResourceState } from '../../components/ResourceState';
 import { Icon } from '../../components/Icon';
 import { Modal } from '../../components/Modal';
+import { fileName, fileStem, isMediaPath, useMediaDrop } from './useMediaDrop';
 
 export function ImportMedia({
   courseId,
@@ -16,22 +17,50 @@ export function ImportMedia({
   courseId?: string;
   onDone?: () => void;
 }) {
-  const { data, navigate, refresh, recording, job, live } = useWorkspace();
+  const { data, navigate, notify, refresh, recording, job, live } =
+    useWorkspace();
   const [open, setOpen] = useState(false),
     [course, setCourse] = useState(courseId ?? data.courses[0]?.id ?? ''),
-    [title, setTitle] = useState(ui.mediaImportDefaultTitle);
+    [title, setTitle] = useState(ui.mediaImportDefaultTitle),
+    // The file name of a dropped file; the native side holds its path.
+    [dropped, setDropped] = useState('');
   const { busy, run } = useAction();
+  const unavailable =
+    !data.courses.length || !!recording || !!job || !!live?.active;
   const close = useCallback(() => {
     if (!busy) setOpen(false);
   }, [busy]);
+  const hovering = useMediaDrop(
+    useCallback(
+      (paths: string[]) => {
+        if (unavailable || open) return;
+        const media = paths.find(isMediaPath);
+        if (!media) {
+          notify(ui.mediaDropUnsupported, true);
+          return;
+        }
+        setDropped(fileName(media));
+        setTitle(fileStem(media) || ui.mediaImportDefaultTitle);
+        setOpen(true);
+      },
+      [unavailable, open, notify],
+    ),
+  );
   return (
     <>
+      {hovering && !unavailable && !open && (
+        <div className="drop-overlay" aria-hidden="true">
+          <Icon name="upload" size={34} />
+          <strong>{ui.mediaDropHint}</strong>
+        </div>
+      )}
       <button
         className="button secondary"
-        disabled={
-          !data.courses.length || !!recording || !!job || !!live?.active
-        }
-        onClick={() => setOpen(true)}
+        disabled={unavailable}
+        onClick={() => {
+          setDropped('');
+          setOpen(true);
+        }}
       >
         <Icon name="download" size={16} />
         {ui.importMedia}
@@ -42,7 +71,9 @@ export function ImportMedia({
             onSubmit={(e) => {
               e.preventDefault();
               void run(async () => {
-                const lecture = await api.importMedia(course, title);
+                const lecture = dropped
+                  ? await api.importDroppedMedia(course, title)
+                  : await api.importMedia(course, title);
                 if (lecture) {
                   await refresh();
                   setOpen(false);
@@ -76,6 +107,12 @@ export function ImportMedia({
                 disabled={busy}
               />
             </label>
+            {dropped && (
+              <p className="dropped-file">
+                <Icon name="upload" size={16} />
+                {dropped}
+              </p>
+            )}
             <p className="field-hint">{ui.mediaImportHint}</p>
             <div className="form-actions">
               {busy ? (
@@ -96,7 +133,11 @@ export function ImportMedia({
                 </button>
               )}
               <button className="button primary" disabled={busy || !course}>
-                {busy ? ui.mediaImportImporting : ui.mediaImportChooseFile}
+                {busy
+                  ? ui.mediaImportImporting
+                  : dropped
+                    ? ui.mediaImportStart
+                    : ui.mediaImportChooseFile}
               </button>
             </div>
           </form>
@@ -155,6 +196,11 @@ export function LibraryPanel() {
                 <span className="library-meta">
                   {clock(lecture.durationSeconds)}
                   <span>{dateText(lecture.startedAt)}</span>
+                  {transcriptionLabel(lecture) && (
+                    <span className="pill quiet">
+                      {transcriptionLabel(lecture)}
+                    </span>
+                  )}
                 </span>
                 {lecture.status === 'failed' && (
                   <span className="danger-text">

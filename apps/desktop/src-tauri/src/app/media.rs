@@ -9,6 +9,15 @@ use symphonia::core::{
     io::MediaSourceStream, meta::MetadataOptions, probe::Hint,
 };
 
+/// File types the importer accepts, by extension.
+pub(crate) const MEDIA_EXTENSIONS: [&str; 6] = ["wav", "mp3", "m4a", "mp4", "flac", "ogg"];
+
+pub(crate) fn is_media(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| MEDIA_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
+}
+
 pub(crate) fn read_pdf(path: &Path) -> AppResult<Vec<u8>> {
     use std::io::Read;
     const LIMIT: u64 = 50 * 1024 * 1024;

@@ -1,6 +1,7 @@
 // Complete React app with synthetic data; no native files, audio, keys or network.
 import { createRoot } from 'react-dom/client';
 import { mockIPC, mockConvertFileSrc } from '@tauri-apps/api/mocks';
+import { emit } from '@tauri-apps/api/event';
 import { App } from '../../src/app/App';
 import { messageText } from '../../src/i18n/messages';
 import type {
@@ -176,6 +177,10 @@ const fixture = {
   finishPreview: (_peak: number) => {},
   failCleanup: false,
   failTrash: false,
+  droppedImport: '',
+  /** Simulates the window's file drop event. */
+  drop: (paths: string[]) =>
+    emit('tauri://drag-drop', { paths, position: { x: 10, y: 10 } }),
 };
 const parameters = new URLSearchParams(location.search);
 // ?classroom: a lecture in progress with live summary cards, for layout checks.
@@ -324,6 +329,9 @@ mockIPC(
       case 'delete_course':
       case 'restore_course':
         return null;
+      case 'import_dropped_media':
+        fixture.droppedImport = String(input.title);
+        return lecture;
       case 'storage_usage':
         return { libraryBytes: 1048576, modelBytes: 3145728 };
       case 'audio_devices':

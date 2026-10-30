@@ -181,3 +181,14 @@ fn media_import_decodes_stereo_preserves_source_and_observes_cancellation() {
     std::fs::write(f.root.join("bad.mp4"), b"broken").unwrap();
     assert!(crate::app::media::decode(&f.root.join("bad.mp4"), &out, |_, _| Ok(())).is_err());
 }
+#[test]
+fn dropped_files_import_only_supported_media() {
+    use crate::app::media::is_media;
+    use std::path::Path;
+    for name in ["week3.mp3", "LECTURE.WAV", "seminar.M4a", "talk.mp4", "a.flac", "b.ogg"] {
+        assert!(is_media(Path::new(name)), "{name}");
+    }
+    for name in ["slides.pdf", "notes.txt", "noextension", "archive.mp3.zip"] {
+        assert!(!is_media(Path::new(name)), "{name}");
+    }
+}

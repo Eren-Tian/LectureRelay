@@ -8,6 +8,7 @@ import {
   dateText,
   languageName,
   subjectName,
+  transcriptionLabel,
 } from '../../lib/presentation';
 import { Icon } from '../../components/Icon';
 import { ResourceState } from '../../components/ResourceState';
@@ -130,6 +131,8 @@ export function CoursePage({ id }: { id: string }) {
                       <p>
                         {dateText(lecture.startedAt)} ·{' '}
                         {clock(lecture.durationSeconds)}
+                        {transcriptionLabel(lecture) &&
+                          ` · ${transcriptionLabel(lecture)}`}
                       </p>
                     </div>
                     <span

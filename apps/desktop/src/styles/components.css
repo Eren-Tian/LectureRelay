@@ -109,6 +109,11 @@
   align-items: center;
   gap: 6px;
 }
+.pill.quiet {
+  color: var(--muted);
+  background: transparent;
+  padding: 2px 8px;
+}
 .pill.gold {
   color: var(--warning);
   background: var(--soft);

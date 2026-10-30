@@ -192,6 +192,31 @@ try {
     ),
   );
   await d.click('aside button[aria-label="Introduction to Biology"]');
+  // Dropping a file: other types are refused; media opens the import dialog.
+  await d.read('window.localizationFixture.drop(["C:/Lectures/slides.pdf"]);');
+  await until('return document.body.innerText.includes("只能导入 WAV");');
+  await d.read(
+    'window.localizationFixture.drop(["C:/Lectures/Week 3 enzymes.mp3"]);',
+  );
+  await until('return !!document.querySelector(".dropped-file");');
+  assert.match(
+    await d.read('return document.querySelector(".dropped-file").textContent;'),
+    /Week 3 enzymes.mp3/,
+  );
+  assert.equal(
+    await d.read(
+      'return document.querySelector(".modal input:not([type])").value;',
+    ),
+    'Week 3 enzymes',
+  );
+  await screenshot('import-dropped');
+  await click('导入');
+  await until(
+    'return window.localizationFixture.droppedImport === "Week 3 enzymes";',
+  );
+  await until('return !!document.querySelector(".replay-player");');
+  await d.click('aside button[aria-label="Introduction to Biology"]');
+  await until('return !!document.querySelector(".course-delete");');
   // Trash is recoverable: the course moves at once and the toast offers Undo.
   await click('删除课程');
   await until('return !!document.querySelector(".toast .text-button");');

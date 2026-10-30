@@ -274,6 +274,10 @@ export const en = {
   mediaImportCourseLabel: 'Course',
   mediaImportHint:
     'WAV, MP3, M4A, MP4, FLAC or OGG, up to 2 GiB and 5 hours. The original file is not changed.',
+  mediaImportStart: 'Import',
+  mediaDropHint: 'Drop to import audio or video',
+  mediaDropUnsupported:
+    'Only WAV, MP3, M4A, MP4, FLAC or OGG files can be imported.',
   mediaImportCancel: 'Cancel Import',
   mediaImportImporting: 'Importing…',
   mediaImportChooseFile: 'Choose File',
@@ -342,6 +346,8 @@ export const en = {
   askAboutSelectionQuestion: (text: string) =>
     `What does this part of the lecture mean? “${text}”`,
   lectureWordCount: (count: number) => `${count.toLocaleString('en-US')} words`,
+  lectureNotTranscribed: 'Not transcribed',
+  lecturePartlyTranscribed: 'Partly transcribed',
   addSegmentWithPlus: '+ Add Segment',
   fillMissingTranslations: 'Complete Translations',
   searchTranscript: 'Search transcript',
@@ -493,6 +499,13 @@ export const en = {
   studyNotesPreviewDraft: 'Preview Draft',
   studyNotesGenerateAiDraft: 'Generate AI Draft',
   studyNotesInsertTimestamp: (time: string) => `+ Insert Timestamp ${time}`,
+  notesFormatToolbar: 'Note formatting',
+  notesFormatHeading: 'Heading',
+  notesFormatBold: 'Bold (Ctrl+B)',
+  notesFormatItalic: 'Italic (Ctrl+I)',
+  notesFormatBullet: 'Bulleted list',
+  notesFormatNumbered: 'Numbered list',
+  notesFormatQuote: 'Quote',
   studyNotesRestoredDraft: 'Draft restored',
   studyNotesEditorLabel: 'Lecture notes',
   studyNotesDiscardDraftTitle: 'Discard this draft?',

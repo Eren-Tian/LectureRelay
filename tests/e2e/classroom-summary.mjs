@@ -108,6 +108,23 @@ try {
   await until(
     'return window.summaryFixture.draft.includes("Saved key point 3");',
   );
+  // The format toolbar wraps or prefixes the selection with Markdown.
+  const editor = 'document.querySelector("textarea[aria-label=课堂笔记]")';
+  await d.read(`${editor}.focus(); ${editor}.setSelectionRange(0, 8);`);
+  await d.read(
+    `document.querySelector('[aria-label="加粗（Ctrl+B）"]').click();`,
+  );
+  await until(`return ${editor}.value.startsWith("**Original** manual");`);
+  assert.deepEqual(
+    await d.read(`return [${editor}.selectionStart, ${editor}.selectionEnd];`),
+    [2, 10],
+  );
+  await d.read(`${editor}.setSelectionRange(0, 0);`);
+  await d.read(`document.querySelector('[aria-label="标题"]').click();`);
+  await until(`return ${editor}.value.startsWith("## **Original** manual");`);
+  await until(
+    'return window.summaryFixture.draft.startsWith("## **Original** manual");',
+  );
   await click('课堂要点');
   await d.read('window.summaryFixture.stale();');
   await until(

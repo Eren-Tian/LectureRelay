@@ -210,6 +210,10 @@ export const zhCN = {
   liveInSessionEyebrow: '正在上课',
   liveRecordingStatusLabel: '录音状态',
   liveRecordingFailedStatus: '录音出现异常，请查看提示',
+  liveDeviceLostBody:
+    '录音已中断，已录的部分都保存着。可以先保存这一段，再选一个设备接着录。',
+  liveSaveAndContinue: '保存并继续录音',
+  liveContinuationTitle: (title: string) => `${title}（续）`,
   liveRecordingPausedStatus: '已暂停',
   liveRecordingDurationLabel: '录音时长',
   liveAudioLevelLabel: '声音电平',

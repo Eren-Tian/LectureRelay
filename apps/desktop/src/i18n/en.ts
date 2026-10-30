@@ -219,6 +219,10 @@ export const en = {
   liveInSessionEyebrow: 'Class in session',
   liveRecordingStatusLabel: 'Recording status',
   liveRecordingFailedStatus: 'Recording problem — see the notice',
+  liveDeviceLostBody:
+    'Recording stopped. Everything recorded so far is saved. Save this part, then pick a device to keep recording.',
+  liveSaveAndContinue: 'Save and Keep Recording',
+  liveContinuationTitle: (title: string) => `${title} (continued)`,
   liveRecordingPausedStatus: 'Paused',
   liveRecordingDurationLabel: 'Recording duration',
   liveAudioLevelLabel: 'Audio level',

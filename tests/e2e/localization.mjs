@@ -292,6 +292,19 @@ try {
   assert.match(model, /下载 Hy-MT2-1.8B · Q4_K_M/);
   assert.match(model, /设置 → AI 与模型 → 本地模型/);
   assert.match(model, /尚未上传任何文本/);
+  // If the device fails mid-lecture, one click saves and starts a follow-on.
+  await d.read('window.localizationFixture.failRecording();');
+  await click('保存并继续录音');
+  await until(
+    'return [...document.querySelectorAll(".modal input")].some(i=>i.value==="Cellular respiration（续）");',
+  );
+  assert.ok(
+    (await d.read('return window.localizationFixture.calls;')).includes(
+      'stop_lecture',
+    ),
+  );
+  await screenshot('device-lost-continue');
+  await click('取消');
   // A lecture in progress with live summaries on, at a common laptop size:
   // the newest summary leads, is readable without scrolling and gets a
   // full-height column beside the captions.

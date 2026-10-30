@@ -11,6 +11,7 @@ import { useAction } from '../../hooks/useAction';
 import { useResource } from '../../hooks/useResource';
 import { useWorkspace } from '../../app/Workspace';
 import { LiveCaptions } from './LiveCaptions';
+import { StartLecture } from './StartLecture';
 
 export function LivePage({ id }: { id: string }) {
   const workspace = useWorkspace();
@@ -22,6 +23,8 @@ export function LivePage({ id }: { id: string }) {
   }, [reload]);
   const { busy, run } = useAction();
   const [openingCaptions, setOpeningCaptions] = useState(false);
+  const [continuation, setContinuation] = useState(false);
+  const closeContinuation = useCallback(() => setContinuation(false), []);
   const settings = workspace.data.settings;
   const live = workspace.live?.lectureId === id ? workspace.live : null;
   if (!data) return <ResourceState error={error} reload={reload} />;
@@ -40,6 +43,13 @@ export function LivePage({ id }: { id: string }) {
         >
           {ui.liveOpenLectureRecord}
         </button>
+        {continuation && (
+          <StartLecture
+            course={data.course}
+            initialTitle={ui.liveContinuationTitle(data.lecture.title)}
+            onClose={closeContinuation}
+          />
+        )}
       </div>
     );
   const translation = live?.translation ?? {
@@ -62,6 +72,14 @@ export function LivePage({ id }: { id: string }) {
         await refresh();
         if (!(await api.recording())) navigate({ view: 'lecture', id });
       }
+    }, ui.recordingSavedNotice);
+  // After a device failure: save what was recorded, then start a follow-on
+  // lecture in the same course, where another device can be chosen.
+  const saveAndContinue = () =>
+    void run(async () => {
+      await api.stopLecture(id);
+      await refresh();
+      setContinuation(true);
     }, ui.recordingSavedNotice);
   const target = languageName(data.course.assistanceLanguage);
   const recognition = live && settings.speechProvider !== 'none' ? live : null;
@@ -135,6 +153,19 @@ export function LivePage({ id }: { id: string }) {
           {messageText(recording.warning)}
         </p>
       )}
+      {recording.failed && (
+        <div className="classroom-notice warning device-lost" role="alert">
+          <span>{ui.liveDeviceLostBody}</span>
+          <button
+            className="button primary"
+            disabled={busy}
+            onClick={saveAndContinue}
+          >
+            {ui.liveSaveAndContinue}
+          </button>
+        </div>
+      )}
+
       {recognition && !recognitionOnTrack && (
         <div
           className={`classroom-notice ${recognition.backlogSeconds > 6 ? 'warning' : ''}`}

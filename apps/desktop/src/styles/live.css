@@ -472,3 +472,15 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Device failure: the explanation and the way forward on one line. */
+.classroom-notice.device-lost {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.classroom-notice.device-lost .button {
+  flex-shrink: 0;
+}

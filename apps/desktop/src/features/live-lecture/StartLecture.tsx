@@ -11,17 +11,25 @@ import { AudioInputTest } from '../settings/AudioInputTest';
 export function StartLecture({
   course,
   onClose,
+  initialTitle,
 }: {
   course: Course;
   onClose: () => void;
+  /** For a continuation after the audio device failed. */
+  initialTitle?: string;
 }) {
   const { refresh, navigate, data } = useWorkspace();
   const [source, setSource] = useState(data.settings.audioSource);
   const [title, setTitle] = useState(
-    ui.defaultLectureTitle(
-      new Date().toLocaleDateString('zh-CN', { month: 'long', day: 'numeric' }),
-      course.code || ui.untitledLectureName,
-    ),
+    () =>
+      initialTitle ??
+      ui.defaultLectureTitle(
+        new Date().toLocaleDateString('zh-CN', {
+          month: 'long',
+          day: 'numeric',
+        }),
+        course.code || ui.untitledLectureName,
+      ),
   );
   const [devices, setDevices] = useState<InputDevice[] | null>(null);
   const [deviceId, setDeviceId] = useState('');

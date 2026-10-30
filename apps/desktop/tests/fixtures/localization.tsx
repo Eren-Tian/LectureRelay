@@ -179,6 +179,17 @@ const fixture = {
   failTrash: false,
   droppedImport: '',
   savedTerm: '',
+  /** Simulates the audio device disappearing mid-lecture. */
+  failRecording: () => {
+    if (!data.recording) return;
+    data.recording = {
+      ...data.recording,
+      failed: true,
+      warning:
+        'Audio device disconnected or unavailable. Earlier audio is preserved.',
+    };
+    return emit('recording-status', data.recording);
+  },
   /** Simulates the window's file drop event. */
   drop: (paths: string[]) =>
     emit('tauri://drag-drop', { paths, position: { x: 10, y: 10 } }),
@@ -330,6 +341,11 @@ mockIPC(
       case 'delete_course':
       case 'restore_course':
         return null;
+      case 'stop_lecture':
+        data.recording = null;
+        live.active = false;
+        lecture.status = 'completed';
+        return lecture;
       case 'save_term':
         fixture.savedTerm = `${input.source}=${input.translation}`;
         return null;

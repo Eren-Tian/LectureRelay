@@ -127,7 +127,9 @@ impl Storage {
                 })
                 .user_error(crate::error::ErrorCode::CannotVerifyMigration)?;
             if errors != 0 {
-                return Err(crate::error::ErrorCode::LanguageMigrationFailedItsIntegrityCheck.into());
+                return Err(
+                    crate::error::ErrorCode::LanguageMigrationFailedItsIntegrityCheck.into(),
+                );
             }
             tx.execute_batch("PRAGMA user_version=6;")
                 .user_error(crate::error::ErrorCode::CannotSaveDatabaseVersion)?;

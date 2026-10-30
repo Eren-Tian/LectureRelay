@@ -762,12 +762,21 @@ fn language_migration_keeps_courses_and_accepts_every_translation_language() {
     old.execute_batch("PRAGMA user_version=5; INSERT INTO courses(id,name,subject,assistance_language,created_at,deleted_at) VALUES('c','Biology','subject','ja',1,NULL),('gone','Old','subject','ko',1,5); INSERT INTO lectures(id,course_id,title,started_at,status,recording_path) VALUES('l','c','l',1,'completed','unused'); INSERT INTO transcript_segments(id,lecture_id,start_seconds,end_seconds,source_text,translated_text,origin,provider) VALUES('s','l',0,1,'Mitochondria','ミトコンドリア','local','local');").unwrap();
     drop(old);
     let db = f.db();
-    assert_eq!(db.segments("l").unwrap()[0].translated_text, "ミトコンドリア");
+    assert_eq!(
+        db.segments("l").unwrap()[0].translated_text,
+        "ミトコンドリア"
+    );
     drop(db);
     let check = rusqlite::Connection::open(path).unwrap();
-    let one = |sql: &str| check.query_row::<String, _, _>(sql, [], |r| r.get(0)).unwrap();
+    let one = |sql: &str| {
+        check
+            .query_row::<String, _, _>(sql, [], |r| r.get(0))
+            .unwrap()
+    };
     assert_eq!(
-        one("SELECT name||'/'||assistance_language||'/'||IFNULL(deleted_at,'') FROM courses WHERE id='gone'"),
+        one(
+            "SELECT name||'/'||assistance_language||'/'||IFNULL(deleted_at,'') FROM courses WHERE id='gone'"
+        ),
         "Old/ko/5"
     );
     assert_eq!(
@@ -785,11 +794,17 @@ fn language_migration_keeps_courses_and_accepts_every_translation_language() {
     );
     // The rebuilt triggers still switch translations with the course language.
     check
-        .execute("UPDATE courses SET assistance_language='fr' WHERE id='c'", [])
+        .execute(
+            "UPDATE courses SET assistance_language='fr' WHERE id='c'",
+            [],
+        )
         .unwrap();
     assert_eq!(one("SELECT translated_text FROM transcript_segments"), "");
     check
-        .execute("UPDATE courses SET assistance_language='ja' WHERE id='c'", [])
+        .execute(
+            "UPDATE courses SET assistance_language='ja' WHERE id='c'",
+            [],
+        )
         .unwrap();
     assert_eq!(
         one("SELECT translated_text FROM transcript_segments"),
@@ -798,13 +813,19 @@ fn language_migration_keeps_courses_and_accepts_every_translation_language() {
     // The CHECK constraint matches the language table exactly.
     for (code, _) in crate::domain::TRANSLATION_LANGUAGES {
         check
-            .execute("UPDATE courses SET assistance_language=?1 WHERE id='gone'", [code])
+            .execute(
+                "UPDATE courses SET assistance_language=?1 WHERE id='gone'",
+                [code],
+            )
             .unwrap();
         assert!(crate::domain::valid_language(code));
     }
     assert!(
         check
-            .execute("UPDATE courses SET assistance_language='xx' WHERE id='gone'", [])
+            .execute(
+                "UPDATE courses SET assistance_language='xx' WHERE id='gone'",
+                []
+            )
             .is_err()
     );
     assert!(!crate::domain::valid_language("xx"));

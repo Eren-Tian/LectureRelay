@@ -125,6 +125,25 @@ try {
   await until(
     'return window.summaryFixture.draft.startsWith("## **Original** manual");',
   );
+  // Task lists and tables (GFM) render in the draft preview.
+  await d.read(
+    `${editor}.setSelectionRange(${editor}.value.length, ${editor}.value.length);`,
+  );
+  await d.read(`document.querySelector('[aria-label="表格"]').click();`);
+  await until(`return ${editor}.value.includes("| 概念 | 说明 |");`);
+  await d.read(`${editor}.setSelectionRange(0, 0);`);
+  await d.read(`document.querySelector('[aria-label="待办列表"]').click();`);
+  await until(`return ${editor}.value.startsWith("- [ ] ## ");`);
+  await click('预览草稿');
+  await until(
+    'return !!document.querySelector(".study-notes .markdown table th") && !!document.querySelector(".study-notes .task-list-item input[type=checkbox]");',
+  );
+  assert.match(
+    await d.read(
+      'return document.querySelector(".study-notes .notice").textContent;',
+    ),
+    /尚未保存/,
+  );
   await click('课堂要点');
   await d.read('window.summaryFixture.stale();');
   await until(

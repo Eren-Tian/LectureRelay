@@ -15,6 +15,12 @@ export function Modal({
   wide?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // Focus is set once when the dialog opens; a new onClose from a re-render
+  // must not move it, so Escape reads the latest callback through a ref.
+  const close = useRef(onClose);
+  useEffect(() => {
+    close.current = onClose;
+  }, [onClose]);
   useEffect(() => {
     const previous = document.activeElement as HTMLElement | null;
     const controls = () =>
@@ -23,12 +29,14 @@ export function Modal({
           'input, select, textarea, button, [tabindex="0"]',
         ) ?? []),
       ].filter((element) => !element.hasAttribute('disabled'));
+    // A field marked data-autofocus wins, e.g. the one still to fill in.
     const first =
+      ref.current?.querySelector<HTMLElement>('[data-autofocus]') ??
       ref.current?.querySelector<HTMLElement>('input, select, textarea') ??
       controls()[0];
     first?.focus();
     const keydown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') close.current();
       if (event.key === 'Tab') {
         const items = controls();
         const first = items[0];
@@ -47,7 +55,7 @@ export function Modal({
       document.removeEventListener('keydown', keydown);
       previous?.focus();
     };
-  }, [onClose]);
+  }, []);
   return createPortal(
     <div
       className="modal-backdrop"

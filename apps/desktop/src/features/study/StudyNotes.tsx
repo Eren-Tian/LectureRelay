@@ -228,8 +228,12 @@ export function StudyNotes({
               </button>
             </div>
           )}
-          {(selected?.body ?? note?.body) ? (
-            <MarkdownBody body={selected?.body ?? note!.body} onSeek={onSeek} />
+          {/* An unsaved draft is what "Preview Draft" shows; the notice above says so. */}
+          {(selected?.body ?? (draft || note?.body)) ? (
+            <MarkdownBody
+              body={selected?.body ?? (draft || note?.body || '')}
+              onSeek={onSeek}
+            />
           ) : (
             <div className="empty-state">
               <h3>{ui.studyMyNotes}</h3>
@@ -242,23 +246,38 @@ export function StudyNotes({
 }
 
 type NoteFormat =
-  'heading' | 'bold' | 'italic' | 'bullet' | 'numbered' | 'quote' | 'timestamp';
+  | 'heading'
+  | 'bold'
+  | 'italic'
+  | 'strike'
+  | 'bullet'
+  | 'numbered'
+  | 'task'
+  | 'quote'
+  | 'table'
+  | 'timestamp';
 const FORMATS: [NoteFormat, string][] = [
   ['heading', 'H'],
   ['bold', 'B'],
   ['italic', 'I'],
+  ['strike', 'S'],
   ['bullet', '•'],
   ['numbered', '1.'],
+  ['task', '☐'],
   ['quote', '❝'],
+  ['table', '▦'],
 ];
 const formatLabel = (kind: NoteFormat) =>
   ({
     heading: ui.notesFormatHeading,
     bold: ui.notesFormatBold,
     italic: ui.notesFormatItalic,
+    strike: ui.notesFormatStrike,
     bullet: ui.notesFormatBullet,
     numbered: ui.notesFormatNumbered,
+    task: ui.notesFormatTask,
     quote: ui.notesFormatQuote,
+    table: ui.notesFormatTable,
     timestamp: '',
   })[kind];
 /** Markdown for one toolbar action; returns the new text and selection. */
@@ -269,14 +288,25 @@ function applyFormat(
   kind: NoteFormat,
   stamp: string,
 ) {
-  if (kind === 'timestamp')
+  if (kind === 'timestamp' || kind === 'table') {
+    const before = text.slice(0, from);
+    // A table needs a blank line before it to be parsed as one.
+    const gap =
+      kind === 'table' && before && !before.endsWith('\n\n')
+        ? before.endsWith('\n')
+          ? '\n'
+          : '\n\n'
+        : '';
+    const insert =
+      kind === 'timestamp' ? stamp : `${gap}${ui.notesTableTemplate}\n`;
     return {
-      text: text.slice(0, from) + stamp + text.slice(to),
-      start: from + stamp.length,
-      end: from + stamp.length,
+      text: before + insert + text.slice(to),
+      start: from + insert.length,
+      end: from + insert.length,
     };
-  if (kind === 'bold' || kind === 'italic') {
-    const mark = kind === 'bold' ? '**' : '*';
+  }
+  if (kind === 'bold' || kind === 'italic' || kind === 'strike') {
+    const mark = { bold: '**', italic: '*', strike: '~~' }[kind];
     const chosen = text.slice(from, to);
     return {
       text: text.slice(0, from) + mark + chosen + mark + text.slice(to),
@@ -284,9 +314,13 @@ function applyFormat(
       end: to + mark.length,
     };
   }
-  const prefix = { heading: '## ', bullet: '- ', numbered: '1. ', quote: '> ' }[
-    kind
-  ];
+  const prefix = {
+    heading: '## ',
+    bullet: '- ',
+    numbered: '1. ',
+    task: '- [ ] ',
+    quote: '> ',
+  }[kind];
   const lineStart = text.lastIndexOf('\n', from - 1) + 1;
   const block = text
     .slice(lineStart, to)

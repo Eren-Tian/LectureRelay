@@ -22,6 +22,7 @@ import { QuestionsPanel } from '../qa/QuestionsPanel';
 import { DeleteLecture } from './DeleteLecture';
 import { SegmentForm } from '../transcript/SegmentForm';
 import { ReplayControls } from './ReplayControls';
+import { AddTermDialog } from '../glossary/AddTermDialog';
 import { savedPosition, savePosition } from './resume';
 import {
   clock,
@@ -56,7 +57,8 @@ export function LecturePage({ id }: { id: string }) {
       y: number;
     } | null>(null),
     [toolRequest, setToolRequest] = useState<{ tab: string; key: number }>(),
-    [focusQuestion, setFocusQuestion] = useState(false);
+    [focusQuestion, setFocusQuestion] = useState(false),
+    [newTerm, setNewTerm] = useState<string | null>(null);
   const transcriptList = useRef<HTMLDivElement>(null),
     lastSaved = useRef(0);
   const resumeAt = useMemo(() => savedPosition(id), [id]);
@@ -86,6 +88,7 @@ export function LecturePage({ id }: { id: string }) {
   }, [data?.segments, search]);
   const closeSegment = useCallback(() => setSegment(null), []);
   const questionFocused = useCallback(() => setFocusQuestion(false), []);
+  const closeTerm = useCallback(() => setNewTerm(null), []);
   const words = useMemo(
     () =>
       (data?.segments ?? []).reduce(
@@ -697,15 +700,32 @@ export function LecturePage({ id }: { id: string }) {
         }
       />
       {selection && (
-        <button
-          className="selection-ask"
+        <div
+          className="selection-actions"
           style={{ left: selection.x, top: selection.y }}
           onMouseDown={(e) => e.preventDefault()}
-          onClick={askSelection}
         >
-          <Icon name="spark" size={14} />
-          {ui.askAiAboutSelection}
-        </button>
+          <button onClick={askSelection}>
+            <Icon name="spark" size={14} />
+            {ui.askAiAboutSelection}
+          </button>
+          {/* A short phrase can become a glossary term for this course. */}
+          {selection.text.length <= 60 && (
+            <button
+              onClick={() => {
+                setNewTerm(selection.text);
+                setSelection(null);
+                window.getSelection()?.removeAllRanges();
+              }}
+            >
+              <Icon name="plus" size={14} />
+              {ui.addToGlossary}
+            </button>
+          )}
+        </div>
+      )}
+      {newTerm !== null && (
+        <AddTermDialog course={course} term={newTerm} onClose={closeTerm} />
       )}
       {segment && (
         <SegmentForm

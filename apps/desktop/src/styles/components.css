@@ -398,6 +398,36 @@
   padding: 2px 4px;
   font-size: 12px;
 }
+/* GFM task lists and tables in notes. */
+.markdown .contains-task-list {
+  list-style: none;
+  padding-left: 2px;
+}
+.markdown .task-list-item input {
+  width: auto;
+  margin: 0 8px 0 0;
+  vertical-align: middle;
+  accent-color: var(--sage);
+}
+.markdown table {
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  margin: 12px 0;
+  font-size: 13px;
+}
+.markdown th,
+.markdown td {
+  border: 1px solid var(--line);
+  padding: 7px 11px;
+  text-align: left;
+  vertical-align: top;
+}
+.markdown th {
+  background: var(--soft);
+  font-weight: 650;
+}
 .markdown-link {
   color: var(--sage);
 }

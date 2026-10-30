@@ -176,6 +176,21 @@ try {
     'lecture-question',
   );
   await screenshot('replay-ask-selection');
+  // A short selection can be added to the course glossary.
+  await d.read(
+    'const t=document.querySelector(".transcript-segment .source-text").firstChild; const r=document.createRange(); r.setStart(t,0); r.setEnd(t,12); const s=getSelection(); s.removeAllRanges(); s.addRange(r); document.querySelector(".transcript-list").dispatchEvent(new MouseEvent("mouseup",{bubbles:true}));',
+  );
+  await click('加入术语表');
+  await until(
+    'return document.querySelector(".modal input")?.value === "Mitochondria";',
+  );
+  await d.fill('.modal input[placeholder]', '线粒体');
+  await click('添加术语');
+  await until('return !!window.localizationFixture.savedTerm;');
+  assert.equal(
+    await d.read('return window.localizationFixture.savedTerm;'),
+    'Mitochondria=线粒体',
+  );
   if (
     await d.read('return !!document.querySelector(".study-workspace.narrow");')
   )

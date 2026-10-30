@@ -288,23 +288,32 @@
 .follow-toggle[aria-pressed='false'] {
   color: var(--muted);
 }
-.selection-ask {
+.selection-actions {
   position: fixed;
   z-index: 40;
   transform: translate(-50%, calc(-100% - 8px));
+  display: inline-flex;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sage);
+  box-shadow: 0 6px 18px #1d2a1f33;
+}
+.selection-actions button {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   padding: 7px 12px;
   border: 0;
-  border-radius: 999px;
   font-size: 12px;
   font-weight: 600;
+  white-space: nowrap;
   color: var(--on-accent);
-  background: var(--sage);
-  box-shadow: 0 6px 18px #1d2a1f33;
+  background: transparent;
 }
-.selection-ask:hover {
+.selection-actions button + button {
+  border-left: 1px solid color-mix(in srgb, var(--on-accent) 35%, transparent);
+}
+.selection-actions button:hover {
   background: var(--accent-hover);
 }
 .study-workspace {

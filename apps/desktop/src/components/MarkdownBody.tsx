@@ -1,4 +1,8 @@
 import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+
+// GitHub-flavored Markdown: tables, task lists and strikethrough in notes.
+const plugins = [remarkGfm];
 
 export function MarkdownBody({
   body,
@@ -10,6 +14,7 @@ export function MarkdownBody({
   return (
     <div className="markdown">
       <Markdown
+        remarkPlugins={plugins}
         components={{
           a: ({ children, href }) => {
             const stamp = href?.match(/^#t=(\d+(?:\.\d+)?)$/);

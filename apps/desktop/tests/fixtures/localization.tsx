@@ -178,6 +178,7 @@ const fixture = {
   failCleanup: false,
   failTrash: false,
   droppedImport: '',
+  savedTerm: '',
   /** Simulates the window's file drop event. */
   drop: (paths: string[]) =>
     emit('tauri://drag-drop', { paths, position: { x: 10, y: 10 } }),
@@ -328,6 +329,9 @@ mockIPC(
         return [{ ...course, id: 'trash-course', name: 'Archived course' }];
       case 'delete_course':
       case 'restore_course':
+        return null;
+      case 'save_term':
+        fixture.savedTerm = `${input.source}=${input.translation}`;
         return null;
       case 'import_dropped_media':
         fixture.droppedImport = String(input.title);

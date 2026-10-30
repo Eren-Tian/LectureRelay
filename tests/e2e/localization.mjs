@@ -307,6 +307,15 @@ try {
       '/tests/fixtures/localization.html?classroom',
   });
   await until('return !!document.querySelector(".course-card");');
+  // The lecture left at 00:30 earlier is offered on the home page.
+  await until('return !!document.querySelector(".continue-card");');
+  assert.match(
+    await d.read(
+      'return document.querySelector(".continue-learning").innerText;',
+    ),
+    /继续学习[\s\S]*Cellular respiration[\s\S]*从 00:30 继续/,
+  );
+  await screenshot('home-continue');
   await d.click('aside button[aria-label="Introduction to Biology"]');
   await click('开始录音');
   await until(

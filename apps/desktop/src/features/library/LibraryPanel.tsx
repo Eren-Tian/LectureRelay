@@ -1,5 +1,6 @@
 import { ui } from '../../i18n';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState, type CSSProperties } from 'react';
+import type { Lecture } from '../../types/domain';
 import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import { useResource } from '../../hooks/useResource';
@@ -8,6 +9,8 @@ import { clock, dateText, transcriptionLabel } from '../../lib/presentation';
 import { ResourceState } from '../../components/ResourceState';
 import { Icon } from '../../components/Icon';
 import { Modal } from '../../components/Modal';
+import { savedResume } from '../lecture-history/resume';
+
 import { fileName, fileStem, isMediaPath, useMediaDrop } from './useMediaDrop';
 
 export function ImportMedia({
@@ -166,6 +169,7 @@ export function LibraryPanel() {
         <h2>{ui.libraryHeading}</h2>
         <ImportMedia />
       </div>
+      {!query && data && <ContinueLearning entries={data} />}
       <label className="library-search">
         <Icon name="search" size={17} />
         <input
@@ -232,5 +236,57 @@ export function LibraryPanel() {
         </p>
       )}
     </section>
+  );
+}
+
+/** Up to three lectures left partway, most recently played first. */
+function ContinueLearning({
+  entries,
+}: {
+  entries: { lecture: Lecture; courseName: string }[];
+}) {
+  const { navigate } = useWorkspace();
+  const started = entries
+    .map((entry) => ({ ...entry, resume: savedResume(entry.lecture.id) }))
+    .filter(
+      (
+        entry,
+      ): entry is typeof entry & { resume: { seconds: number; at: number } } =>
+        !!entry.resume &&
+        entry.lecture.status !== 'recording' &&
+        entry.resume.seconds > 5 &&
+        entry.resume.seconds < entry.lecture.durationSeconds - 5,
+    )
+    .sort((a, b) => b.resume.at - a.resume.at)
+    .slice(0, 3);
+  if (!started.length) return null;
+  return (
+    <div className="continue-learning">
+      <h3>{ui.continueLearning}</h3>
+      <div className="continue-grid">
+        {started.map(({ lecture, courseName, resume }) => (
+          <button
+            key={lecture.id}
+            className="continue-card"
+            style={
+              {
+                '--progress': `${(resume.seconds / lecture.durationSeconds) * 100}%`,
+              } as CSSProperties
+            }
+            onClick={() => navigate({ view: 'lecture', id: lecture.id })}
+          >
+            <span className="continue-play" aria-hidden="true">
+              <Icon name="play" size={14} />
+            </span>
+            <span className="continue-text">
+              <strong>{lecture.title}</strong>
+              <small>
+                {courseName} · {ui.playerResumeFrom(clock(resume.seconds))}
+              </small>
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

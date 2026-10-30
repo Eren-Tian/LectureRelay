@@ -299,6 +299,7 @@ export const en = {
   mediaImportImporting: 'Importing…',
   mediaImportChooseFile: 'Choose File',
   libraryHeading: 'Lectures',
+  continueLearning: 'Continue Learning',
   librarySearchLabel: 'Search all lectures',
   librarySearchPlaceholder: 'Search courses, lecture titles or transcripts',
   libraryUnpinLabel: 'Unpin lecture',

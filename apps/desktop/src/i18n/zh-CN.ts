@@ -277,6 +277,7 @@ export const zhCN = {
   mediaImportImporting: '正在导入…',
   mediaImportChooseFile: '选择文件',
   libraryHeading: '课堂记录',
+  continueLearning: '继续学习',
   librarySearchLabel: '搜索全部课堂记录',
   librarySearchPlaceholder: '搜索课程、课堂标题或转录内容',
   libraryUnpinLabel: '取消置顶',

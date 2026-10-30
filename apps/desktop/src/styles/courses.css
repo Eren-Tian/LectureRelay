@@ -245,6 +245,74 @@
 .library-search input {
   width: 100%;
 }
+.continue-learning {
+  margin-bottom: 22px;
+}
+.continue-learning h3 {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.continue-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
+  gap: 12px;
+}
+/* The bottom edge doubles as a progress bar for how far you listened. */
+.continue-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  overflow: hidden;
+}
+.continue-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: var(--progress, 0%);
+  background: var(--sage);
+}
+.continue-card:hover {
+  border-color: var(--sage);
+}
+.continue-play {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--on-accent);
+  background: var(--sage);
+}
+.continue-play svg {
+  fill: currentColor;
+}
+.continue-text {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.continue-text strong {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.continue-text small {
+  font-size: 11px;
+  color: var(--muted);
+}
 .library-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));

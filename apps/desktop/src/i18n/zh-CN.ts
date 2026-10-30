@@ -123,6 +123,7 @@ export const zhCN = {
   taskTranscription: '转录录音',
   taskTranslation: '翻译文本',
   taskNotes: '生成笔记',
+  taskDiarization: '识别讲话人',
   taskReview: '整理复习指南',
   taskQuestion: '课堂问答',
   taskProviderTest: '测试服务连接',
@@ -353,6 +354,13 @@ export const zhCN = {
   speakerUse: '用于这一段',
   speakerClear: '清除',
   speakerRenameAll: (name: string) => `把所有“${name}”改成这个名字`,
+  detectSpeakers: '识别讲话人',
+  speakerAutoPrefix: '讲话人',
+  speakersDetected: (count: number) =>
+    count
+      ? `找到 ${count} 位讲话人，已标在转录上。可以点标签改名。`
+      : '没有找到可区分的讲话人。',
+  speakerModelMissing: '请先下载讲话人识别模型（147 MB）。',
   askAboutSelectionQuestion: (text: string) =>
     `这段课堂内容是什么意思？“${text}”`,
   lectureWordCount: (count: number) => `${count.toLocaleString('zh-CN')} 词`,
@@ -775,6 +783,8 @@ export const zhCN = {
   modelSpeechHint: '上课时生成英文字幕。',
   modelTranslationHint: '把英文字幕翻译成你选择的语言。',
   modelStudyHint: '用于课后总结、整堂复习和问答。',
+  modelSpeakerTitle: '讲话人识别',
+  modelSpeakerHint: '自动区分转录里谁在说话，最多 4 人。',
   modelConnecting: '正在连接…',
   modelDownloading: '正在下载',
   modelNotDownloaded: '未下载',

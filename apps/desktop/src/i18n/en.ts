@@ -125,6 +125,7 @@ export const en = {
   taskTranscription: 'Transcription',
   taskTranslation: 'Translation',
   taskNotes: 'Note generation',
+  taskDiarization: 'Detect speakers',
   taskReview: 'Review guide',
   taskQuestion: 'Lecture Q&A',
   taskProviderTest: 'Connection test',
@@ -382,6 +383,13 @@ export const en = {
   speakerUse: 'Use for This Segment',
   speakerClear: 'Clear',
   speakerRenameAll: (name: string) => `Rename every “${name}”`,
+  detectSpeakers: 'Detect Speakers',
+  speakerAutoPrefix: 'Speaker',
+  speakersDetected: (count: number) =>
+    count
+      ? `Found ${count} speakers and labelled the transcript. Click a label to rename it.`
+      : 'No distinct speakers were found.',
+  speakerModelMissing: 'Download the speaker detection model (147 MB) first.',
   askAboutSelectionQuestion: (text: string) =>
     `What does this part of the lecture mean? “${text}”`,
   lectureWordCount: (count: number) => `${count.toLocaleString('en-US')} words`,
@@ -849,6 +857,8 @@ export const en = {
     'Translates English captions into the language you choose.',
   modelStudyHint:
     'Used for summaries, full-lecture review and Q&A after class.',
+  modelSpeakerTitle: 'Speaker Detection',
+  modelSpeakerHint: 'Tells who is speaking in a transcript, up to four people.',
   modelConnecting: 'Connecting…',
   modelDownloading: 'Downloading',
   modelNotDownloaded: 'Not downloaded',

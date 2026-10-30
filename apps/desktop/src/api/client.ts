@@ -120,6 +120,9 @@ export const api = {
   stopLecture: (id: string) => call<Lecture>('stop_lecture', { id }),
   recording: () => call<RecordingStatus | null>('recording_status'),
   lecture: (id: string) => call<LectureDetail>('lecture_detail', { id }),
+  speakerModel: () => call<ModelStatus>('speaker_model'),
+  detectSpeakers: (id: string, prefix: string) =>
+    call<number>('detect_speakers', { id, prefix }),
   setSpeaker: (lectureId: string, segmentId: string, speaker: string) =>
     call<void>('set_segment_speaker', { lectureId, segmentId, speaker }),
   renameSpeaker: (lectureId: string, from: string, to: string) =>

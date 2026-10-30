@@ -738,4 +738,10 @@ export const nativeErrorKeys: Record<string, string> = {
     'Enter a speaker name of up to 40 characters.',
   cannot_save_speaker: 'Cannot save the speaker.',
   cannot_read_speakers: 'Cannot read speakers.',
+  download_the_speaker_model_first:
+    'Download the speaker model in Settings → AI & models → Local models first.',
+  transcribe_before_detecting_speakers:
+    'Transcribe the lecture before detecting speakers.',
+  speaker_detection_failed_transcript_is_unchanged:
+    'Speaker detection failed. The transcript is unchanged.',
 };

@@ -7,17 +7,50 @@
 #include <string>
 #include <vector>
 #include "nemo_speech/asr.h"
+#include "nemo_speech/diar.h"
 #include "silence.hpp"
 template<class T>T sym(HMODULE h,const char*n){return reinterpret_cast<T>(GetProcAddress(h,n));}
 std::string utf8(const wchar_t*s){int n=WideCharToMultiByte(CP_UTF8,0,s,-1,nullptr,0,nullptr,nullptr);std::string r(n,'\0');WideCharToMultiByte(CP_UTF8,0,s,-1,r.data(),n,nullptr,nullptr);r.pop_back();return r;}
 std::string quote(const char*s){std::string r="\"";for(auto*p=reinterpret_cast<const unsigned char*>(s?s:"");*p;p++){if(*p=='"'||*p=='\\'){r+='\\';r+=*p;}else if(*p=='\n')r+="\\n";else if(*p=='\r')r+="\\r";else if(*p=='\t')r+="\\t";else if(*p>=32)r+=*p;}return r+"\"";}
 bool reply(int32_t code,const std::string&s){uint32_t n=s.size();if(n>20000){code=-2;n=0;}return fwrite(&code,4,1,stdout)==1&&fwrite(&n,4,1,stdout)==1&&(!n||fwrite(s.data(),1,n,stdout)==n)&&fflush(stdout)==0;}
+// Speaker diarization ("who spoke when"), selected by a third argument. Command 1
+// pushes 16 kHz float audio and gets an empty reply; command 2 finishes, replies
+// "start end speaker" lines in pages under the reply limit, then an empty page.
+int diarize(HMODULE lib,const std::string&model_path){
+ auto create=sym<decltype(&nemo_speech_diar_create)>(lib,"nemo_speech_diar_create");auto destroy=sym<decltype(&nemo_speech_diar_destroy)>(lib,"nemo_speech_diar_destroy");
+ auto open=sym<decltype(&nemo_speech_diar_stream_open)>(lib,"nemo_speech_diar_stream_open");auto push=sym<decltype(&nemo_speech_diar_stream_push_f32)>(lib,"nemo_speech_diar_stream_push_f32");
+ auto finish=sym<decltype(&nemo_speech_diar_stream_finish)>(lib,"nemo_speech_diar_stream_finish");auto close=sym<decltype(&nemo_speech_diar_stream_close)>(lib,"nemo_speech_diar_stream_close");
+ auto segments=sym<decltype(&nemo_speech_diar_segments)>(lib,"nemo_speech_diar_segments");
+ if(!create||!destroy||!open||!push||!finish||!close||!segments){reply(-1,"");return 3;}
+ // The long-form preset: 8 s chunks and larger speaker caches. A negative left
+ // context keeps the preset's value (0 would be an explicit override).
+ nemo_speech_diar_model_config cfg={};cfg.size=sizeof(cfg);cfg.model_path=model_path.c_str();cfg.gpu=-1;cfg.preset="offline";cfg.left_context_frames=-1;
+ nemo_speech_diar_model*model=nullptr;int code=create(&cfg,&model);if(!reply(code,"")||code)return 4;
+ nemo_speech_diar_stream*stream=nullptr;code=open(model,&stream);uint32_t header;
+ while(code==0&&fread(&header,4,1,stdin)==1){
+  if(header==0)break;auto command=header>>30;auto count=header&0x3fffffff;
+  if(count>960000||(command!=1&&command!=2)){code=-2;break;}
+  std::vector<float>pcm(count);if(count&&fread(pcm.data(),4,count,stdin)!=count)break;
+  if(command==1){code=count?push(stream,pcm.data(),count,16000):0;if(code||!reply(0,""))break;continue;}
+  size_t n=0;code=finish(stream);if(!code)code=segments(stream,nullptr,nullptr,0,&n);
+  std::vector<nemo_speech_diar_segment>found(n);if(!code&&n)code=segments(stream,nullptr,found.data(),n,&n);
+  if(code)break;
+  std::string page;char line[64];
+  for(size_t i=0;i<n;i++){int k=snprintf(line,sizeof line,"%.3f %.3f %d\n",found[i].start_time,found[i].end_time,found[i].speaker);if(k<=0)continue;if(page.size()+k>19000){if(!reply(0,page))return 5;page.clear();}page.append(line,k);}
+  if((!page.empty()&&!reply(0,page))||!reply(0,""))return 5;
+  break;
+ }
+ if(code)reply(code,"");
+ if(stream)close(stream);destroy(model);return 0;
+}
 int wmain(int argc,wchar_t**argv){
- if(argc!=3)return 1;_setmode(_fileno(stdin),_O_BINARY);_setmode(_fileno(stdout),_O_BINARY);
+ bool diarization=argc==4&&std::wstring(argv[3])==L"diarize";
+ if(argc!=3&&!diarization)return 1;_setmode(_fileno(stdin),_O_BINARY);_setmode(_fileno(stdout),_O_BINARY);
  // The parent applies the global CPU policy and can update it while this stream runs.
  SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_SYSTEM32|LOAD_LIBRARY_SEARCH_USER_DIRS);AddDllDirectory(argv[1]);
  HMODULE lib=LoadLibraryExW((std::wstring(argv[1])+L"\\nemo_speech_asr_c.dll").c_str(),nullptr,LOAD_LIBRARY_SEARCH_DLL_LOAD_DIR|LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
  if(!lib){reply(-1,"");return 2;}
+ if(diarization){int status=diarize(lib,utf8(argv[2]));FreeLibrary(lib);return status;}
  auto create=sym<decltype(&nemo_speech_asr_create)>(lib,"nemo_speech_asr_create");auto destroy=sym<decltype(&nemo_speech_asr_destroy)>(lib,"nemo_speech_asr_destroy");
  auto defaults=sym<decltype(&nemo_speech_asr_recognition_options_default)>(lib,"nemo_speech_asr_recognition_options_default");
  auto batch=sym<decltype(&nemo_speech_asr_recognize_f32)>(lib,"nemo_speech_asr_recognize_f32");

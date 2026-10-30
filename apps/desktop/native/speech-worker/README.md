@@ -15,8 +15,12 @@ Build with `pnpm build:asr`. MSVC `/O2 /MT` compiles from source; no CMake wrapp
 
 The adapter starts a hidden child with a kill-on-close Windows Job Object and a 30-second response timeout. Messages/replies are bounded. DLL search is restricted to its runtime and Windows system directories. The Rust parent owns the global performance policy: Quiet Mode permits up to four available logical processors; disabling it restores the app's full available CPU mask. Changes also update running live and post-class workers without restarting their recognition streams. This limits runnable CPUs, not the number of software threads. The standalone C++ helper does not impose a separate cap. No Python/CUDA/weights are bundled.
 
-## Protocol (unchanged)
+## Protocol
 
 Stdin uses little-endian u32 headers: high two bits select batch (0), feed (1), flush (2), or glossary (3); lower 30 bits contain float32 mono-16k sample count or glossary byte count. Header 0 closes the worker. Glossary payload is NUL-delimited UTF-8, at most 16 KiB/64 terms. Replies are i32 code + u32 UTF-8 byte length + payload, at most 20,000 bytes. Streaming replies contain `text`/`final`; partials remain provisional. Batch returns text. The persistent recognizer uses 160 ms blocks, 500 ms quiet detection and 20-second endpoints.
 
 The audited nine-DLL import closure starts at `nemo_speech_asr_c.dll`: ASR, ggml/base/CPU, MSVC C++/VCRuntime and OpenMP. Windows OS/UCRT imports are system dependencies. NMT/TTS/llama and unused SDK redistributables are excluded; the full upstream notice tree is intentionally retained. Change this list only after checking PE imports, dynamic loading and an actual model smoke. See [provenance](../../../../docs/licenses/native-runtime.md).
+
+## Speaker diarization mode
+
+A third argument, `diarize`, loads a Sortformer GGUF instead of the ASR model through the same `nemo_speech_asr_c.dll` (its diarization ABI in `nemo_speech/diar.h`); the DLL import closure is unchanged. After the creation reply, command 1 pushes 16 kHz float audio and gets an empty reply. Command 2 finishes the stream and replies `start end speaker` lines (seconds, 1-based speaker) in pages under the 20,000-byte reply limit, followed by an empty page. The long-form `offline` preset is used; a negative left context keeps the preset value.

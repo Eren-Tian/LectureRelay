@@ -85,6 +85,7 @@ export const taskName = (kind: string) =>
       transcription: ui.taskTranscription,
       translation: ui.taskTranslation,
       notes: ui.taskNotes,
+      diarization: ui.taskDiarization,
       review: ui.taskReview,
       question: ui.taskQuestion,
       'provider-test': ui.taskProviderTest,

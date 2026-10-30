@@ -19,8 +19,11 @@ Install the Windows EXE. No LectureRelay login, API key, Python, Ollama or devel
 | English transcription                      | Nemotron Streaming EN 0.6B Q8          | 667 MiB   |
 | Translation candidate                      | Hy-MT2-1.8B Q4_K_M                     | 1,081 MiB |
 | Summary, review, Q&A; optional translation | Qwen3.5-4B Q4_K_M (Unsloth conversion) | 2,614 MiB |
+| Speaker detection (optional)               | Sortformer 4spk v2 Q8_0                | 140 MiB   |
 
-All three need about **4.3 GiB** of disk space plus app files and recordings. Working memory is additional. A GPU is not required. Downloads are optional and independent; Qwen translation and study tools reuse the same file. Each model is stored once in `%LOCALAPPDATA%\LectureRelay\models` and every feature uses that copy.
+**识别讲话人** on a saved lecture uses the optional Sortformer model ("diar_streaming_sortformer_4spk-v2" by NVIDIA, CC BY 4.0, converted to GGUF Q8_0 by NeMo-Speech.cpp). It runs in the same local speech worker, tells up to four speakers apart, and labels each transcript segment with the speaker it overlaps most as "讲话人 1", "讲话人 2" and so on; names you typed are kept. Its attribution notice is saved beside the model as `NOTICE-Sortformer.txt`. Detection quality on classroom audio has not been evaluated, and the feature has not yet been run against the real model in an installed build.
+
+The first three models need about **4.3 GiB** of disk space plus app files and recordings. Working memory is additional. A GPU is not required. Downloads are optional and independent; Qwen translation and study tools reuse the same file. Each model is stored once in `%LOCALAPPDATA%\LectureRelay\models` and every feature uses that copy.
 
 Download models from LectureRelay opened from the Start menu or desktop shortcut. When another packaged app (for example the Codex desktop app) starts LectureRelay, Windows stores files LectureRelay creates under AppData in that app's private folder, where a normally opened LectureRelay cannot find them. LectureRelay therefore refuses downloads in that situation instead of storing a second copy; models that are already downloaded keep working.
 

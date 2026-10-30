@@ -19,16 +19,21 @@ export function ModelManagerCard({
   const workspace = useWorkspace();
   const speech = !model || model.id === 'nemotron-streaming';
   const translation = model?.id === 'hy-mt2-1.8b';
+  const speakers = model?.id === 'sortformer-4spk-v2';
   const title = speech
     ? ui.modelSpeechTitle
     : translation
       ? ui.modelTranslationTitle
-      : ui.modelStudyTitle;
+      : speakers
+        ? ui.modelSpeakerTitle
+        : ui.modelStudyTitle;
   const hint = speech
     ? ui.modelSpeechHint
     : translation
       ? ui.modelTranslationHint
-      : ui.modelStudyHint;
+      : speakers
+        ? ui.modelSpeakerHint
+        : ui.modelStudyHint;
   return (
     <section className="settings-card">
       <div className="settings-title">

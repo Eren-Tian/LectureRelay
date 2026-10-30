@@ -481,10 +481,24 @@ pub async fn resume_review(state: App<'_>, id: String, review_id: String) -> App
 }
 
 #[tauri::command]
+pub fn speaker_model(state: App<'_>) -> AppResult<crate::models::manager::ModelStatus> {
+    crate::models::manager::status_for(&state, crate::models::catalog::DIARIZATION)
+}
+
+#[tauri::command]
+pub async fn detect_speakers(state: App<'_>, id: String, prefix: String) -> AppResult<usize> {
+    let job = begin_job(&state, &id, "diarization")?;
+    let result = crate::app::diarize::run(state.inner().clone(), id, prefix).await;
+    job.finish(&result)?;
+    result
+}
+
+#[tauri::command]
 pub fn local_text_models(state: App<'_>) -> AppResult<Vec<crate::models::manager::ModelStatus>> {
     [
         crate::models::catalog::TRANSLATION,
         crate::models::catalog::STUDY,
+        crate::models::catalog::DIARIZATION,
     ]
     .into_iter()
     .map(|id| crate::models::manager::status_for(&state, id))

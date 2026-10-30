@@ -509,6 +509,9 @@ pub enum ErrorCode {
     SpeakerNameIsEmptyOrTooLong,
     CannotSaveSpeaker,
     CannotReadSpeakers,
+    DownloadTheSpeakerModelFirst,
+    TranscribeBeforeDetectingSpeakers,
+    SpeakerDetectionFailedTranscriptIsUnchanged,
     ModelRequired,
 }
 impl ErrorCode {
@@ -1418,6 +1421,15 @@ impl ErrorCode {
             Self::SpeakerNameIsEmptyOrTooLong => "Enter a speaker name of up to 40 characters.",
             Self::CannotSaveSpeaker => "Cannot save the speaker.",
             Self::CannotReadSpeakers => "Cannot read speakers.",
+            Self::DownloadTheSpeakerModelFirst => {
+                "Download the speaker model in Settings → AI & models → Local models first."
+            }
+            Self::TranscribeBeforeDetectingSpeakers => {
+                "Transcribe the lecture before detecting speakers."
+            }
+            Self::SpeakerDetectionFailedTranscriptIsUnchanged => {
+                "Speaker detection failed. The transcript is unchanged."
+            }
             Self::ModelRequired => "",
         }
     }
@@ -2327,6 +2339,15 @@ impl ErrorCode {
             "Enter a speaker name of up to 40 characters." => Self::SpeakerNameIsEmptyOrTooLong,
             "Cannot save the speaker." => Self::CannotSaveSpeaker,
             "Cannot read speakers." => Self::CannotReadSpeakers,
+            "Download the speaker model in Settings → AI & models → Local models first." => {
+                Self::DownloadTheSpeakerModelFirst
+            }
+            "Transcribe the lecture before detecting speakers." => {
+                Self::TranscribeBeforeDetectingSpeakers
+            }
+            "Speaker detection failed. The transcript is unchanged." => {
+                Self::SpeakerDetectionFailedTranscriptIsUnchanged
+            }
             _ => Self::OperationFailed,
         }
     }

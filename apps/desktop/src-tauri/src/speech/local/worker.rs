@@ -26,15 +26,59 @@ pub struct SpeechUpdate {
     #[serde(rename = "final")]
     pub is_final: bool,
 }
+/// One speaker turn from the diarizer: seconds and a 1-based speaker number.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SpeakerTurn {
+    pub start: f64,
+    pub end: f64,
+    pub speaker: i32,
+}
+
+/// Parses the diarizer's "start end speaker" lines; malformed lines are skipped.
+pub fn parse_turns(text: &str) -> Vec<SpeakerTurn> {
+    text.lines()
+        .filter_map(|line| {
+            let mut parts = line.split_whitespace();
+            let start = parts.next()?.parse::<f64>().ok()?;
+            let end = parts.next()?.parse::<f64>().ok()?;
+            let speaker = parts.next()?.parse::<i32>().ok()?;
+            (start.is_finite() && end > start && speaker > 0).then_some(SpeakerTurn {
+                start,
+                end,
+                speaker,
+            })
+        })
+        .collect()
+}
+
 impl LocalSpeech {
     pub fn open(
         runtime: &Path,
         model: &Path,
         performance: &super::performance::Performance,
     ) -> AppResult<Self> {
-        let mut child = Command::new(runtime.join("asr-worker.exe"))
-            .arg(runtime)
-            .arg(model)
+        Self::spawn(runtime, model, performance, None)
+    }
+    /// The same worker in speaker diarization mode, with a diarization model.
+    pub fn open_diarizer(
+        runtime: &Path,
+        model: &Path,
+        performance: &super::performance::Performance,
+    ) -> AppResult<Self> {
+        Self::spawn(runtime, model, performance, Some("diarize"))
+    }
+    fn spawn(
+        runtime: &Path,
+        model: &Path,
+        performance: &super::performance::Performance,
+        mode: Option<&str>,
+    ) -> AppResult<Self> {
+        let mut command = Command::new(runtime.join("asr-worker.exe"));
+        command.arg(runtime).arg(model);
+        if let Some(mode) = mode {
+            command.arg(mode);
+        }
+        let mut child = command
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
@@ -183,6 +227,24 @@ impl LocalSpeech {
             .user_error(crate::error::ErrorCode::LocalRecognitionStoppedRecordingIsPreserved)?;
         self.receive()
     }
+    /// Pushes audio to the diarizer; it replies once the audio is buffered.
+    pub fn diarize_feed(&mut self, samples: &[i16], rate: u32) -> AppResult<()> {
+        self.send(samples, rate, 1).map(|_| ())
+    }
+    /// Ends the audio and collects every speaker turn, page by page.
+    pub fn diarize_finish(&mut self) -> AppResult<Vec<SpeakerTurn>> {
+        self.input
+            .try_send((2u32 << 30).to_le_bytes().to_vec())
+            .user_error(crate::error::ErrorCode::LocalSpeechStopped)?;
+        let mut turns = Vec::new();
+        loop {
+            let page = self.receive()?;
+            if page.is_empty() {
+                return Ok(turns);
+            }
+            turns.extend(parse_turns(&page));
+        }
+    }
     pub fn process_id(&self) -> u32 {
         self.child.id()
     }
@@ -230,6 +292,36 @@ pub(crate) fn contain_worker(child: &Child) -> AppResult<windows::Win32::Foundat
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    #[ignore = "requires the pinned native SDK and the downloaded Sortformer model"]
+    fn native_diarizer_returns_speaker_turns() {
+        let project = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..");
+        let runtime = Path::new(env!("CARGO_MANIFEST_DIR")).join("resources/local-asr");
+        let model = project.join("target/asr-evaluation/models").join(
+            crate::models::catalog::get(crate::models::catalog::DIARIZATION)
+                .unwrap()
+                .file,
+        );
+        let performance = super::super::performance::Performance::new(true).unwrap();
+        let mut engine = LocalSpeech::open_diarizer(&runtime, &model, &performance).unwrap();
+        let reader =
+            hound::WavReader::open(project.join("target/asr-evaluation/benchmark-data/jfk.wav"))
+                .unwrap();
+        let samples = reader
+            .into_samples::<i16>()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        for part in samples.chunks(16000 * 20) {
+            engine.diarize_feed(part, 16000).unwrap();
+        }
+        let turns = engine.diarize_finish().unwrap();
+        assert!(!turns.is_empty());
+        assert!(
+            turns
+                .iter()
+                .all(|t| t.end > t.start && (1..=4).contains(&t.speaker))
+        );
+    }
     #[test]
     #[ignore = "requires the pinned native SDK and downloaded evaluation model"]
     fn native_stream_resamples_finalizes_and_reports_worker_crash() {

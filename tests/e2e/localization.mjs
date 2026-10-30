@@ -204,6 +204,23 @@ try {
     'return document.querySelector(".speaker-chip").textContent === "李老师";',
   );
   await screenshot('replay-speaker');
+  // Automatic speaker detection keeps the typed name.
+  await click('识别讲话人');
+  await until('return document.body.innerText.includes("找到 1 位讲话人");');
+  assert.equal(
+    await d.read('return document.querySelector(".speaker-chip").textContent;'),
+    '李老师',
+  );
+  // Without the speaker model, the button leads to Local models.
+  await d.read('window.localizationFixture.speakerModelInstalled = false;');
+  await click('识别讲话人');
+  await until(
+    'return document.body.innerText.includes("请先下载讲话人识别模型") && !!document.querySelector(".settings-nav");',
+  );
+  await d.click('aside button[aria-label="Introduction to Biology"]');
+  await until('return !!document.querySelector(".lecture-row");');
+  await d.click('.lecture-row');
+  await until('return !!document.querySelector(".replay-player");');
   if (
     await d.read('return !!document.querySelector(".study-workspace.narrow");')
   )

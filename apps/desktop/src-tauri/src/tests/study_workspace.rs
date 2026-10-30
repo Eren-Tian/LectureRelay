@@ -234,3 +234,60 @@ fn speaker_labels_follow_segments_and_appear_in_exports() {
     db.purge_lecture_content("speaker-test", &l.id).unwrap();
     assert!(db.speakers(&l.id).unwrap().is_empty());
 }
+#[test]
+fn detected_speakers_follow_overlap_and_keep_typed_names() {
+    use crate::speech::local::worker::{SpeakerTurn, parse_turns};
+    let turns = parse_turns("0.000 4.000 2\n4.000 9.500 1\nbad line\n9.5 9.5 1\n9.500 12.000 2\n");
+    assert_eq!(turns.len(), 3);
+    assert_eq!(
+        turns[1],
+        SpeakerTurn {
+            start: 4.,
+            end: 9.5,
+            speaker: 1
+        }
+    );
+    let f = Fixture::new();
+    let db = f.db();
+    let (_, l) = lecture(&f, &db);
+    let mut segments = Vec::new();
+    for (start, end) in [(0., 3.5), (3.8, 9.), (10., 11.5), (20., 25.)] {
+        db.save_segment(
+            &l.id,
+            None,
+            SegmentInput {
+                start_seconds: start,
+                end_seconds: end,
+                source_text: format!("At {start}"),
+                translated_text: String::new(),
+            },
+        )
+        .unwrap();
+    }
+    segments.extend(db.segments(&l.id).unwrap());
+    // Sortformer's speaker 2 talks first, so it becomes "Speaker 1".
+    let labels = crate::app::diarize::assign(&segments, &turns);
+    let numbers: Vec<usize> = labels.iter().map(|(_, n)| *n).collect();
+    assert_eq!(numbers, [1, 2, 1]);
+    // A typed name survives; earlier automatic labels are replaced.
+    db.set_speaker(&l.id, &segments[1].id, "Prof. Lee").unwrap();
+    db.set_speaker(&l.id, &segments[3].id, "Speaker 7").unwrap();
+    let named: Vec<(String, String)> = labels
+        .iter()
+        .map(|(id, n)| (id.clone(), format!("Speaker {n}")))
+        .collect();
+    db.apply_auto_speakers(&l.id, "Speaker", &named).unwrap();
+    let saved = db.speakers(&l.id).unwrap();
+    let name = |i: usize| {
+        saved
+            .iter()
+            .find(|s| s.segment_id == segments[i].id)
+            .map(|s| s.speaker.clone())
+    };
+    assert_eq!(name(0).as_deref(), Some("Speaker 1"));
+    assert_eq!(name(1).as_deref(), Some("Prof. Lee"));
+    assert_eq!(name(2).as_deref(), Some("Speaker 1"));
+    assert_eq!(name(3), None);
+    assert!(db.apply_auto_speakers(&l.id, "Speaker*", &named).is_err());
+    assert!(crate::models::catalog::get(crate::models::catalog::DIARIZATION).is_ok());
+}

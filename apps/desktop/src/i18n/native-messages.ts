@@ -712,6 +712,12 @@ export const nativeMessages: Record<string, string> = {
   'Enter a speaker name of up to 40 characters.': '讲话人名称最多 40 个字。',
   'Cannot save the speaker.': '无法保存讲话人。',
   'Cannot read speakers.': '无法读取讲话人。',
+  'Download the speaker model in Settings → AI & models → Local models first.':
+    '请先在“设置 → AI 与模型 → 本地模型”下载讲话人模型。',
+  'Transcribe the lecture before detecting speakers.':
+    '请先完成转录，再识别讲话人。',
+  'Speaker detection failed. The transcript is unchanged.':
+    '讲话人识别失败，转录没有改动。',
 };
 
 /** Native messages built with format!; each {} is a value shown as-is. */

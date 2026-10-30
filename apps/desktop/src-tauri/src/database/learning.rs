@@ -74,6 +74,38 @@ impl Storage {
         Ok(())
     }
 
+    /// Saves detected speakers. Earlier automatic labels ("<prefix> <n>") are
+    /// replaced; any other name was typed by the student and is kept.
+    pub fn apply_auto_speakers(
+        &self,
+        lecture_id: &str,
+        prefix: &str,
+        labels: &[(String, String)],
+    ) -> AppResult<()> {
+        if prefix.is_empty() || prefix.chars().count() > 20 || prefix.contains(['*', '?', '[', ']'])
+        {
+            return Err(crate::error::ErrorCode::SpeakerNameIsEmptyOrTooLong.into());
+        }
+        let mut db = self.lock()?;
+        let tx = db
+            .transaction()
+            .user_error(crate::error::ErrorCode::CannotSaveSpeaker)?;
+        tx.execute(
+            "DELETE FROM segment_speakers WHERE lecture_id=?1 AND speaker GLOB ?2",
+            params![lecture_id, format!("{prefix} [0-9]*")],
+        )
+        .user_error(crate::error::ErrorCode::CannotSaveSpeaker)?;
+        for (segment, speaker) in labels {
+            tx.execute(
+                "INSERT INTO segment_speakers(segment_id,lecture_id,speaker) SELECT ?1,?2,?3 WHERE EXISTS(SELECT 1 FROM transcript_segments WHERE id=?1 AND lecture_id=?2) ON CONFLICT(segment_id) DO NOTHING",
+                params![segment, lecture_id, speaker],
+            )
+            .user_error(crate::error::ErrorCode::CannotSaveSpeaker)?;
+        }
+        tx.commit()
+            .user_error(crate::error::ErrorCode::CannotSaveSpeaker)
+    }
+
     /// Renames a speaker on every segment of one lecture.
     pub fn rename_speaker(&self, lecture_id: &str, from: &str, to: &str) -> AppResult<()> {
         let to = to.trim();

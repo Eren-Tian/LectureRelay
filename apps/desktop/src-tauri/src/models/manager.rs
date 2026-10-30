@@ -228,6 +228,8 @@ pub(crate) async fn download_model_from(
             std::fs::copy(state.runtime.join(source), state.paths.data.join("models").join(target))
                 .user_error(crate::error::ErrorCode::CannotSaveModelLicenseReinstallLecturerelay)?;
         }
+        } else if id == catalog::DIARIZATION {
+            crate::storage::write_atomic(&state.paths.data.join("models").join("NOTICE-Sortformer.txt"), catalog::SORTFORMER_NOTICE.as_bytes())?;
         } else {
             let license = if id == catalog::TRANSLATION { "LICENSE-Hy-MT2.txt" } else { "LICENSE-Qwen3.5.txt" };
             std::fs::copy(state.runtime.with_file_name("local-text").join(license), state.paths.data.join("models").join(license)).user_error(crate::error::ErrorCode::CannotSaveModelLicenseReinstallLecturerelay)?;

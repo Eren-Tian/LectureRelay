@@ -266,6 +266,22 @@ export function LecturePage({ id }: { id: string }) {
       }
     });
   };
+  // Automatic speaker labels need the separate speaker model.
+  const detectSpeakers = () =>
+    void run(async () => {
+      if (!(await api.speakerModel()).installed) {
+        workspace.notify(ui.speakerModelMissing, true);
+        workspace.navigate({ view: 'settings', entry: 'models' });
+        return;
+      }
+      try {
+        const count = await api.detectSpeakers(id, ui.speakerAutoPrefix);
+        workspace.notify(ui.speakersDetected(count));
+      } finally {
+        await reload();
+        await workspace.refresh();
+      }
+    });
   const ask = (e: FormEvent) => {
     e.preventDefault();
     if (!readiness('study').configured) {
@@ -485,6 +501,13 @@ export function LecturePage({ id }: { id: string }) {
                   onClick={() => setSegment('new')}
                 >
                   {ui.addSegmentWithPlus}
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={blocked || !segments.length}
+                  onClick={detectSpeakers}
+                >
+                  {ui.detectSpeakers}
                 </button>
                 <button
                   className="button secondary"

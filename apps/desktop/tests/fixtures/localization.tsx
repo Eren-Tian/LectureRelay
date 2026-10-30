@@ -180,6 +180,7 @@ const fixture = {
   failTrash: false,
   droppedImport: '',
   savedTerm: '',
+  speakerModelInstalled: true,
   /** Simulates the recorder moving to another device by itself. */
   switchDevice: (deviceName: string) => {
     if (!data.recording) return;
@@ -340,6 +341,23 @@ mockIPC(
         return structuredClone(study);
       case 'local_model_status':
         return models[0];
+      case 'speaker_model':
+        return {
+          ...models[1],
+          id: 'sortformer-4spk-v2',
+          installed: fixture.speakerModelInstalled,
+        };
+      case 'detect_speakers': {
+        // Like the native side: automatic labels never replace typed names.
+        const typed = new Set(detail.speakers.map((s) => s.segmentId));
+        detail.speakers = [
+          ...detail.speakers,
+          ...detail.segments
+            .filter((s) => !typed.has(s.id))
+            .map((s) => ({ segmentId: s.id, speaker: `${input.prefix} 1` })),
+        ];
+        return 1;
+      }
       case 'local_text_models':
         return models.slice(1);
       case 'trash_courses':

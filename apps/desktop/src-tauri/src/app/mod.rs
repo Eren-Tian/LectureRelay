@@ -1,5 +1,6 @@
 pub(crate) mod assistance;
 pub(crate) mod busy;
+pub(crate) mod diarize;
 pub(crate) mod exports;
 pub(crate) mod jobs;
 pub(crate) mod live_summaries;
@@ -170,6 +171,8 @@ pub fn run() {
             commands::study::import_dropped_media,
             commands::set_segment_speaker,
             commands::rename_speaker,
+            commands::speaker_model,
+            commands::detect_speakers,
             commands::study::attach_document,
             commands::study::read_document,
             commands::bootstrap,

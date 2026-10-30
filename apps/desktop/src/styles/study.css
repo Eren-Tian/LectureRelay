@@ -526,6 +526,23 @@
 .transcript-segment p {
   overflow-wrap: anywhere;
 }
+/* A stretch of the recording with no text, between two segments. */
+.transcript-gap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 8px;
+  margin: 0;
+  padding: 10px 0;
+  border-bottom: 1px dashed var(--line);
+  color: var(--muted);
+  font-size: 12px;
+}
+.transcript-gap .text-button {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 .transcript-panel .source-text {
   line-height: 1.55;
 }

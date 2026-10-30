@@ -304,6 +304,9 @@ export const zhCN = {
   libraryEmpty: '录制或导入一节课，开始积累你的课堂记录。',
   // Lecture replay and transcript
   noTranslationSaved: '暂无译文',
+  transcriptGap: (minutes: number, seconds: number) =>
+    `${minutes ? `${minutes} 分${seconds ? ` ${seconds} 秒` : '钟'}` : `${seconds} 秒`}没有转写内容`,
+  transcriptNotTranscribedAfter: '之后的录音还没有转写',
   addSegment: '添加段落',
   continueTranscription: '继续转录',
   transcribeRecording: '转录录音',

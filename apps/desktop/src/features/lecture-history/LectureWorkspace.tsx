@@ -1,6 +1,7 @@
 import { messageText } from '../../i18n/messages';
 import { ui } from '../../i18n';
 import {
+  Fragment,
   useCallback,
   useEffect,
   useMemo,
@@ -307,6 +308,23 @@ export function LecturePage({ id }: { id: string }) {
   const pages = Math.max(1, Math.ceil(filtered.length / 80)),
     currentPage = Math.min(page, pages - 1),
     visible = filtered.slice(currentPage * 80, (currentPage + 1) * 80);
+  // Long stretches with no text are marked so they do not read as a
+  // continuous transcript. Search results skip them.
+  const gapFrom = (index: number) => {
+    if (search.trim()) return null;
+    const from = index ? filtered[index - 1].endSeconds : 0;
+    return filtered[index].startSeconds - from >= GAP_SECONDS ? from : null;
+  };
+  const transcriptEnd =
+      !search.trim() &&
+      currentPage === pages - 1 &&
+      filtered.length > 0 &&
+      data?.lecture.status !== 'recording',
+    lastEnd = filtered.at(-1)?.endSeconds ?? 0,
+    transcribedUntil = data?.lecture.transcribedUntil ?? 0,
+    untranscribedTail =
+      transcriptEnd &&
+      transcribedUntil < (data?.lecture.durationSeconds ?? 0) - 0.1;
   const exportFile = () =>
     void run(async () => {
       await api.export(id, format);
@@ -595,73 +613,99 @@ export function LecturePage({ id }: { id: string }) {
               ref={transcriptList}
               onWheel={() => playing && setFollow(false)}
             >
-              {visible.map((s) => (
-                <article
-                  key={s.id}
-                  className={
-                    'transcript-segment ' +
-                    (position >= s.startSeconds && position < s.endSeconds
-                      ? 'playing'
-                      : '')
-                  }
-                >
-                  <button
-                    className="timestamp"
-                    onClick={() => seek(s.startSeconds)}
+              {visible.map((s, i) => (
+                <Fragment key={s.id}>
+                  {gapFrom(currentPage * 80 + i) !== null && (
+                    <TranscriptGap
+                      from={gapFrom(currentPage * 80 + i) ?? 0}
+                      to={s.startSeconds}
+                      seek={seek}
+                    />
+                  )}
+                  <article
+                    className={
+                      'transcript-segment ' +
+                      (position >= s.startSeconds && position < s.endSeconds
+                        ? 'playing'
+                        : '')
+                    }
                   >
-                    {clock(s.startSeconds)}
-                  </button>
-                  <div>
                     <button
-                      className={`speaker-chip ${speakers.get(s.id) ? '' : 'empty'}`}
-                      aria-label={
-                        speakers.get(s.id)
-                          ? ui.speakerChangeLabel(speakers.get(s.id) ?? '')
-                          : ui.speakerAddLabel
-                      }
-                      onClick={() => setSpeakerFor(s)}
+                      className="timestamp"
+                      onClick={() => seek(s.startSeconds)}
                     >
-                      {speakers.get(s.id) ?? ui.speakerAdd}
+                      {clock(s.startSeconds)}
                     </button>
-                    <p
-                      className="source-text"
-                      style={{
-                        fontSize: Math.max(16, settings.englishFontSize - 3),
-                      }}
+                    <div>
+                      <button
+                        className={`speaker-chip ${speakers.get(s.id) ? '' : 'empty'}`}
+                        aria-label={
+                          speakers.get(s.id)
+                            ? ui.speakerChangeLabel(speakers.get(s.id) ?? '')
+                            : ui.speakerAddLabel
+                        }
+                        onClick={() => setSpeakerFor(s)}
+                      >
+                        {speakers.get(s.id) ?? ui.speakerAdd}
+                      </button>
+                      <p
+                        className="source-text"
+                        style={{
+                          fontSize: Math.max(16, settings.englishFontSize - 3),
+                        }}
+                      >
+                        <Highlight text={s.sourceText} query={search.trim()} />
+                      </p>
+                      <p
+                        lang={course.assistanceLanguage}
+                        dir="auto"
+                        className={
+                          'translated-text ' +
+                          (!s.translatedText ? 'untranslated' : '')
+                        }
+                        style={{
+                          fontSize: Math.max(16, settings.translationFontSize),
+                        }}
+                      >
+                        {s.translatedText ? (
+                          <Highlight
+                            text={s.translatedText}
+                            query={search.trim()}
+                          />
+                        ) : (
+                          ui.noTranslationSaved
+                        )}
+                      </p>
+                    </div>
+                    <button
+                      className="icon-button segment-edit"
+                      aria-label={ui.editCaptionAt(clock(s.startSeconds))}
+                      disabled={blocked}
+                      onClick={() => setSegment(s)}
                     >
-                      <Highlight text={s.sourceText} query={search.trim()} />
-                    </p>
-                    <p
-                      lang={course.assistanceLanguage}
-                      dir="auto"
-                      className={
-                        'translated-text ' +
-                        (!s.translatedText ? 'untranslated' : '')
-                      }
-                      style={{
-                        fontSize: Math.max(16, settings.translationFontSize),
-                      }}
-                    >
-                      {s.translatedText ? (
-                        <Highlight
-                          text={s.translatedText}
-                          query={search.trim()}
-                        />
-                      ) : (
-                        ui.noTranslationSaved
-                      )}
-                    </p>
-                  </div>
-                  <button
-                    className="icon-button segment-edit"
-                    aria-label={ui.editCaptionAt(clock(s.startSeconds))}
-                    disabled={blocked}
-                    onClick={() => setSegment(s)}
-                  >
-                    <Icon name="edit" size={15} />
-                  </button>
-                </article>
+                      <Icon name="edit" size={15} />
+                    </button>
+                  </article>
+                </Fragment>
               ))}
+              {transcriptEnd && transcribedUntil - lastEnd >= GAP_SECONDS && (
+                <TranscriptGap
+                  from={lastEnd}
+                  to={transcribedUntil}
+                  seek={seek}
+                />
+              )}
+              {untranscribedTail && (
+                <p className="transcript-gap">
+                  <button
+                    className="text-button"
+                    onClick={() => seek(transcribedUntil)}
+                  >
+                    {clock(transcribedUntil)}
+                  </button>
+                  <span>{ui.transcriptNotTranscribedAfter}</span>
+                </p>
+              )}
               {!visible.length && (
                 <div className="empty-state">
                   <h3>
@@ -868,4 +912,27 @@ function Highlight({ text, query }: { text: string; query: string }) {
   return text
     .split(re)
     .map((part, i) => (i % 2 ? <mark key={i}>{part}</mark> : part));
+}
+
+/** Silences at least this long get a marker in the transcript. */
+const GAP_SECONDS = 30;
+
+function TranscriptGap({
+  from,
+  to,
+  seek,
+}: {
+  from: number;
+  to: number;
+  seek: (seconds: number) => void;
+}) {
+  const length = Math.round(to - from);
+  return (
+    <p className="transcript-gap">
+      <button className="text-button" onClick={() => seek(from)}>
+        {clock(from)}–{clock(to)}
+      </button>
+      <span>{ui.transcriptGap(Math.floor(length / 60), length % 60)}</span>
+    </p>
+  );
 }

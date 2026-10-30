@@ -137,6 +137,13 @@ try {
   await until('return !!document.querySelector(".replay-player");');
   assert.match(await text(), /录音设备报告声音中断/);
   assert.match(await text(), /Mitochondria produce ATP/);
+  // 10–45 s has no text and 45–60 s is not transcribed yet; both are marked.
+  assert.deepEqual(
+    await d.read(
+      'return [...document.querySelectorAll(".transcript-gap")].map(p=>p.textContent);',
+    ),
+    ['00:10–00:4535 秒没有转写内容', '00:45之后的录音还没有转写'],
+  );
   await screenshot('replay');
   // The app's own player: ←/→ move the playhead by 5 s when no control has focus.
   assert.match(

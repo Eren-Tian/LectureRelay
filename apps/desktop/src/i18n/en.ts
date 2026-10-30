@@ -328,6 +328,10 @@ export const en = {
   libraryEmpty: 'Record or import a lecture to start building your library.',
   // Lecture replay and transcript
   noTranslationSaved: 'No translation yet',
+  transcriptGap: (minutes: number, seconds: number) =>
+    `No transcript for ${[minutes && `${minutes} min`, seconds && `${seconds} s`].filter(Boolean).join(' ')}`,
+  transcriptNotTranscribedAfter:
+    'The recording after this point is not transcribed yet',
   addSegment: 'Add Segment',
   continueTranscription: 'Continue Transcription',
   transcribeRecording: 'Transcribe Recording',

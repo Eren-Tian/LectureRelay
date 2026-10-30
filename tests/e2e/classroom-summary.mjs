@@ -131,6 +131,10 @@ try {
   );
   await d.read(`document.querySelector('[aria-label="表格"]').click();`);
   await until(`return ${editor}.value.includes("| 概念 | 说明 |");`);
+  // Wait for the toolbar to place the cursor after the table (next frame).
+  await until(
+    `return ${editor}.selectionStart === ${editor}.value.length && document.activeElement === ${editor};`,
+  );
   await d.read(`${editor}.setSelectionRange(0, 0);`);
   await d.read(`document.querySelector('[aria-label="待办列表"]').click();`);
   await until(`return ${editor}.value.startsWith("- [ ] ## ");`);

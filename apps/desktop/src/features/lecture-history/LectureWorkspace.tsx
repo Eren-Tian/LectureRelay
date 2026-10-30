@@ -61,7 +61,8 @@ export function LecturePage({ id }: { id: string }) {
     [toolRequest, setToolRequest] = useState<{ tab: string; key: number }>(),
     [focusQuestion, setFocusQuestion] = useState(false),
     [newTerm, setNewTerm] = useState<string | null>(null),
-    [speakerFor, setSpeakerFor] = useState<TranscriptSegment | null>(null);
+    [speakerFor, setSpeakerFor] = useState<TranscriptSegment | null>(null),
+    [noteAppend, setNoteAppend] = useState<{ key: string; body: string }>();
   const transcriptList = useRef<HTMLDivElement>(null),
     lastSaved = useRef(0);
   const resumeAt = useMemo(() => savedPosition(id), [id]);
@@ -343,7 +344,10 @@ export function LecturePage({ id }: { id: string }) {
           <h1>{lecture.title}</h1>
           <p>
             {dateText(lecture.startedAt)} · {clock(lecture.durationSeconds)}
-            {words > 0 && <> · {ui.lectureWordCount(words)}</>}{' '}
+            {words > 0 && <> · {ui.lectureWordCount(words)}</>}
+            {speakers.size > 0 && (
+              <> · {ui.lectureSpeakerCount(new Set(speakers.values()).size)}</>
+            )}{' '}
             {ui.metaEnglishTo} {languageName(course.assistanceLanguage)}
           </p>
         </div>
@@ -743,6 +747,7 @@ export function LecturePage({ id }: { id: string }) {
         secondary={
           <StudyTools
             request={toolRequest}
+            noteAppend={noteAppend}
             detail={data}
             position={position}
             onSeek={seek}
@@ -763,6 +768,13 @@ export function LecturePage({ id }: { id: string }) {
                 setQuestion={setQuestion}
                 focusRequested={focusQuestion}
                 onFocused={questionFocused}
+                onAddToNotes={(answer) => {
+                  setNoteAppend({
+                    key: crypto.randomUUID(),
+                    body: `\n\n**${answer.question}**\n\n${answer.answer}\n`,
+                  });
+                  setToolRequest({ tab: 'notes', key: Date.now() });
+                }}
               />
             }
           />

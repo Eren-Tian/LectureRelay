@@ -12,6 +12,7 @@ import { useResource } from '../../hooks/useResource';
 import { useWorkspace } from '../../app/Workspace';
 import { LiveCaptions } from './LiveCaptions';
 import { StartLecture } from './StartLecture';
+import { SwitchDevice } from './SwitchDevice';
 
 export function LivePage({ id }: { id: string }) {
   const workspace = useWorkspace();
@@ -26,13 +27,22 @@ export function LivePage({ id }: { id: string }) {
   const [continuation, setContinuation] = useState(false);
   const closeContinuation = useCallback(() => setContinuation(false), []);
   // The native recorder moves to the default device when the chosen one is
-  // lost; say so, since the sound source may have changed.
+  // lost; say so, since the sound source may have changed. A switch the
+  // student asked for is confirmed instead.
   const deviceName = recording?.lectureId === id ? recording.deviceName : '';
-  const lastDevice = useRef(deviceName);
+  const lastDevice = useRef(deviceName),
+    requestedDevice = useRef('');
+  const [switching, setSwitching] = useState(false);
+  const closeSwitch = useCallback(() => setSwitching(false), []);
   const { notify } = workspace;
   useEffect(() => {
     if (deviceName && lastDevice.current && deviceName !== lastDevice.current)
-      notify(ui.liveDeviceSwitched(deviceName));
+      notify(
+        deviceName === requestedDevice.current
+          ? ui.liveDeviceChanged(deviceName)
+          : ui.liveDeviceSwitched(deviceName),
+      );
+    if (deviceName === requestedDevice.current) requestedDevice.current = '';
     lastDevice.current = deviceName;
   }, [deviceName, notify]);
   const settings = workspace.data.settings;
@@ -125,10 +135,15 @@ export function LivePage({ id }: { id: string }) {
               {clock(recording.durationSeconds)}
             </strong>
           </div>
-          <span className="actual-device" title={recording.deviceName}>
+          <button
+            className="actual-device"
+            title={ui.liveSwitchDeviceTitle}
+            disabled={recording.failed}
+            onClick={() => setSwitching(true)}
+          >
             {recording.source === 'system' ? ui.systemAudio : ui.microphone} ·{' '}
             {recording.deviceName}
-          </span>
+          </button>
           {recognitionOnTrack && (
             <span className="classroom-chip" role="status">
               <span className="status-dot" />
@@ -162,6 +177,16 @@ export function LivePage({ id }: { id: string }) {
         <p className="classroom-notice warning" role="alert">
           {messageText(recording.warning)}
         </p>
+      )}
+      {switching && (
+        <SwitchDevice
+          lectureId={id}
+          recording={recording}
+          onSwitching={(name) => {
+            requestedDevice.current = name;
+          }}
+          onClose={closeSwitch}
+        />
       )}
       {recording.failed && (
         <div className="classroom-notice warning device-lost" role="alert">

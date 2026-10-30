@@ -226,6 +226,13 @@ export const en = {
   liveContinuationTitle: (title: string) => `${title} (continued)`,
   liveDeviceSwitched: (device: string) =>
     `The audio device was lost. Recording continues on ${device}.`,
+  liveDeviceChanged: (device: string) =>
+    `Switched to ${device}. Recording continues.`,
+  liveSwitchDeviceTitle: 'Switch Recording Device',
+  liveSwitchDeviceHint:
+    'Recording continues in this lecture; the switch point is marked for checking.',
+  liveSwitchDeviceCurrent: 'In use',
+  liveSwitchDeviceDefault: 'System default',
   liveRecordingPausedStatus: 'Paused',
   liveRecordingDurationLabel: 'Recording duration',
   liveAudioLevelLabel: 'Audio level',
@@ -370,6 +377,8 @@ export const en = {
   transcriptFollowPlayback: 'Follow Playback',
   transcriptKeywords: 'Keywords',
   askAiAboutSelection: 'Ask AI',
+  answerCopy: 'Copy',
+  answerCopied: 'Copied',
   addToGlossary: 'Add to Glossary',
   addToGlossaryTitle: 'Add to Course Glossary',
   addToGlossaryHint:
@@ -394,6 +403,8 @@ export const en = {
   askAboutSelectionQuestion: (text: string) =>
     `What does this part of the lecture mean? “${text}”`,
   lectureWordCount: (count: number) => `${count.toLocaleString('en-US')} words`,
+  lectureSpeakerCount: (count: number) =>
+    count === 1 ? '1 speaker' : `${count} speakers`,
   lectureNotTranscribed: 'Not transcribed',
   lecturePartlyTranscribed: 'Partly transcribed',
   addSegmentWithPlus: '+ Add Segment',

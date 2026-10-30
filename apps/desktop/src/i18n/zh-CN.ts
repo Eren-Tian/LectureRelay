@@ -217,6 +217,11 @@ export const zhCN = {
   liveContinuationTitle: (title: string) => `${title}（续）`,
   liveDeviceSwitched: (device: string) =>
     `录音设备已断开，已自动切换到 ${device}，录音没有中断。`,
+  liveDeviceChanged: (device: string) => `已切换到 ${device}，录音没有中断。`,
+  liveSwitchDeviceTitle: '切换录音设备',
+  liveSwitchDeviceHint: '录音继续写在这一节里，切换处会提示检查。',
+  liveSwitchDeviceCurrent: '正在使用',
+  liveSwitchDeviceDefault: '系统默认',
   liveRecordingPausedStatus: '已暂停',
   liveRecordingDurationLabel: '录音时长',
   liveAudioLevelLabel: '声音电平',
@@ -342,6 +347,8 @@ export const zhCN = {
   transcriptFollowPlayback: '跟随播放',
   transcriptKeywords: '关键词',
   askAiAboutSelection: '问 AI',
+  answerCopy: '复制',
+  answerCopied: '已复制',
   addToGlossary: '加入术语表',
   addToGlossaryTitle: '加入课程术语表',
   addToGlossaryHint: '这门课之后的识别和翻译会参考它。',
@@ -365,6 +372,7 @@ export const zhCN = {
   askAboutSelectionQuestion: (text: string) =>
     `这段课堂内容是什么意思？“${text}”`,
   lectureWordCount: (count: number) => `${count.toLocaleString('zh-CN')} 词`,
+  lectureSpeakerCount: (count: number) => `${count} 位讲话人`,
   lectureNotTranscribed: '未转写',
   lecturePartlyTranscribed: '部分转写',
   addSegmentWithPlus: '+ 添加段落',

@@ -176,6 +176,12 @@ try {
     'lecture-question',
   );
   await screenshot('replay-ask-selection');
+  // An answer can be added to the note draft.
+  await click('加入我的笔记');
+  await until(
+    'return !!document.querySelector("textarea[aria-label=课堂笔记]") && document.querySelector("textarea[aria-label=课堂笔记]").value.includes("**What makes ATP?**");',
+  );
+  await click('问答');
   // A short selection can be added to the course glossary.
   await d.read(
     'const t=document.querySelector(".transcript-segment .source-text").firstChild; const r=document.createRange(); r.setStart(t,0); r.setEnd(t,12); const s=getSelection(); s.removeAllRanges(); s.addRange(r); document.querySelector(".transcript-list").dispatchEvent(new MouseEvent("mouseup",{bubbles:true}));',
@@ -204,6 +210,12 @@ try {
     'return document.querySelector(".speaker-chip").textContent === "李老师";',
   );
   await screenshot('replay-speaker');
+  assert.match(
+    await d.read(
+      'return document.querySelector(".replay-heading p").textContent;',
+    ),
+    /1 位讲话人/,
+  );
   // Automatic speaker detection keeps the typed name.
   await click('识别讲话人');
   await until('return document.body.innerText.includes("找到 1 位讲话人");');
@@ -253,7 +265,13 @@ try {
   await click('我的笔记');
   await d.read('document.querySelector(".study-tools details").open=true;');
   assert.match(await text(), /整堂复习/);
-  assert.match(await text(), /Original manual notes/);
+  // The notes show either rendered or in the editor, which reopens for a draft.
+  assert.match(
+    await d.read(
+      'return document.querySelector(".study-notes").innerText + (document.querySelector("textarea[aria-label=课堂笔记]")?.value ?? "");',
+    ),
+    /Original manual notes/,
+  );
   await click('删除课堂记录');
   await until('return !!document.querySelector(".modal");');
   assert.match(await text(), /“Cellular respiration”的录音.*无法恢复/);
@@ -342,6 +360,19 @@ try {
   await d.read('window.localizationFixture.switchDevice("Laptop Microphone");');
   await until(
     'return document.body.innerText.includes("已自动切换到 Laptop Microphone");',
+  );
+  // The device can also be switched by hand during the lecture.
+  await d.read('window.localizationFixture.extraDevice = true;');
+  await d.click('.actual-device');
+  await click('Desk Microphone');
+  await until(
+    'return document.body.innerText.includes("已切换到 Desk Microphone，录音没有中断");',
+  );
+  assert.match(
+    await d.read(
+      'return document.querySelector(".actual-device").textContent;',
+    ),
+    /Desk Microphone/,
   );
   // If the device fails mid-lecture, one click saves and starts a follow-on.
   await d.read('window.localizationFixture.failRecording();');

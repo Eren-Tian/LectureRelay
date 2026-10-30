@@ -102,7 +102,15 @@ const detail: LectureDetail = {
   lecture,
   segments,
   speakers: [],
-  answers: [],
+  answers: [
+    {
+      id: 'answer-1',
+      question: 'What makes ATP?',
+      answer: 'Mitochondria produce ATP.',
+      sources: [],
+      createdAt: 1791205300,
+    },
+  ],
   recordingWarning:
     'The audio device reported a discontinuity. Check the recording; the device did not report how much audio was affected.',
   note: {
@@ -181,6 +189,7 @@ const fixture = {
   droppedImport: '',
   savedTerm: '',
   speakerModelInstalled: true,
+  extraDevice: false,
   /** Simulates the recorder moving to another device by itself. */
   switchDevice: (deviceName: string) => {
     if (!data.recording) return;
@@ -409,7 +418,21 @@ mockIPC(
           });
         return [
           { id: 'fixture-device', name: 'USB Microphone', isDefault: true },
+          ...(fixture.extraDevice
+            ? [{ id: 'desk-device', name: 'Desk Microphone', isDefault: false }]
+            : []),
         ];
+      case 'switch_recording_device':
+        if (!data.recording) throw Error('Not recording');
+        data.recording = {
+          ...data.recording,
+          deviceName:
+            input.deviceId === 'desk-device'
+              ? 'Desk Microphone'
+              : 'USB Microphone',
+        };
+        void emit('recording-status', data.recording);
+        return null;
       case 'test_audio_input':
         fixture.previewRequests++;
         return new Promise<number>((resolve) => {

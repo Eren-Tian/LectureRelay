@@ -512,6 +512,7 @@ pub enum ErrorCode {
     DownloadTheSpeakerModelFirst,
     TranscribeBeforeDetectingSpeakers,
     SpeakerDetectionFailedTranscriptIsUnchanged,
+    CannotSwitchAudioDeviceTheCurrentOneKeepsRecording,
     ModelRequired,
 }
 impl ErrorCode {
@@ -1430,6 +1431,9 @@ impl ErrorCode {
             Self::SpeakerDetectionFailedTranscriptIsUnchanged => {
                 "Speaker detection failed. The transcript is unchanged."
             }
+            Self::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording => {
+                "Cannot switch to that device. Recording continues on the current one."
+            }
             Self::ModelRequired => "",
         }
     }
@@ -2347,6 +2351,9 @@ impl ErrorCode {
             }
             "Speaker detection failed. The transcript is unchanged." => {
                 Self::SpeakerDetectionFailedTranscriptIsUnchanged
+            }
+            "Cannot switch to that device. Recording continues on the current one." => {
+                Self::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording
             }
             _ => Self::OperationFailed,
         }

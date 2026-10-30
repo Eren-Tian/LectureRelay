@@ -916,3 +916,8 @@
     margin: 18mm;
   }
 }
+.answer-actions {
+  display: flex;
+  gap: 14px;
+  margin: 4px 0 8px;
+}

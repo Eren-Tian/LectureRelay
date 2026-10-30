@@ -2,7 +2,7 @@ import { ui } from '../../i18n';
 import { Icon } from '../../components/Icon';
 import { MarkdownBody } from '../../components/MarkdownBody';
 import { clock } from '../../lib/presentation';
-import { useEffect, useRef, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { TranscriptSegment, Answer } from '../../types/domain';
 
 export function QuestionsPanel({
@@ -17,7 +17,9 @@ export function QuestionsPanel({
   setQuestion,
   focusRequested = false,
   onFocused,
+  onAddToNotes,
 }: {
+  onAddToNotes?: (answer: Answer) => void;
   /** Focus the question box once it is on screen, then report back. */
   focusRequested?: boolean;
   onFocused?: () => void;
@@ -32,6 +34,7 @@ export function QuestionsPanel({
   setQuestion: (value: string) => void;
 }) {
   const input = useRef<HTMLTextAreaElement>(null);
+  const [copied, setCopied] = useState('');
   useEffect(() => {
     if (!focusRequested || !input.current) return;
     input.current.focus();
@@ -58,6 +61,26 @@ export function QuestionsPanel({
           <article className="answer-card" key={answer.id}>
             <h3>{answer.question}</h3>
             <MarkdownBody body={answer.answer} />
+            <div className="answer-actions">
+              {onAddToNotes && (
+                <button
+                  className="text-button"
+                  onClick={() => onAddToNotes(answer)}
+                >
+                  {ui.summaryAddToNotes}
+                </button>
+              )}
+              <button
+                className="text-button"
+                onClick={() =>
+                  void navigator.clipboard
+                    .writeText(answer.answer)
+                    .then(() => setCopied(answer.id))
+                }
+              >
+                {copied === answer.id ? ui.answerCopied : ui.answerCopy}
+              </button>
+            </div>
             <details>
               <summary>
                 {ui.viewEvidencePrefix}

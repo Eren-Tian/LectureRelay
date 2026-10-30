@@ -173,6 +173,7 @@ pub fn run() {
             commands::rename_speaker,
             commands::speaker_model,
             commands::detect_speakers,
+            commands::switch_recording_device,
             commands::study::attach_document,
             commands::study::read_document,
             commands::bootstrap,

@@ -97,6 +97,8 @@ export const api = {
   inputDevices: () => call<InputDevice[]>('input_devices'),
   testAudioInput: (id: string, source: string, deviceId: string) =>
     call<number>('test_audio_input', { id, source, deviceId }),
+  switchRecordingDevice: (id: string, deviceId: string) =>
+    call<void>('switch_recording_device', { id, deviceId }),
   audioDevices: (source: string) =>
     call<InputDevice[]>('audio_devices', { source }),
   live: () => call<LiveStatus>('live_status'),

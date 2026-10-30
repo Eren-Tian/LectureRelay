@@ -34,9 +34,12 @@ export function StudyTools({
   onAI,
   questions,
   request,
+  noteAppend,
 }: {
   /** Opens a tab from outside, e.g. Q&A after "Ask AI" on a selection. */
   request?: { tab: string; key: number };
+  /** Text to add to the note draft, e.g. an answer from Q&A. */
+  noteAppend?: { key: string; body: string };
   detail: LectureDetail;
   position: number;
   onSeek?: (n: number) => void;
@@ -59,6 +62,11 @@ export function StudyTools({
   useEffect(() => {
     if (request) setTab(request.tab);
   }, [request]);
+  useEffect(() => {
+    if (!noteAppend) return;
+    setAppend(noteAppend);
+    setTab('notes');
+  }, [noteAppend]);
   useEffect(() => {
     void reload();
   }, [

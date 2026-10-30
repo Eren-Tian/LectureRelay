@@ -718,6 +718,8 @@ export const nativeMessages: Record<string, string> = {
     '请先完成转录，再识别讲话人。',
   'Speaker detection failed. The transcript is unchanged.':
     '讲话人识别失败，转录没有改动。',
+  'Cannot switch to that device. Recording continues on the current one.':
+    '无法切换到这个设备，录音仍在原设备上继续。',
 };
 
 /** Native messages built with format!; each {} is a value shown as-is. */

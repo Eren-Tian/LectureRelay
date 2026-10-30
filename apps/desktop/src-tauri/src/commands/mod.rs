@@ -231,6 +231,18 @@ pub fn pause_lecture(state: App<'_>, id: String, paused: bool) -> AppResult<()> 
 }
 
 #[tauri::command]
+pub async fn switch_recording_device(
+    state: App<'_>,
+    id: String,
+    device_id: String,
+) -> AppResult<()> {
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || state.recorder.switch_device(&id, &device_id))
+        .await
+        .user_error(crate::error::ErrorCode::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording)?
+}
+
+#[tauri::command]
 pub async fn stop_lecture(state: App<'_>, id: String) -> AppResult<Lecture> {
     let state = state.inner().clone();
     tauri::async_runtime::spawn_blocking(move || stop_recording(&state, &id))

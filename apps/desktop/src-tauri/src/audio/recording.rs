@@ -62,6 +62,8 @@ pub(crate) fn saved_warning(recording: &std::path::Path) -> Option<String> {
 enum Control {
     Pause(bool),
     Stop,
+    /// Move capture to another device of the same kind; the reply says whether it worked.
+    Switch(String, mpsc::Sender<AppResult<()>>),
 }
 
 struct Session {
@@ -192,6 +194,28 @@ impl Recorder {
             .send(Control::Pause(paused))
             .user_error(crate::error::ErrorCode::RecordingStoppedSaveTheLecture)?;
         Ok(())
+    }
+
+    /// Switches the running recording to another device. On failure the
+    /// current device keeps recording.
+    pub fn switch_device(&self, id: &str, device_id: &str) -> AppResult<()> {
+        let (reply, result) = mpsc::channel();
+        {
+            let sessions = self
+                .0
+                .lock()
+                .user_error(crate::error::ErrorCode::RecordingStatusUnavailable)?;
+            sessions
+                .as_ref()
+                .filter(|session| session.id == id)
+                .ok_or(crate::error::ErrorCode::ThisLectureIsNotRecording)?
+                .control
+                .send(Control::Switch(device_id.into(), reply))
+                .user_error(crate::error::ErrorCode::RecordingStoppedSaveTheLecture)?;
+        }
+        result.recv_timeout(Duration::from_secs(10)).user_error(
+            crate::error::ErrorCode::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording,
+        )?
     }
 
     pub fn stop(&self, id: &str) -> AppResult<AudioSummary> {
@@ -342,6 +366,55 @@ fn record<R: tauri::Runtime>(
                         .trace
                         .event("resume_command_queued", false, None, None);
                 }
+            }
+            Ok(Control::Switch(device_id, reply)) => {
+                let result = (|| -> AppResult<cpal::Device> {
+                    let chosen = device_id
+                        .parse()
+                        .ok()
+                        .and_then(|id| host.device_by_id(&id))
+                        .ok_or(crate::error::ErrorCode::InvalidAudioDeviceSelectItAgain)?;
+                    let config = if source == InputSource::System {
+                        chosen.default_output_config()
+                    } else {
+                        chosen.default_input_config()
+                    }
+                    .user_error(
+                        crate::error::ErrorCode::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording,
+                    )?;
+                    let next = open_stream(
+                        &chosen,
+                        &config,
+                        rate,
+                        samples_tx.clone(),
+                        &paused,
+                        &health,
+                        &failed,
+                    )
+                    .ok_or(
+                        crate::error::ErrorCode::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording,
+                    )??;
+                    // Stop the old stream first so the two never write at once;
+                    // if the new one cannot start, the old one resumes.
+                    let _ = stream.pause();
+                    if next.play().is_err() {
+                        let _ = stream.play();
+                        return Err(crate::error::ErrorCode::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording.into());
+                    }
+                    if paused.load(Ordering::Relaxed) {
+                        let _ = next.pause();
+                    }
+                    drop(std::mem::replace(&mut stream, next));
+                    Ok(chosen)
+                })();
+                if let Ok(chosen) = &result {
+                    failed.store(false, Ordering::Relaxed);
+                    health.device_switched(paused.load(Ordering::Relaxed));
+                    if let Ok(mut current) = status.lock() {
+                        current.device_name = device_name(chosen);
+                    }
+                }
+                let _ = reply.send(result.map(|_| ()));
             }
             Err(mpsc::TryRecvError::Empty) => {}
         }

@@ -467,6 +467,10 @@
 .actual-device {
   font-size: 12px;
   color: var(--muted);
+  border: 0;
+  border-bottom: 1px dashed var(--line);
+  background: transparent;
+  padding: 0;
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -483,4 +487,34 @@
 }
 .classroom-notice.device-lost .button {
   flex-shrink: 0;
+}
+.actual-device:hover:not(:disabled) {
+  color: var(--ink);
+  border-bottom-color: var(--sage);
+}
+.device-choices {
+  display: grid;
+  gap: 8px;
+  margin-top: 6px;
+}
+.device-choices button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  text-align: left;
+  border: 1px solid var(--control-line);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--ink);
+}
+.device-choices button.active {
+  border-color: var(--sage);
+  background: var(--soft);
+}
+.device-choices button small {
+  color: var(--muted);
+  font-size: 11px;
+  white-space: nowrap;
 }

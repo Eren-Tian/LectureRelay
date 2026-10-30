@@ -744,4 +744,6 @@ export const nativeErrorKeys: Record<string, string> = {
     'Transcribe the lecture before detecting speakers.',
   speaker_detection_failed_transcript_is_unchanged:
     'Speaker detection failed. The transcript is unchanged.',
+  cannot_switch_audio_device_the_current_one_keeps_recording:
+    'Cannot switch to that device. Recording continues on the current one.',
 };

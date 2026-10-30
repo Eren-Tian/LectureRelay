@@ -926,3 +926,109 @@
   gap: 14px;
   margin: 4px 0 8px;
 }
+/* Document or mind map view of the notes. */
+.view-switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  margin-bottom: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--soft);
+}
+.view-switch button {
+  padding: 4px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+}
+.view-switch button[aria-pressed='true'] {
+  background: var(--paper);
+  color: var(--ink);
+  font-weight: 650;
+  box-shadow: 0 1px 3px #2a3a2420;
+}
+/* A left-to-right tree: each branch draws its connector with borders. */
+.mindmap {
+  overflow-x: auto;
+  padding: 8px 2px 16px;
+}
+.mindmap ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.mindmap li {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 4px 0 4px 22px;
+}
+.mindmap > ul > li {
+  padding-left: 0;
+}
+.mindmap li ul {
+  padding-left: 22px;
+  position: relative;
+}
+/* Horizontal stub into each child and the vertical spine between siblings. */
+.mindmap li ul > li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 22px;
+  border-top: 1.5px solid var(--line);
+}
+.mindmap li ul > li::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-left: 1.5px solid var(--line);
+}
+.mindmap li ul > li:first-child::after {
+  top: 50%;
+}
+.mindmap li ul > li:last-child::after {
+  bottom: 50%;
+}
+.mindmap li ul > li:only-child::after {
+  display: none;
+}
+/* Parent-to-children stub on the parent's side. */
+.mindmap li > ul::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 22px;
+  border-top: 1.5px solid var(--line);
+}
+.mindmap-node {
+  flex-shrink: 0;
+  max-width: 240px;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--paper);
+  font-size: 13px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+.mindmap > ul > li > .mindmap-node {
+  background: var(--sage);
+  border-color: var(--sage);
+  color: var(--on-accent);
+  font-weight: 650;
+}
+.mindmap > ul > li > ul > li > .mindmap-node {
+  background: var(--soft);
+  font-weight: 600;
+}

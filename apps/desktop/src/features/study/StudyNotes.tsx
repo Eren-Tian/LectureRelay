@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNoteDraft } from './useNoteDraft';
 import { useWorkspace } from '../../app/Workspace';
 import { MarkdownBody } from '../../components/MarkdownBody';
+import { MindMap } from '../../components/MindMap';
 import { clock, dateText, languageName } from '../../lib/presentation';
 import type { Note, StudyState } from '../../types/domain';
 
@@ -16,7 +17,10 @@ export function StudyNotes({
   onGenerate,
   blocked,
   append,
+  title = '',
 }: {
+  /** The lecture title, the mind map's centre when notes have several tops. */
+  title?: string;
   id: string;
   note: Note | null;
   study: StudyState;
@@ -28,7 +32,8 @@ export function StudyNotes({
   append?: { key: string; body: string };
 }) {
   const { confirm } = useWorkspace();
-  const [version, setVersion] = useState('');
+  const [version, setVersion] = useState(''),
+    [view, setView] = useState<'document' | 'map'>('document');
   const {
     draft,
     editing,
@@ -230,10 +235,36 @@ export function StudyNotes({
           )}
           {/* An unsaved draft is what "Preview Draft" shows; the notice above says so. */}
           {(selected?.body ?? (draft || note?.body)) ? (
-            <MarkdownBody
-              body={selected?.body ?? (draft || note?.body || '')}
-              onSeek={onSeek}
-            />
+            <>
+              <div
+                className="view-switch"
+                role="group"
+                aria-label={ui.notesViewLabel}
+              >
+                {(['document', 'map'] as const).map((option) => (
+                  <button
+                    key={option}
+                    aria-pressed={view === option}
+                    onClick={() => setView(option)}
+                  >
+                    {option === 'document'
+                      ? ui.notesViewDocument
+                      : ui.notesViewMindMap}
+                  </button>
+                ))}
+              </div>
+              {view === 'map' ? (
+                <MindMap
+                  body={selected?.body ?? (draft || note?.body || '')}
+                  title={title || ui.studyMyNotes}
+                />
+              ) : (
+                <MarkdownBody
+                  body={selected?.body ?? (draft || note?.body || '')}
+                  onSeek={onSeek}
+                />
+              )}
+            </>
           ) : (
             <div className="empty-state">
               <h3>{ui.studyMyNotes}</h3>

@@ -148,6 +148,19 @@ try {
     ),
     /尚未保存/,
   );
+  // The same draft as a mind map: headings and lists become nodes.
+  await click('导图');
+  await until('return !!document.querySelector(".mindmap .mindmap-node");');
+  assert.ok(
+    await d.read(
+      'return [...document.querySelectorAll(".mindmap-node")].some(n=>/段/.test(n.textContent));',
+    ),
+  );
+  await fs.writeFile(
+    new URL('component-mindmap.png', output),
+    Buffer.from(await d.screenshot(), 'base64'),
+  );
+  await click('文档');
   await click('课堂要点');
   await d.read('window.summaryFixture.stale();');
   await until(

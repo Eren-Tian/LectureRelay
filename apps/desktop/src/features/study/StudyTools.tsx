@@ -175,6 +175,7 @@ export function StudyTools({
             </div>
             <div hidden={tab !== 'notes'}>
               <StudyNotes
+                title={detail.lecture.title}
                 append={append}
                 id={id}
                 note={detail.note}

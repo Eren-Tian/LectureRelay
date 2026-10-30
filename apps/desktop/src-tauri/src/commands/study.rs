@@ -57,6 +57,35 @@ pub async fn import_media(
     .await
     .user_error(crate::error::ErrorCode::MediaImportCouldNotFinish)?
 }
+/// Downloads a linked audio or video file, then imports it like a chosen file.
+#[tauri::command]
+pub async fn import_media_url(
+    state: App<'_>,
+    course_id: String,
+    title: String,
+    url: String,
+) -> AppResult<Option<Lecture>> {
+    let url = crate::app::media::media_url(&url)?;
+    state.storage.course(&course_id)?;
+    let job = {
+        let _gate = state.lock_gate();
+        state.ensure_idle(crate::app::Operation::Job)?;
+        state.jobs.begin(&course_id, "download")?
+    };
+    let downloaded = crate::app::media::download(&state, &url).await;
+    job.finish(&downloaded)?;
+    let file = downloaded?;
+    let state = state.inner().clone();
+    let source = file.clone();
+    let result = tauri::async_runtime::spawn_blocking(move || {
+        crate::app::media::import(&state, &course_id, &title, &source)
+    })
+    .await
+    .user_error(crate::error::ErrorCode::MediaImportCouldNotFinish);
+    let _ = std::fs::remove_file(&file);
+    result?.map(Some)
+}
+
 /// The media file last dropped on the main window. Only the window's drop
 /// event sets it, so the page can import a dropped file but cannot name paths.
 #[derive(Default)]

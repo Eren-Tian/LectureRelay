@@ -18,6 +18,105 @@ pub(crate) fn is_media(path: &Path) -> bool {
         .is_some_and(|ext| MEDIA_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
 }
 
+/// Largest media file accepted, matching the decoder's limit.
+const MAX_MEDIA_BYTES: u64 = 2 * 1024 * 1024 * 1024;
+
+/// An https link, which should point straight at an audio or video file.
+pub(crate) fn media_url(text: &str) -> AppResult<reqwest::Url> {
+    reqwest::Url::parse(text.trim())
+        .ok()
+        .filter(|url| url.scheme() == "https" && url.host_str().is_some())
+        .ok_or_else(|| crate::error::ErrorCode::EnterAnHttpsLinkToAnAudioOrVideoFile.into())
+}
+
+/// Downloads a linked media file into the app's state folder for import.
+/// Web pages are refused: video sites need their own apps, not a file link.
+pub(crate) async fn download(
+    state: &AppState,
+    url: &reqwest::Url,
+) -> AppResult<std::path::PathBuf> {
+    use std::io::Write;
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    let client = reqwest::Client::builder()
+        .use_rustls_tls()
+        .connect_timeout(std::time::Duration::from_secs(15))
+        .timeout(std::time::Duration::from_secs(3600))
+        .build()
+        .user_error(crate::error::ErrorCode::CannotDownloadThatLinkCheckItAndYourConnection)?;
+    let mut response = client
+        .get(url.clone())
+        .send()
+        .await
+        .and_then(reqwest::Response::error_for_status)
+        .user_error(crate::error::ErrorCode::CannotDownloadThatLinkCheckItAndYourConnection)?;
+    let kind = response
+        .headers()
+        .get(reqwest::header::CONTENT_TYPE)
+        .and_then(|value| value.to_str().ok())
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    if kind.starts_with("text/") || kind.contains("html") || kind.contains("json") {
+        return Err(crate::error::ErrorCode::ThatLinkOpensWebPageNotMediaFile.into());
+    }
+    if response
+        .content_length()
+        .is_some_and(|size| size > MAX_MEDIA_BYTES)
+    {
+        return Err(crate::error::ErrorCode::ChooseAMediaFileSmallerThan2Gib.into());
+    }
+    // Keep a known extension as a decoder hint; otherwise the decoder probes.
+    let extension = url
+        .path_segments()
+        .and_then(|mut segments| segments.next_back())
+        .map(Path::new)
+        .filter(|name| is_media(name))
+        .and_then(|name| name.extension())
+        .and_then(|ext| ext.to_str())
+        .map_or_else(|| "media".to_owned(), str::to_ascii_lowercase);
+    let folder = state.paths.data.join("state");
+    std::fs::create_dir_all(&folder)
+        .user_error(crate::error::ErrorCode::CannotDownloadThatLinkCheckItAndYourConnection)?;
+    let path = folder.join(format!("download-{}.{extension}", new_id()));
+    let total = response.content_length().unwrap_or(0);
+    let result: AppResult<()> = async {
+        let mut file = File::create(&path)
+            .user_error(crate::error::ErrorCode::CannotCreateTheRecordingFileCheckDiskSpace)?;
+        let mut done = 0_u64;
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .user_error(crate::error::ErrorCode::MediaDownloadWasInterruptedTryAgain)?
+        {
+            state.jobs.checkpoint()?;
+            done += chunk.len() as u64;
+            if done > MAX_MEDIA_BYTES {
+                return Err(crate::error::ErrorCode::ChooseAMediaFileSmallerThan2Gib.into());
+            }
+            file.write_all(&chunk)
+                .user_error(crate::error::ErrorCode::CannotCreateTheRecordingFileCheckDiskSpace)?;
+            state
+                .jobs
+                .progress((done >> 20) as u32, (total >> 20) as u32);
+        }
+        file.sync_all()
+            .user_error(crate::error::ErrorCode::CannotCreateTheRecordingFileCheckDiskSpace)
+    }
+    .await;
+    if result.is_err() {
+        let _ = std::fs::remove_file(&path);
+    }
+    result.map(|()| path)
+}
+
+/// Removes downloads left by an import that did not finish.
+pub(crate) fn discard_downloads(folder: &Path) {
+    for entry in std::fs::read_dir(folder).into_iter().flatten().flatten() {
+        if entry.file_name().to_string_lossy().starts_with("download-") {
+            let _ = std::fs::remove_file(entry.path());
+        }
+    }
+}
+
 pub(crate) fn read_pdf(path: &Path) -> AppResult<Vec<u8>> {
     use std::io::Read;
     const LIMIT: u64 = 50 * 1024 * 1024;

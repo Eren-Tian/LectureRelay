@@ -71,6 +71,8 @@ export const api = {
   library: (query: string) => call<LibraryEntry[]>('library_search', { query }),
   pin: (id: string, pinned: boolean) =>
     call<void>('pin_lecture', { id, pinned }),
+  importMediaUrl: (courseId: string, title: string, url: string) =>
+    call<Lecture | null>('import_media_url', { courseId, title, url }),
   importDroppedMedia: (courseId: string, title: string) =>
     call<Lecture | null>('import_dropped_media', { courseId, title }),
   importMedia: (courseId: string, title: string) =>

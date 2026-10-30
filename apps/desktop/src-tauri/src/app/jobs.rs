@@ -71,7 +71,8 @@ impl Jobs {
         if status.is_some() {
             return Err(crate::error::ErrorCode::AnotherAiTaskIsRunningWaitOrCancel.into());
         }
-        if kind != "provider-test"
+        // These have no lecture yet, so they are not recorded as lecture tasks.
+        if !matches!(kind, "provider-test" | "download")
             && let Some(db) = &self.storage
         {
             *self

@@ -316,6 +316,17 @@ try {
   await until('return !!document.querySelector(".replay-player");');
   await d.click('aside button[aria-label="Introduction to Biology"]');
   await until('return !!document.querySelector(".course-delete");');
+  // A link straight to a media file downloads and imports it.
+  await click('导入音视频');
+  await until('return !!document.querySelector(".modal input[type=url]");');
+  await d.fill('.modal input[type=url]', 'https://example.edu/week4.mp4');
+  await click('下载并导入');
+  await until(
+    'return window.localizationFixture.linkImport === "https://example.edu/week4.mp4";',
+  );
+  await until('return !!document.querySelector(".replay-player");');
+  await d.click('aside button[aria-label="Introduction to Biology"]');
+  await until('return !!document.querySelector(".course-delete");');
   // Trash is recoverable: the course moves at once and the toast offers Undo.
   await click('删除课程');
   await until('return !!document.querySelector(".toast .text-button");');

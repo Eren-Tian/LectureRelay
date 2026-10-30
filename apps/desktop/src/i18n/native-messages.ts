@@ -718,6 +718,13 @@ export const nativeMessages: Record<string, string> = {
     '请先完成转录，再识别讲话人。',
   'Speaker detection failed. The transcript is unchanged.':
     '讲话人识别失败，转录没有改动。',
+  'Enter an https link to an audio or video file.':
+    '请输入指向音视频文件的 https 链接。',
+  'Cannot download that link. Check the link and your connection.':
+    '无法下载这个链接，请检查链接和网络。',
+  'That link opens a web page, not an audio or video file. Video sites such as YouTube are not supported.':
+    '这个链接打开的是网页，不是音视频文件。不支持 YouTube 等视频网站。',
+  'The download was interrupted. Try again.': '下载中断了，请重试。',
   'Cannot switch to that device. Recording continues on the current one.':
     '无法切换到这个设备，录音仍在原设备上继续。',
 };

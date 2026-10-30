@@ -291,3 +291,25 @@ fn detected_speakers_follow_overlap_and_keep_typed_names() {
     assert!(db.apply_auto_speakers(&l.id, "Speaker*", &named).is_err());
     assert!(crate::models::catalog::get(crate::models::catalog::DIARIZATION).is_ok());
 }
+#[test]
+fn media_links_must_be_https_and_leftover_downloads_are_removed() {
+    use crate::app::media::{discard_downloads, media_url};
+    assert!(media_url(" https://example.edu/lectures/week3.mp4 ").is_ok());
+    for bad in [
+        "http://example.edu/a.mp4",
+        "ftp://example.edu/a.mp4",
+        "file:///C:/a.mp4",
+        "not a link",
+        "",
+    ] {
+        assert!(media_url(bad).is_err(), "{bad}");
+    }
+    let f = Fixture::new();
+    let folder = f.root.join("state");
+    std::fs::create_dir_all(&folder).unwrap();
+    std::fs::write(folder.join("download-1.mp4"), b"partial").unwrap();
+    std::fs::write(folder.join("keep.json"), b"{}").unwrap();
+    discard_downloads(&folder);
+    assert!(!folder.join("download-1.mp4").exists());
+    assert!(folder.join("keep.json").exists());
+}

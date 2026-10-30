@@ -190,6 +190,7 @@ const fixture = {
   savedTerm: '',
   speakerModelInstalled: true,
   extraDevice: false,
+  linkImport: '',
   /** Simulates the recorder moving to another device by itself. */
   switchDevice: (deviceName: string) => {
     if (!data.recording) return;
@@ -403,6 +404,9 @@ mockIPC(
       case 'save_term':
         fixture.savedTerm = `${input.source}=${input.translation}`;
         return null;
+      case 'import_media_url':
+        fixture.linkImport = String(input.url);
+        return lecture;
       case 'import_dropped_media':
         fixture.droppedImport = String(input.title);
         return lecture;

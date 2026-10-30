@@ -513,6 +513,10 @@ pub enum ErrorCode {
     TranscribeBeforeDetectingSpeakers,
     SpeakerDetectionFailedTranscriptIsUnchanged,
     CannotSwitchAudioDeviceTheCurrentOneKeepsRecording,
+    EnterAnHttpsLinkToAnAudioOrVideoFile,
+    CannotDownloadThatLinkCheckItAndYourConnection,
+    ThatLinkOpensWebPageNotMediaFile,
+    MediaDownloadWasInterruptedTryAgain,
     ModelRequired,
 }
 impl ErrorCode {
@@ -1431,6 +1435,16 @@ impl ErrorCode {
             Self::SpeakerDetectionFailedTranscriptIsUnchanged => {
                 "Speaker detection failed. The transcript is unchanged."
             }
+            Self::EnterAnHttpsLinkToAnAudioOrVideoFile => {
+                "Enter an https link to an audio or video file."
+            }
+            Self::CannotDownloadThatLinkCheckItAndYourConnection => {
+                "Cannot download that link. Check the link and your connection."
+            }
+            Self::ThatLinkOpensWebPageNotMediaFile => {
+                "That link opens a web page, not an audio or video file. Video sites such as YouTube are not supported."
+            }
+            Self::MediaDownloadWasInterruptedTryAgain => "The download was interrupted. Try again.",
             Self::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording => {
                 "Cannot switch to that device. Recording continues on the current one."
             }
@@ -2352,6 +2366,16 @@ impl ErrorCode {
             "Speaker detection failed. The transcript is unchanged." => {
                 Self::SpeakerDetectionFailedTranscriptIsUnchanged
             }
+            "Enter an https link to an audio or video file." => {
+                Self::EnterAnHttpsLinkToAnAudioOrVideoFile
+            }
+            "Cannot download that link. Check the link and your connection." => {
+                Self::CannotDownloadThatLinkCheckItAndYourConnection
+            }
+            "That link opens a web page, not an audio or video file. Video sites such as YouTube are not supported." => {
+                Self::ThatLinkOpensWebPageNotMediaFile
+            }
+            "The download was interrupted. Try again." => Self::MediaDownloadWasInterruptedTryAgain,
             "Cannot switch to that device. Recording continues on the current one." => {
                 Self::CannotSwitchAudioDeviceTheCurrentOneKeepsRecording
             }

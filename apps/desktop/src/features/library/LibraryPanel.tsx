@@ -26,7 +26,8 @@ export function ImportMedia({
     [course, setCourse] = useState(courseId ?? data.courses[0]?.id ?? ''),
     [title, setTitle] = useState(ui.mediaImportDefaultTitle),
     // The file name of a dropped file; the native side holds its path.
-    [dropped, setDropped] = useState('');
+    [dropped, setDropped] = useState(''),
+    [link, setLink] = useState('');
   const { busy, run } = useAction();
   const unavailable =
     !data.courses.length || !!recording || !!job || !!live?.active;
@@ -62,6 +63,7 @@ export function ImportMedia({
         disabled={unavailable}
         onClick={() => {
           setDropped('');
+          setLink('');
           setOpen(true);
         }}
       >
@@ -76,7 +78,9 @@ export function ImportMedia({
               void run(async () => {
                 const lecture = dropped
                   ? await api.importDroppedMedia(course, title)
-                  : await api.importMedia(course, title);
+                  : link.trim()
+                    ? await api.importMediaUrl(course, title, link)
+                    : await api.importMedia(course, title);
                 if (lecture) {
                   await refresh();
                   setOpen(false);
@@ -110,11 +114,26 @@ export function ImportMedia({
                 disabled={busy}
               />
             </label>
-            {dropped && (
+            {dropped ? (
               <p className="dropped-file">
                 <Icon name="upload" size={16} />
                 {dropped}
               </p>
+            ) : (
+              <label>
+                {ui.mediaImportLinkLabel}
+                <input
+                  type="url"
+                  inputMode="url"
+                  autoComplete="off"
+                  spellCheck={false}
+                  placeholder="https://…/lecture.mp4"
+                  value={link}
+                  disabled={busy}
+                  onChange={(e) => setLink(e.target.value)}
+                />
+                <span className="field-hint">{ui.mediaImportLinkHint}</span>
+              </label>
             )}
             <p className="field-hint">{ui.mediaImportHint}</p>
             <div className="form-actions">
@@ -140,7 +159,9 @@ export function ImportMedia({
                   ? ui.mediaImportImporting
                   : dropped
                     ? ui.mediaImportStart
-                    : ui.mediaImportChooseFile}
+                    : link.trim()
+                      ? ui.mediaImportDownload
+                      : ui.mediaImportChooseFile}
               </button>
             </div>
           </form>

@@ -744,6 +744,14 @@ export const nativeErrorKeys: Record<string, string> = {
     'Transcribe the lecture before detecting speakers.',
   speaker_detection_failed_transcript_is_unchanged:
     'Speaker detection failed. The transcript is unchanged.',
+  enter_an_https_link_to_an_audio_or_video_file:
+    'Enter an https link to an audio or video file.',
+  cannot_download_that_link_check_it_and_your_connection:
+    'Cannot download that link. Check the link and your connection.',
+  that_link_opens_web_page_not_media_file:
+    'That link opens a web page, not an audio or video file. Video sites such as YouTube are not supported.',
+  media_download_was_interrupted_try_again:
+    'The download was interrupted. Try again.',
   cannot_switch_audio_device_the_current_one_keeps_recording:
     'Cannot switch to that device. Recording continues on the current one.',
 };

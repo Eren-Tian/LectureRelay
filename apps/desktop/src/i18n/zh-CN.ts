@@ -285,6 +285,10 @@ export const zhCN = {
   mediaImportHint:
     '支持 WAV、MP3、M4A、MP4、FLAC、OGG，最大 2 GiB、5 小时。原文件不会被修改。',
   mediaImportStart: '导入',
+  mediaImportLinkLabel: '或粘贴音视频链接（可选）',
+  mediaImportLinkHint:
+    '需要直接指向文件的 https 链接，例如课程平台的下载链接。不支持 YouTube 等视频网站页面。',
+  mediaImportDownload: '下载并导入',
   mediaDropHint: '松开即可导入音视频',
   mediaDropUnsupported: '只能导入 WAV、MP3、M4A、MP4、FLAC 或 OGG 文件。',
   mediaImportCancel: '取消导入',

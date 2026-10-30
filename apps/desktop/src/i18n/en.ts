@@ -308,6 +308,10 @@ export const en = {
   mediaImportHint:
     'WAV, MP3, M4A, MP4, FLAC or OGG, up to 2 GiB and 5 hours. The original file is not changed.',
   mediaImportStart: 'Import',
+  mediaImportLinkLabel: 'Or paste a link to the file (optional)',
+  mediaImportLinkHint:
+    'Use an https link straight to the file, such as a course platform download. Video site pages such as YouTube are not supported.',
+  mediaImportDownload: 'Download and Import',
   mediaDropHint: 'Drop to import audio or video',
   mediaDropUnsupported:
     'Only WAV, MP3, M4A, MP4, FLAC or OGG files can be imported.',

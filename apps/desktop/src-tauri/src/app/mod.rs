@@ -37,6 +37,7 @@ pub fn run() {
             let instance_lock = paths.acquire_instance_lock()?;
             // The instance lock guarantees no download is in progress.
             model_manager::discard_partial_downloads(&paths.data.join("models"));
+            media::discard_downloads(&paths.data.join("state"));
             let storage = Arc::new(database::Storage::open(&paths.data.join("app.db"))?);
             storage::cleanup::recover(&paths, &storage)?;
             let recovered_count = storage.recover(&paths)?;
@@ -169,6 +170,7 @@ pub fn run() {
             commands::study::pin_lecture,
             commands::study::import_media,
             commands::study::import_dropped_media,
+            commands::study::import_media_url,
             commands::set_segment_speaker,
             commands::rename_speaker,
             commands::speaker_model,

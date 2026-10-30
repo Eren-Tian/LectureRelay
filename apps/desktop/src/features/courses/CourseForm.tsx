@@ -2,7 +2,8 @@ import { ui } from '../../i18n';
 import { useState, useCallback, type FormEvent } from 'react';
 import { api } from '../../api/client';
 import { type Course, type CourseInput } from '../../types/domain';
-import { LANGUAGES, SUBJECTS, subjectName } from '../../lib/presentation';
+import { SUBJECTS, subjectName } from '../../lib/presentation';
+import { LanguageOptions } from '../../components/LanguageOptions';
 import { Modal } from '../../components/Modal';
 import { useAction } from '../../hooks/useAction';
 import { useWorkspace } from '../../app/Workspace';
@@ -73,11 +74,7 @@ export function CourseForm({
                 )
               }
             >
-              {LANGUAGES.map((language) => (
-                <option key={language.value} value={language.value}>
-                  {language.label}
-                </option>
-              ))}
+              <LanguageOptions />
             </select>
           </label>
         </div>

@@ -1,5 +1,5 @@
 import { RuntimePreferences } from './RuntimePreferences';
-import { LANGUAGES } from '../../lib/presentation';
+import { LanguageOptions } from '../../components/LanguageOptions';
 import type { AppSettings } from '../../types/domain';
 import type { SettingsSectionProps } from './settings-types';
 import { ui } from '../../i18n';
@@ -26,11 +26,7 @@ export function GeneralSettings({
               })
             }
           >
-            {LANGUAGES.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.label}
-              </option>
-            ))}
+            <LanguageOptions />
           </select>
         </label>
       </section>

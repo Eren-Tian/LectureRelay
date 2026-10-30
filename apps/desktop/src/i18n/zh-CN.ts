@@ -99,6 +99,8 @@ export const zhCN = {
   languagePortuguese: '葡萄牙语',
   languageFrench: '法语',
   languageGerman: '德语',
+  languageGroupCommon: '常用',
+  languageGroupOther: '其他语言',
   subjectComputerScience: '计算机科学',
   subjectEngineering: '工程',
   subjectMathematics: '数学',

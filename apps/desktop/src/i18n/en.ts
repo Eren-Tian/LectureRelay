@@ -101,6 +101,8 @@ export const en = {
   languagePortuguese: 'Portuguese',
   languageFrench: 'French',
   languageGerman: 'German',
+  languageGroupCommon: 'Common',
+  languageGroupOther: 'Other languages',
   subjectComputerScience: 'Computer Science',
   subjectEngineering: 'Engineering',
   subjectMathematics: 'Mathematics',

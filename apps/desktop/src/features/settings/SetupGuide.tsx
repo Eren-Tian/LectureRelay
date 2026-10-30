@@ -3,7 +3,7 @@ import { api } from '../../api/client';
 import { useWorkspace } from '../../app/Workspace';
 import type { ActionRunner } from '../../hooks/useAction';
 import type { AppSettings, ModelStatus } from '../../types/domain';
-import { LANGUAGES } from '../../lib/presentation';
+import { LanguageOptions } from '../../components/LanguageOptions';
 import { ui } from '../../i18n';
 
 export function SetupGuide({
@@ -61,11 +61,7 @@ export function SetupGuide({
               })
             }
           >
-            {LANGUAGES.map((l) => (
-              <option key={l.value} value={l.value}>
-                {l.label}
-              </option>
-            ))}
+            <LanguageOptions />
           </select>
         </label>
         <ul className="setup-checklist">

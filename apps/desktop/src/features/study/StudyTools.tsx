@@ -33,7 +33,10 @@ export function StudyTools({
   onReload,
   onAI,
   questions,
+  request,
 }: {
+  /** Opens a tab from outside, e.g. Q&A after "Ask AI" on a selection. */
+  request?: { tab: string; key: number };
   detail: LectureDetail;
   position: number;
   onSeek?: (n: number) => void;
@@ -53,6 +56,9 @@ export function StudyTools({
     [label, setLabel] = useState(''),
     [kind, setKind] = useState<'bookmark' | 'chapter'>('bookmark');
   const [append, setAppend] = useState<{ key: string; body: string }>();
+  useEffect(() => {
+    if (request) setTab(request.tab);
+  }, [request]);
   useEffect(() => {
     void reload();
   }, [

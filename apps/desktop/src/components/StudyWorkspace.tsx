@@ -9,7 +9,10 @@ export function StudyWorkspace({
   storageKey = 'study-split',
   defaultRatio = 58,
   narrowBelow = 850,
+  reveal,
 }: {
+  /** A changing value brings the secondary panel into view. */
+  reveal?: number;
   primary: ReactNode;
   secondary: ReactNode;
   primaryLabel?: string;
@@ -35,6 +38,11 @@ export function StudyWorkspace({
       return defaultRatio;
     }
   });
+  useEffect(() => {
+    if (!reveal) return;
+    setPanel('secondary');
+    setFocus(false);
+  }, [reveal]);
   useEffect(() => {
     const el = root.current;
     if (!el) return;

@@ -20,7 +20,10 @@ export type IconName =
   | 'folder'
   | 'spark'
   | 'shield'
-  | 'search';
+  | 'search'
+  | 'rewind'
+  | 'forward'
+  | 'upload';
 const paths: Record<IconName, string> = {
   info: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18 M12 11v6 M12 7v.1',
   books: 'M4 5h6v14H4z M14 4h5v15h-5z M7 9h1 M16 8h1',
@@ -43,6 +46,11 @@ const paths: Record<IconName, string> = {
   spark: 'M12 3l3 6 6 3-6 3-3 6-3-6-6-3 6-3z',
   shield: 'M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6z M8 12l3 3 5-6',
   search: 'M10 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12 M15 15l5 5',
+  rewind:
+    'M4 12a8 8 0 1 0 2.3-5.6 M4 4v4h4 M10 9.5v5 M13.5 9.5h1.5a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.5z',
+  forward:
+    'M20 12a8 8 0 1 1-2.3-5.6 M20 4v4h-4 M8 9.5v5 M11.5 9.5H13a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1.5z',
+  upload: 'M12 15V3 M7 8l5-5 5 5 M5 17v3h14v-3',
 };
 export function Icon({
   name,

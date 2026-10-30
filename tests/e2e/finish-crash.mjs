@@ -20,10 +20,7 @@ assert(
     await driver.read('return document.querySelector("main").innerText;')
   ).includes('Recording recovered'),
 );
-const rectangle = await driver.read(
-  'const r=document.querySelector("audio").getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};',
-);
-await driver.clickAt(rectangle.x + 20, rectangle.y + rectangle.height / 2);
+await driver.click('.player-play');
 await new Promise((r) => setTimeout(r, 700));
 const audio = await driver.read(
   'const a=document.querySelector("audio");return {duration:a.duration,currentTime:a.currentTime,paused:a.paused,error:a.error?.code};',

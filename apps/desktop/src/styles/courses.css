@@ -2,26 +2,27 @@
 .lecture-list-item {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
+  padding-right: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.lecture-list-item:last-child {
+  border-bottom: 0;
+}
+.lecture-list-item:hover {
+  background: var(--soft);
 }
 .lecture-list-item > .lecture-row {
   flex: 1;
   min-width: 0;
+  border-bottom: 0;
 }
-.lecture-list-item > .button {
-  flex-shrink: 0;
-}
-@media (width <= 950px) {
-  .lecture-list-item {
-    flex-wrap: wrap;
-  }
-  .lecture-list-item > .lecture-row {
-    flex-basis: 100%;
-  }
+.lecture-list-item > .lecture-row:hover {
+  background: transparent;
 }
 .course-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr));
   gap: 16px;
 }
 .course-card {
@@ -235,7 +236,7 @@
   margin-top: 30px;
 }
 .library-search {
-  display: flex;
+  flex-direction: row;
   align-items: center;
   gap: 10px;
   max-width: 600px;

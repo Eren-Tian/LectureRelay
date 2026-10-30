@@ -147,7 +147,7 @@ export function CoursePage({ id }: { id: string }) {
                     </span>
                     <Icon name="arrow" size={18} />
                   </button>
-                  <DeleteLecture lecture={lecture} onDeleted={reload} />
+                  <DeleteLecture compact lecture={lecture} onDeleted={reload} />
                 </div>
               ))}
             </div>

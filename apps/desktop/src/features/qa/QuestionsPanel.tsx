@@ -2,7 +2,7 @@ import { ui } from '../../i18n';
 import { Icon } from '../../components/Icon';
 import { MarkdownBody } from '../../components/MarkdownBody';
 import { clock } from '../../lib/presentation';
-import type { FormEvent } from 'react';
+import { useEffect, useRef, type FormEvent } from 'react';
 import type { TranscriptSegment, Answer } from '../../types/domain';
 
 export function QuestionsPanel({
@@ -15,7 +15,12 @@ export function QuestionsPanel({
   seek,
   ask,
   setQuestion,
+  focusRequested = false,
+  onFocused,
 }: {
+  /** Focus the question box once it is on screen, then report back. */
+  focusRequested?: boolean;
+  onFocused?: () => void;
   answers: Answer[];
   cloud: string;
   local?: boolean;
@@ -26,6 +31,12 @@ export function QuestionsPanel({
   ask: (event: FormEvent) => void;
   setQuestion: (value: string) => void;
 }) {
+  const input = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (!focusRequested || !input.current) return;
+    input.current.focus();
+    onFocused?.();
+  }, [focusRequested, onFocused]);
   return (
     <section className="review-panel">
       <div className="section-heading">
@@ -74,6 +85,7 @@ export function QuestionsPanel({
         <div>
           <textarea
             id="lecture-question"
+            ref={input}
             required
             rows={2}
             maxLength={2000}

@@ -134,6 +134,36 @@ try {
   assert.match(await text(), /录音设备报告声音中断/);
   assert.match(await text(), /Mitochondria produce ATP/);
   await screenshot('replay');
+  // The app's own player: ←/→ move the playhead by 5 s when no control has focus.
+  assert.match(
+    await d.read('return document.querySelector(".player-time").textContent;'),
+    /^00:00 \//,
+  );
+  await d.read(
+    'document.activeElement?.blur(); document.body.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowRight",bubbles:true}));',
+  );
+  await until(
+    'return document.querySelector(".player-time").textContent.startsWith("00:05");',
+  );
+  assert.equal(
+    await d.read(
+      'return document.querySelector(".follow-toggle").getAttribute("aria-pressed");',
+    ),
+    'true',
+  );
+  // Selecting transcript text offers "Ask AI", which opens Q&A with the excerpt.
+  await d.read(
+    'const p=document.querySelector(".transcript-segment .source-text"); const r=document.createRange(); r.selectNodeContents(p); const s=getSelection(); s.removeAllRanges(); s.addRange(r); p.closest(".transcript-list").dispatchEvent(new MouseEvent("mouseup",{bubbles:true}));',
+  );
+  await click('问 AI');
+  await until(
+    'return document.querySelector("#lecture-question")?.value.includes("Mitochondria produce ATP");',
+  );
+  assert.equal(
+    await d.read('return document.activeElement.id;'),
+    'lecture-question',
+  );
+  await screenshot('replay-ask-selection');
   if (
     await d.read('return !!document.querySelector(".study-workspace.narrow");')
   )

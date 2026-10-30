@@ -21,6 +21,7 @@ import { StudyTools } from '../study/StudyTools';
 import { QuestionsPanel } from '../qa/QuestionsPanel';
 import { DeleteLecture } from './DeleteLecture';
 import { SegmentForm } from '../transcript/SegmentForm';
+import { ReplayControls } from './ReplayControls';
 import {
   clock,
   exportName,
@@ -45,7 +46,17 @@ export function LecturePage({ id }: { id: string }) {
     [question, setQuestion] = useState(''),
     [segment, setSegment] = useState<TranscriptSegment | 'new' | null>(null),
     [format, setFormat] = useState<ExportKind>('srt-bilingual'),
-    [printing, setPrinting] = useState(false);
+    [printing, setPrinting] = useState(false),
+    [playing, setPlaying] = useState(false),
+    [follow, setFollow] = useState(true),
+    [selection, setSelection] = useState<{
+      text: string;
+      x: number;
+      y: number;
+    } | null>(null),
+    [toolRequest, setToolRequest] = useState<{ tab: string; key: number }>(),
+    [focusQuestion, setFocusQuestion] = useState(false);
+  const transcriptList = useRef<HTMLDivElement>(null);
   const ownJob = workspace.job?.lectureId === id ? workspace.job : null,
     live = workspace.live?.lectureId === id ? workspace.live : null;
   const blocked =
@@ -70,6 +81,84 @@ export function LecturePage({ id }: { id: string }) {
     );
   }, [data?.segments, search]);
   const closeSegment = useCallback(() => setSegment(null), []);
+  const questionFocused = useCallback(() => setFocusQuestion(false), []);
+  const words = useMemo(
+    () =>
+      (data?.segments ?? []).reduce(
+        (n, s) => n + s.sourceText.split(/\s+/).filter(Boolean).length,
+        0,
+      ),
+    [data?.segments],
+  );
+  const duration = data?.lecture.durationSeconds ?? 0;
+  const toggle = () => {
+    const el = audio.current;
+    if (!el) return;
+    if (el.paused)
+      void el.play().catch(() => workspace.notify(ui.replayPressPlay));
+    else el.pause();
+  };
+  /** Moves the playhead without starting or stopping playback. */
+  const scrub = (value: number) => {
+    const seconds = Math.max(0, Math.min(duration, value));
+    setPosition(seconds);
+    if (audio.current) audio.current.currentTime = seconds;
+  };
+  // Space plays or pauses and ←/→ skip 5 s, unless a control has focus.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+      if (
+        (e.target as HTMLElement | null)?.closest(
+          'input, textarea, select, button, a, [contenteditable="true"], [role="tablist"], [role="separator"], .modal',
+        )
+      )
+        return;
+      if (duration <= 0) return;
+      if (e.key === ' ') toggle();
+      else if (e.key === 'ArrowLeft' || e.key === 'ArrowRight')
+        scrub(
+          (audio.current?.currentTime ?? 0) + (e.key === 'ArrowLeft' ? -5 : 5),
+        );
+      else return;
+      e.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+  // While playing, keep the current segment in view until the reader scrolls.
+  useEffect(() => {
+    if (!follow || !playing) return;
+    const index = filtered.findIndex(
+      (s) => position >= s.startSeconds && position < s.endSeconds,
+    );
+    if (index < 0) return;
+    if (Math.floor(index / 80) !== page) {
+      setPage(Math.floor(index / 80));
+      return;
+    }
+    const list = transcriptList.current;
+    const current = list?.querySelector<HTMLElement>(
+      '.transcript-segment.playing',
+    );
+    if (!list || !current) return;
+    const box = list.getBoundingClientRect(),
+      row = current.getBoundingClientRect();
+    if (row.top >= box.top && row.bottom <= box.bottom) return;
+    list.scrollTo({
+      top: list.scrollTop + row.top - box.top - box.height / 3,
+      behavior: matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+    });
+  }, [position, follow, playing, filtered, page]);
+  useEffect(() => {
+    const clear = () => {
+      if (!window.getSelection()?.toString().trim()) setSelection(null);
+    };
+    document.addEventListener('selectionchange', clear);
+    return () => document.removeEventListener('selectionchange', clear);
+  }, []);
   if (!data) return <ResourceState error={error} reload={reload} />;
   const { lecture, course, segments, answers } = data;
   const cloud = providerName(workspace.data.settings.provider);
@@ -87,6 +176,32 @@ export function LecturePage({ id }: { id: string }) {
     }
     el.currentTime = seconds;
     void el.play().catch(() => workspace.notify(ui.replayPressPlay));
+  };
+  const pickSelection = () => {
+    const picked = window.getSelection();
+    const text = picked?.toString().replace(/\s+/g, ' ').trim() ?? '';
+    if (
+      !picked?.rangeCount ||
+      text.length < 2 ||
+      !transcriptList.current?.contains(picked.anchorNode)
+    ) {
+      setSelection(null);
+      return;
+    }
+    const box = picked.getRangeAt(0).getBoundingClientRect();
+    setSelection({
+      text: text.slice(0, 600),
+      x: box.left + box.width / 2,
+      y: box.top,
+    });
+  };
+  const askSelection = () => {
+    if (!selection) return;
+    setQuestion(ui.askAboutSelectionQuestion(selection.text));
+    setSelection(null);
+    window.getSelection()?.removeAllRanges();
+    setToolRequest({ tab: 'questions', key: Date.now() });
+    setFocusQuestion(true);
   };
   const beginAI = async (kind: 'transcription' | 'translation' | 'notes') => {
     const task = readiness(kind === 'notes' ? 'study' : kind);
@@ -182,48 +297,50 @@ export function LecturePage({ id }: { id: string }) {
         <Icon name="back" size={16} />
         {course.name}
       </button>
-      <header className="page-heading">
+      <header className="page-heading replay-heading">
         <div>
           <h1>{lecture.title}</h1>
           <p>
             {dateText(lecture.startedAt)} · {clock(lecture.durationSeconds)}
-            {ui.metaEnglishTo}
-            {languageName(course.assistanceLanguage)}
+            {words > 0 && <> · {ui.lectureWordCount(words)}</>}{' '}
+            {ui.metaEnglishTo} {languageName(course.assistanceLanguage)}
           </p>
         </div>
-        <span
-          className={'pill ' + (lecture.status === 'interrupted' ? 'gold' : '')}
-        >
-          {lecture.status === 'failed'
-            ? lecture.audioSource === 'import'
-              ? ui.importFailed
-              : ui.recordingDidNotStart
-            : lecture.status === 'interrupted'
-              ? ui.recoveredRecording
-              : ui.recordingSaved}
-        </span>
-      </header>
-      <div className="button-row replay-actions">
-        <DeleteLecture
-          lecture={lecture}
-          beforeDelete={() => {
-            const player = audio.current;
-            if (player) {
-              const source = player.src;
-              player.pause();
-              player.removeAttribute('src');
-              player.load();
-              return () => {
-                player.src = source;
-                player.load();
-              };
+        <div className="replay-heading-actions">
+          <span
+            className={
+              'pill ' + (lecture.status === 'interrupted' ? 'gold' : '')
             }
-          }}
-          onDeleted={() =>
-            workspace.navigate({ view: 'course', id: course.id })
-          }
-        />
-      </div>
+          >
+            {lecture.status === 'failed'
+              ? lecture.audioSource === 'import'
+                ? ui.importFailed
+                : ui.recordingDidNotStart
+              : lecture.status === 'interrupted'
+                ? ui.recoveredRecording
+                : ui.recordingSaved}
+          </span>
+          <DeleteLecture
+            lecture={lecture}
+            beforeDelete={() => {
+              const player = audio.current;
+              if (player) {
+                const source = player.src;
+                player.pause();
+                player.removeAttribute('src');
+                player.load();
+                return () => {
+                  player.src = source;
+                  player.load();
+                };
+              }
+            }}
+            onDeleted={() =>
+              workspace.navigate({ view: 'course', id: course.id })
+            }
+          />
+        </div>
+      </header>
       {data.recordingWarning && (
         <p role="status" className="notice warning">
           {messageText(data.recordingWarning)}
@@ -282,8 +399,10 @@ export function LecturePage({ id }: { id: string }) {
         <audio
           ref={audio}
           src={recordingUrl(lecture.recordingPath)}
-          controls
           preload="metadata"
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onEnded={() => setPlaying(false)}
           onTimeUpdate={(e) => setPosition(e.currentTarget.currentTime)}
           onLoadedMetadata={(e) => {
             e.currentTarget.playbackRate = speed;
@@ -295,39 +414,21 @@ export function LecturePage({ id }: { id: string }) {
           }}
           onError={() => workspace.notify(ui.recordingUnreadable, true)}
         />
-        <div className="playback-tools">
-          <button
-            className="button secondary"
-            aria-label={ui.rewind10Seconds}
-            onClick={() => seek(position - 10)}
-          >
-            −10s
-          </button>
-          <button
-            className="button secondary"
-            aria-label={ui.forward10Seconds}
-            onClick={() => seek(position + 10)}
-          >
-            +10s
-          </button>
-          <select
-            aria-label={ui.playbackSpeed}
-            value={speed}
-            onChange={(e) => {
-              const n = Number(e.target.value);
-              setSpeed(n);
-              if (audio.current) audio.current.playbackRate = n;
-            }}
-          >
-            {[0.5, 0.75, 1, 1.25, 1.5, 1.75, 2].map((n) => (
-              <option key={n} value={n}>
-                {n}×
-              </option>
-            ))}
-          </select>
-        </div>
+        <ReplayControls
+          playing={playing}
+          position={position}
+          duration={lecture.durationSeconds}
+          speed={speed}
+          onToggle={toggle}
+          onScrub={scrub}
+          onSpeed={(n) => {
+            setSpeed(n);
+            if (audio.current) audio.current.playbackRate = n;
+          }}
+        />
       </section>
       <StudyWorkspace
+        reveal={toolRequest?.key}
         primary={
           <section className="review-panel transcript-panel">
             <div className="section-heading">
@@ -380,8 +481,24 @@ export function LecturePage({ id }: { id: string }) {
                 {filtered.length}
                 {ui.segmentCountSuffix}
               </span>
+              {lecture.durationSeconds > 0 && segments.length > 0 && (
+                <button
+                  className="text-button follow-toggle"
+                  aria-pressed={follow}
+                  onClick={() => setFollow(!follow)}
+                >
+                  {ui.transcriptFollowPlayback}
+                </button>
+              )}
             </div>
-            <div className="transcript-list">
+            <div
+              className="transcript-list"
+              ref={transcriptList}
+              onWheel={() => playing && setFollow(false)}
+              onMouseUp={pickSelection}
+              onKeyUp={pickSelection}
+              onScroll={() => selection && setSelection(null)}
+            >
               {visible.map((s) => (
                 <article
                   key={s.id}
@@ -520,6 +637,7 @@ export function LecturePage({ id }: { id: string }) {
         }
         secondary={
           <StudyTools
+            request={toolRequest}
             detail={data}
             position={position}
             onSeek={seek}
@@ -538,11 +656,24 @@ export function LecturePage({ id }: { id: string }) {
                 seek={seek}
                 ask={ask}
                 setQuestion={setQuestion}
+                focusRequested={focusQuestion}
+                onFocused={questionFocused}
               />
             }
           />
         }
       />
+      {selection && (
+        <button
+          className="selection-ask"
+          style={{ left: selection.x, top: selection.y }}
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={askSelection}
+        >
+          <Icon name="spark" size={14} />
+          {ui.askAiAboutSelection}
+        </button>
+      )}
       {segment && (
         <SegmentForm
           lectureId={id}

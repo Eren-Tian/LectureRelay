@@ -1,19 +1,9 @@
 /* Replay and study workspace: player, transcript, study tools and printing. */
-.replay-actions {
-  justify-content: flex-end;
-  margin-bottom: 12px;
-}
-.playback-tools label {
+.replay-heading-actions {
   display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 10px;
-  margin: 0;
-  font-size: 12px;
-}
-.playback-tools select {
-  width: 90px;
-  margin: 0;
+  flex-shrink: 0;
 }
 .transcript-search {
   display: flex;
@@ -196,29 +186,122 @@
   padding: 10px 14px;
 }
 .replay-player {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 10px 14px;
+  padding: 8px 14px 8px 8px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--paper);
   flex-shrink: 0;
-  flex-wrap: wrap;
+  container: replay-player / inline-size;
 }
-.replay-player audio {
+.replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.player-play {
+  width: 40px;
   height: 40px;
-  flex: 1;
-  min-width: 200px;
+  border-radius: 50%;
+  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--on-accent);
+  background: var(--sage);
 }
-.replay-player .playback-tools {
+.player-play:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.player-play svg {
+  fill: currentColor;
+}
+.player-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  margin: 0 6px;
+}
+/* The filled part of the track shows progress without extra markup. */
+.player-progress {
+  flex: 1;
+  min-width: 80px;
+  height: 6px;
+  padding: 0;
+  margin: 0 6px;
+  border: 0;
+  border-radius: 999px;
+  appearance: none;
+  cursor: pointer;
+  background: linear-gradient(
+    to right,
+    var(--sage) var(--progress, 0%),
+    var(--hover) var(--progress, 0%)
+  );
+}
+.player-progress::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--sage);
+  border: 2px solid var(--paper);
+  box-shadow: 0 0 0 1px var(--sage);
+}
+.player-progress:focus-visible {
+  outline: 2px solid var(--sage);
+  outline-offset: 4px;
+}
+.replay-controls select {
+  width: auto;
+  min-width: 70px;
+  padding: 7px 10px;
   margin: 0;
 }
-.replay-player select {
-  min-width: 70px;
+.player-hint {
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+  margin-left: 6px;
 }
-.replay-player .button {
-  padding: 8px 10px;
+.replay-player audio {
+  display: none;
+}
+@container replay-player (width < 640px) {
+  .player-hint {
+    display: none;
+  }
+}
+@container replay-player (width < 460px) {
+  .player-time {
+    display: none;
+  }
+}
+.follow-toggle[aria-pressed='true'] {
+  font-weight: 650;
+}
+.follow-toggle[aria-pressed='false'] {
+  color: var(--muted);
+}
+.selection-ask {
+  position: fixed;
+  z-index: 40;
+  transform: translate(-50%, calc(-100% - 8px));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--sage);
+  box-shadow: 0 6px 18px #1d2a1f33;
+}
+.selection-ask:hover {
+  background: var(--accent-hover);
 }
 .study-workspace {
   display: flex;

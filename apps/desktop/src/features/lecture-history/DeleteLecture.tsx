@@ -10,8 +10,11 @@ export function DeleteLecture({
   lecture,
   onDeleted,
   beforeDelete,
+  compact = false,
 }: {
   lecture: Lecture;
+  /** Icon only, for rows in a list. */
+  compact?: boolean;
   onDeleted?: () => void | Promise<void>;
   beforeDelete?: () => void | (() => void);
 }) {
@@ -24,7 +27,9 @@ export function DeleteLecture({
     !!workspace.live?.active;
   return (
     <button
-      className="button text danger-text"
+      className={
+        compact ? 'icon-button danger-text' : 'button text danger-text'
+      }
       disabled={blocked}
       aria-label={ui.deleteLectureLabel(lecture.title)}
       title={blocked ? ui.deleteLectureBlockedHint : ui.deleteLectureHint}
@@ -55,7 +60,7 @@ export function DeleteLecture({
       }
     >
       <Icon name="trash" size={16} />
-      {busy ? ui.deleting : ui.deleteLecture}
+      {!compact && (busy ? ui.deleting : ui.deleteLecture)}
     </button>
   );
 }
